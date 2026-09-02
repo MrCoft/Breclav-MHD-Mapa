@@ -1020,16 +1020,30 @@ const index = buildIndex(tinyNetwork);
 
 describe('departuresAt', () => {
   it('returns the weekday departure from the first stop', () => {
-    // Wednesday. Trip starts at 374, stop 'a' has offset 0. The 1450 trip
-    // departs after midnight and so belongs to the next date's board.
+    // Wednesday, preceded by an ordinary Tuesday running the same service.
+    // Tuesday's 1450 trip departs stop 'a' at 00:10 on the Wednesday, and
+    // Wednesday's own 374 trip follows. Both belong on this board.
     const found = departuresAt(index, 'a', '2026-09-02', 0);
-    expect(found.map((d) => d.time)).toEqual([374]);
+    expect(found.map((d) => d.time)).toEqual([10, 374]);
+    expect(found[0]!.serviceDate).toBe('2026-09-01');
+    expect(found[1]!.serviceDate).toBe('2026-09-02');
   });
 
   it('applies the pattern offset at a later stop', () => {
-    // Stop 'c' has pattern offset 9, so 374 + 9 = 383.
+    // Stop 'c': Tuesday's 1450 trip overrides offsets to [0, 3, 7], so
+    // 1450 + 7 - 1440 = 17. Wednesday's trip uses the pattern's 9: 374 + 9 = 383.
     const found = departuresAt(index, 'c', '2026-09-02', 0);
-    expect(found.map((d) => d.time)).toEqual([383]);
+    expect(found.map((d) => d.time)).toEqual([17, 383]);
+  });
+
+  it('includes post-midnight trips on ordinary consecutive weekdays', () => {
+    // The regression guard. Monday 2026-09-07 and Tuesday 2026-09-08 both run
+    // `weekday`, with no exception on either. An implementation that suppresses
+    // the previous service day whenever it also runs today loses the 00:10
+    // departure here while still passing the exception-day test below.
+    const found = departuresAt(index, 'a', '2026-09-08', 0);
+    expect(found.map((d) => d.time)).toEqual([10, 374]);
+    expect(found[0]!.serviceDate).toBe('2026-09-07');
   });
 
   it('filters out departures before the requested time', () => {
@@ -1051,9 +1065,12 @@ describe('departuresAt', () => {
   });
 
   it('honours the limit and returns results in time order', () => {
+    // Saturday 2026-09-05, which `weekday` lists in `added`, preceded by an
+    // ordinary Friday. The earliest departure is Friday's night trip at 00:10.
     const found = departuresAt(index, 'a', '2026-09-05', 0, 1);
     expect(found).toHaveLength(1);
-    expect(found[0]!.time).toBe(374);
+    expect(found[0]!.time).toBe(10);
+    expect(found[0]!.serviceDate).toBe('2026-09-04');
   });
 
   it('returns an empty array for an unknown stop', () => {
@@ -1165,7 +1182,14 @@ export function departuresAt(
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/departures.test.ts tests/formatMinutes.test.ts`
-Expected: `tests/departures.test.ts` 7 passing, `tests/formatMinutes.test.ts` 2 passing.
+Expected: `tests/departures.test.ts` 8 passing, `tests/formatMinutes.test.ts` 2 passing.
+
+These expectations were wrong in an earlier revision of this plan: they asserted that a query on
+2026-09-02 returns only `[374]`, overlooking that 2026-09-01 is an ordinary Tuesday running the
+same service, whose post-midnight trip lands at 00:10 on the 2nd. An implementer made those
+wrong tests pass by filtering out previous-day services that also run today, which silently
+deleted every night departure on ordinary days while still passing the exception-day test. The
+regression test above exists so that the same shortcut cannot pass again.
 
 Note the `time >= 1440` guard: a departure later than the queried date's midnight belongs to the *next* date's board, not this one. Without it the 1450 trip would appear both as "1450" today and "10" tomorrow.
 

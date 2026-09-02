@@ -46,10 +46,20 @@ Measured subset of the feed for routes touching Břeclav:
 | Routes | — | 20 |
 | Trips | 71 981 | 1 844 |
 | `stop_times` rows | 1 230 372 | 23 273 |
-| Stops | 10 938 | 380 |
+| Stops, platform level | 7 680 | 380 |
+| Stops, parent stations | 3 258 | 164 |
+| Patterns | — | 252 |
 
 The subset is small enough to ship as a single bundle, expected around 300 KB gzipped. No
 lazy loading, data tiling, or server component is needed.
+
+**The feed is platform-level.** Every `stop_times` row references a platform
+(`location_type=0`) which belongs to a parent station (`location_type=1`). Six distinct
+platform ids share one coordinate at Břeclav bus station. The converter therefore collapses
+every stop reference to its `parent_station` before doing anything else; without this the
+map draws overlapping duplicate markers and a stop's departures fragment across platforms.
+Collapsing takes the subset from 380 stops to 164. Platform-level detail is not retained —
+this map shows where a line goes, not which bay it leaves from.
 
 ## Network data format
 
@@ -95,10 +105,10 @@ public/data/
 Design decisions:
 
 **Run times live on the pattern, not the trip.** GTFS stores an absolute time per stop per
-trip — 23 273 rows for this subset. Nearly every trip on a pattern shares identical run
-times, so the offsets are hoisted to the pattern and each trip collapses to a single start
-integer. A trip with genuinely different run times carries its own `offsets` array, which
-overrides the pattern's.
+trip — 23 273 rows for this subset. The most common run-time vector is hoisted to the
+pattern, letting a trip that uses it collapse to a single start integer. A trip with
+different run times carries its own `offsets` array, which overrides the pattern's.
+Measured on the real feed, 1 150 trips take the hoisted vector and 694 carry an override.
 
 **Times are integer minutes since midnight**, not strings. GTFS legitimately emits values
 such as `25:10:00` for post-midnight departures; integers represent these directly with no
@@ -132,15 +142,27 @@ inputs and caches (never served), while `public/data/` holds the generated scena
 **Stage 1 — fetch and filter.** Download `gtfs.zip`, conditional on `Last-Modified`.
 `stop_times.txt` is 50 MB unzipped and is streamed, never held fully in memory. Two passes:
 
-1. Stops whose municipality (the substring before the first comma) is `Břeclav` → trips
-   touching those stops → the set of route ids.
-2. Every trip belonging to those routes is kept in full.
+1. Every stop reference is resolved to its `parent_station` (falling back to the stop's own
+   id when it has no parent). All later stages work exclusively in parent-station ids.
+2. Stations whose municipality (the substring before the first comma) is `Břeclav` → trips
+   touching those stations → the set of route ids.
+3. Every trip belonging to those routes is kept in full.
+
+A parent station inherits `zone` and `wheelchair` from its first child platform, since those
+attributes are recorded at platform level.
 
 The municipality match is a config value in `config/scope.json`, not a constant, so
 widening scope is a config edit.
 
-**Stage 2 — patterns.** Trips are grouped by `(route, direction, exact stop sequence)`. The
-group's modal run-time vector becomes the pattern `offsets`; deviating trips emit their own.
+**Stage 2 — patterns.** Trips are grouped by `(route, direction, exact stop sequence)` over
+parent-station ids, yielding 252 patterns averaging 13.7 stops. The group's modal run-time
+vector becomes the pattern `offsets`; deviating trips emit their own `offsets` array.
+
+Deviation is common rather than exceptional: 694 of 1 844 trips (38%) carry an override,
+drawn from 316 distinct vectors. The scheme still pays — the remaining 1 150 trips collapse
+to a single integer each — but the implementation must treat the override path as a normal
+case with its own tests, not as a rare fallback.
+
 `calendar.txt` and `calendar_dates.txt` fold into the `services` collection.
 
 **Stage 3 — geometry.** For each pattern, in priority order:

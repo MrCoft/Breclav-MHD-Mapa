@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { buildIndex } from '../src/data/buildIndex'
 import { buildPatternGeometry } from '../src/domain/patternGeometry'
 import { vehiclesAt } from '../src/domain/vehicles'
@@ -331,6 +331,43 @@ const scenarioF = buildScenario(
     },
     [equatorLineFeature('P-F', [0, 2000, 5000])],
 )
+
+// ---------------------------------------------------------------------------------------------
+// Fixture G: an offsets/geometry mismatch — a pattern whose trip offsets don't line up 1:1 with
+// its geometry's stop distances (a converter or geometry bug this project has hit before). It
+// must not render a vehicle, and must not throw, but it must warn rather than fail in silence.
+// ---------------------------------------------------------------------------------------------
+
+const patternG: Pattern = {
+    id: 'P-G',
+    line: 'L',
+    direction: 0,
+    headsign: 'G',
+    stops: ['g0', 'g1', 'g2'],
+    offsets: [0, 10, 20],
+}
+const tripG: Trip = { pattern: 'P-G', service: 'daily', start: 0 }
+const scenarioG = buildScenario(
+    {
+        stops: testStops(['g0', 'g1', 'g2']),
+        lines: [testLine('L')],
+        patterns: [patternG],
+        services: [dailyService],
+        trips: [tripG],
+    },
+    // Only two stop distances for a three-offset pattern — the mismatch.
+    [equatorLineFeature('P-G', [0, 1000])],
+)
+
+describe('vehiclesAt: offsets/geometry mismatch', () => {
+    it('warns once naming the pattern, and omits the vehicle rather than throwing', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        expect(() => vehiclesAt(scenarioG.index, scenarioG.geometries, '2026-06-15', 5)).not.toThrow()
+        expect(vehiclesAt(scenarioG.index, scenarioG.geometries, '2026-06-15', 5)).toEqual([])
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('P-G'))
+        warn.mockRestore()
+    })
+})
 
 describe('vehiclesAt: post-midnight', () => {
     it('is still running just after midnight, sourced from the previous (weekday) service day', () => {

@@ -48,15 +48,25 @@ const CASING_WIDTH: DataDrivenPropertyValueSpecification<number> = [
     10,
 ]
 
-const VEHICLE_RADIUS: DataDrivenPropertyValueSpecification<number> = ['interpolate', ['linear'], ['zoom'], 11, 5, 15, 9]
+// Sized well clear of stops-circle (2.5-5px across the same zoom range) — vehicles are the
+// moving focus of the map and must read as unmistakably vehicles, not dots, at the default zoom.
+const VEHICLE_RADIUS: DataDrivenPropertyValueSpecification<number> = [
+    'interpolate',
+    ['linear'],
+    ['zoom'],
+    11,
+    7,
+    15,
+    12,
+]
 const VEHICLE_TEXT_SIZE: DataDrivenPropertyValueSpecification<number> = [
     'interpolate',
     ['linear'],
     ['zoom'],
     11,
-    8,
+    9,
     15,
-    11,
+    13,
 ]
 
 /**
@@ -279,9 +289,9 @@ function installLayers(instance: MapLibreMap, scenario: Scenario): boolean {
             'text-field': ['get', 'lineName'],
             'text-font': VEHICLE_TEXT_FONT,
             'text-size': VEHICLE_TEXT_SIZE,
-            // Vehicles are few (67 at peak) and keep moving, so MapLibre's default collision
-            // avoidance would make labels flicker in and out as they jostle for space — always
-            // showing every line number is worth more here than tidy label placement.
+            // Vehicles are few (about 45-47 at peak) and keep moving, so MapLibre's default
+            // collision avoidance would make labels flicker in and out as they jostle for space —
+            // always showing every line number is worth more here than tidy label placement.
             'text-allow-overlap': true,
             'text-ignore-placement': true,
         },

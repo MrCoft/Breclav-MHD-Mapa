@@ -23,17 +23,17 @@ const SATELLITE_STYLE: StyleSpecification = {
 }
 
 /**
- * Basemap choices for the switcher, decision 27. All keyless — Decision 1 puts the bundle on
- * GitHub Pages, where a keyed tile provider's key would be public. Terrain/hillshade are
- * deliberately not offered: Břeclav sits in the flat Dyje floodplain, so a DEM would show
- * close to nothing.
+ * Basemap choices for the switcher, decision 27. Keyless — Decision 1 puts the bundle on GitHub
+ * Pages, where a keyed tile provider's key would be public. Terrain/hillshade are deliberately
+ * not offered: Břeclav sits in the flat Dyje floodplain, so a DEM would show close to nothing.
+ *
+ * Two choices: a drawn map and satellite imagery — the familiar Google Maps pairing. "Mapa" is
+ * `BASEMAP_STYLE` (see style.ts), the same constant the map boots into, so the switcher's first
+ * entry and the app's default can never drift apart.
  */
 export const BASEMAPS: BasemapOption[] = [
-    { id: 'positron', label: 'Světlá', style: BASEMAP_STYLE },
-    { id: 'liberty', label: 'Podrobná', style: 'https://tiles.openfreemap.org/styles/liberty' },
-    { id: 'bright', label: 'Výrazná', style: 'https://tiles.openfreemap.org/styles/bright' },
-    { id: 'dark', label: 'Tmavá', style: 'https://tiles.openfreemap.org/styles/dark' },
+    { id: 'bright', label: 'Mapa', style: BASEMAP_STYLE },
     { id: 'satellite', label: 'Satelitní', style: SATELLITE_STYLE },
 ]
 
-export const DEFAULT_BASEMAP_ID = 'positron'
+export const DEFAULT_BASEMAP_ID = 'bright'

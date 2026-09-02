@@ -95,7 +95,20 @@ function vehicleForTrip(
     const offsets = trip.offsets ?? pattern.offsets
     const first = offsets[0]
     const last = offsets[offsets.length - 1]
-    if (first === undefined || last === undefined || offsets.length !== geometry.stopDistances.length) {
+    if (offsets.length !== geometry.stopDistances.length) {
+        // Benign to the map (the vehicle just doesn't render), but silent otherwise — this
+        // project has twice been bitten by a converter or geometry mismatch that only ever
+        // showed up as "something doesn't render," with nothing to point at why. Dev-only: this
+        // is a data-pipeline signal, not something a production visitor's console needs to carry.
+        if (import.meta.env.DEV) {
+            console.warn(
+                `vehiclesAt: pattern "${pattern.id}" has ${offsets.length} offsets but geometry with ` +
+                    `${geometry.stopDistances.length} stop distances — skipping its vehicles`,
+            )
+        }
+        return null
+    }
+    if (first === undefined || last === undefined) {
         return null
     }
 

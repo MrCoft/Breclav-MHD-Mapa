@@ -33,7 +33,10 @@ export const StopPanel = () => {
     }
 
     return (
-        <div className="z-10 m-3 flex max-h-[70vh] w-auto min-w-[260px] flex-col overflow-y-auto rounded-md border border-slate-200 bg-white p-3 shadow-lg sm:absolute sm:top-3 sm:right-3 sm:m-0 sm:max-h-[calc(100%-1.5rem)] sm:w-[320px]">
+        // Below `md`: a true bottom sheet — full width, capped at 60% of the real viewport
+        // (`dvh`, never `vh` — see App's own note on why), scrolling its own content rather than
+        // the page. `md:` restores the original floating desktop panel exactly as it was.
+        <div className="z-10 flex min-h-0 max-h-[60dvh] w-full flex-col overflow-y-auto rounded-t-xl border border-slate-200 bg-white p-3 shadow-lg md:absolute md:top-3 md:right-3 md:max-h-[calc(100%-1.5rem)] md:w-[320px] md:rounded-md">
             <div className="flex items-start justify-between gap-2">
                 <h2 className="text-base font-semibold">{stop.name}</h2>
                 <button

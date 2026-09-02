@@ -26,4 +26,11 @@ describe('streamCsv', () => {
             { stop_id: 'U2', stop_name: 'Poštorná' },
         ])
     })
+
+    it('rejects when the source file does not exist, instead of crashing the process', async () => {
+        const dir = mkdtempSync(join(tmpdir(), 'gtfs-'))
+        const missing = join(dir, 'does-not-exist.txt')
+
+        await expect(streamCsv(missing, () => {})).rejects.toThrow()
+    })
 })

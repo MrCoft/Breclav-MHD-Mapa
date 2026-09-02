@@ -158,3 +158,22 @@ would make a bus visibly cut corners it should round.
 
 **Decide:** simplify at build time with a tolerance chosen by looking at the result, request
 `overview=simplified`, or accept 1 MB. Worth measuring first-paint on a phone before choosing.
+
+## 15. Comparison scope and missing stops — decided 2026-09-02
+
+The user asked whether the toggle between current and proposed schedules is still coming. It is;
+the format, the store, the URL parameter and `scenarios.json` already support it, and only the
+proposal data is missing. Two sub-questions that were open are now decided, absent a contrary
+instruction:
+
+**Regional exceptions (was question 7).** Comparison mode filters to city lines 561–569, per the
+user's earlier answer, **plus 571 and 574 as named exceptions**. The proposal explicitly cancels
+564 and replaces it with 574, and has 571 stop at all intermediate stops. A strict city-lines
+filter would show 564 vanishing with nothing to indicate 574 absorbs it, which misrepresents what
+is being proposed.
+
+**Stops that do not exist yet (was question 10).** The proposal asks for a bidirectional stop on
+Na Zahradách, a Mánesova stop in the opposite direction, and an alighting stop on J. Skácela.
+These have no GTFS parent station and no coordinates. They will be hand-placed from the PDF's
+descriptions against OpenStreetMap, recorded in a small overrides file so each placement is
+auditable rather than silently guessed.

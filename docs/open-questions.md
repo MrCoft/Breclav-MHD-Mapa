@@ -141,3 +141,20 @@ is never served. But most of those relations are irrelevant to this project.
 **Decide:** filter the response to relations whose `ref` matches a line in scope before writing
 the cache — an order of magnitude smaller, at the cost of making the cache scope-dependent — or
 accept the size.
+
+## 14. Routed geometry tripled the map payload
+
+Adding the routing tier took `geometry.geojson` from 3.5 MB to 8.1 MB raw, and from 0.40 MB to
+**1.07 MB gzipped**. The cause is fidelity: OSRM is queried with `overview=full`, which returns
+every shape point, giving a mean of 675 vertices per pattern against roughly 276 before.
+
+That detail is invisible at the zoom levels this map is used at. A Douglas-Peucker
+simplification at build time, with a tolerance of a few metres, would likely remove most of it
+with no perceptible change to the drawn line. OSRM also offers `overview=simplified`, which is
+cheaper still but gives away control over the tolerance.
+
+The counter-argument is that vehicle animation interpolates along these lines, so oversimplifying
+would make a bus visibly cut corners it should round.
+
+**Decide:** simplify at build time with a tolerance chosen by looking at the result, request
+`overview=simplified`, or accept 1 MB. Worth measuring first-paint on a phone before choosing.

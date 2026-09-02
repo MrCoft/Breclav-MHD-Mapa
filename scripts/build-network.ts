@@ -178,7 +178,8 @@ export function assertSane(net: Network, scope: ScopeConfig): void {
     }
 }
 
-function sortNetwork(net: Network): Network {
+/** Deterministic ordering for a committed network.json — also reused by build-proposal.ts. */
+export function sortNetwork(net: Network): Network {
     return {
         stops: [...net.stops].sort((a, b) => a.id.localeCompare(b.id)),
         lines: [...net.lines].sort((a, b) => a.id.localeCompare(b.id, 'cs', { numeric: true })),

@@ -16,6 +16,7 @@
         "dev": "vite",
         "build": "tsc -b && vite build",
         "build:network": "tsx scripts/build-network.ts",
+        "build:proposal": "tsx scripts/build-proposal.ts",
         "preview": "vite preview",
         "lint": "eslint .",
         "storybook": "storybook dev -p 6006",

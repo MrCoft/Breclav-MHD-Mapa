@@ -78,6 +78,12 @@ export interface Meta {
     generatedAt: string
     converterVersion: string
     geometrySources: { osm: number; routed: number; straight: number; override: number }
+    /**
+     * Lines carried over from another scenario unchanged rather than built from this
+     * scenario's own source — e.g. the proposed network's regional lines 571 and 574, which
+     * the proposal describes changing but supplies no timetable for.
+     */
+    inheritedLines?: { lines: string[]; note: string }
 }
 
 export interface ScenarioRef {

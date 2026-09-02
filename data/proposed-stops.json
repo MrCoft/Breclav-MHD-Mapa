@@ -1,0 +1,23 @@
+[
+    {
+        "id": "breclav-na-zahradach",
+        "name": "Břeclav, Na Zahradách",
+        "lat": 48.759892,
+        "lon": 16.892155,
+        "note": "PDF page 2: \"zřízení obousměrné zastávky v ulici Na Zahradách, kudy jsou vedeny nově vybrané spoje linky 566 a 569\" (a bidirectional stop on Na Zahradách street, through which newly-selected services of line 566 and 569 are routed). Located via OpenStreetMap/Nominatim: way 15735288 'Na Zahradách', a tertiary road running between Autobusové nádraží (48.754552, 16.893289) and Stará Břeclav (48.767-48.780, 16.886-16.903) — the exact corridor PDF page 1 describes ('566 a 569 prodlouženy ulicí od Autobusového nádraží ulicí Na Zahradách do Staré Břeclavi'). Coordinates are that way's own centroid, since neither source gives a more specific position along it. UNUSED in the imported network: despite this narrative, none of the 8 timetable sheets in navrh_2026_new2.xlsx contains any stop row referencing this street (searched every distinct stop name in the workbook, by hand and by fuzzy match) — both lines' proposed routes run their ordinary alignment (566 via Lanžhotská/Gumotex/BORS; 569 via Lidická/Mánesova/kulturní dům) with no shortcut variant. This stop is recorded here, placed as best as the sources allow, so the choice is auditable — but it is not inserted into any pattern. See the task report's spreadsheet/PDF disagreement section."
+    },
+    {
+        "id": "breclav-stara-breclav-manesova-2",
+        "name": "Břeclav, Stará Břeclav, Mánesova",
+        "lat": 48.772506,
+        "lon": 16.887847,
+        "note": "PDF page 2: \"zřízení zastávky Mánesova také v opačném směru\" (a Mánesova stop also in the opposite direction). The existing stop breclav-stara-breclav-manesova (48.772417, 16.887833) is today used only by line 565's return direction, running kulturní dům -> Mánesova -> Lidická (south-east along the street) — i.e. only one physical pole exists. Lines 565, 566 and 569 each use the identically-spelled name \"Mánesova\" for a row in *both* of their directions; line 565's sheet lays out the full corridor (Sovadinova - Lidická - Skopalíkova - Vinohradní - Mánesova - kulturní dům - u parku - ...), and whichever row's neighbouring stop sits on the kulturní-dům side (the direction opposite the existing pole's own kulturní dům -> Mánesova -> Lidická) needs this second pole, which does not exist today — see resolveManesova in scripts/proposal/stopMatch.ts for the full rule and every occurrence it was checked against. Placed by taking OpenStreetMap way 25823599 ('Mánesova', a tertiary road) and offsetting the existing stop 10m along that way's local perpendicular, toward the side that puts it on the right-hand side of a bus travelling away from Lidická (Czech right-hand traffic) — i.e. roughly opposite the existing pole across the street."
+    },
+    {
+        "id": "breclav-postorna-j-skacela-1-maje",
+        "name": "Břeclav, Poštorná, J. Skácela / 1. máje",
+        "lat": 48.753123,
+        "lon": 16.869078,
+        "note": "PDF page 2: \"zřízení zastávky pro výstup na J. Skácela před domem 151/3 umožní hladký přestup z 563 na spoje do města na zastávce Poštorná, kostel\" (an alighting-only stop on J. Skácela in front of house 151/3, for an easy transfer from 563 to services into town at Poštorná, kostel). The workbook's 563 sheet (return direction) names it \"Jana Skácela/1. Máje Výstup\" ('výstup' = alighting), served by only 14 of that direction's 31 trips — a short-turn variant, matching the PDF's own \"vybrané spoje\" (selected services) framing. Located precisely via OpenStreetMap/Overpass: the RUIAN (Czech official address registry) address point for house 151/3 on J. Skácela (a primary road, ref 55, the Poštorná-Vienna border road) — node 2299901433, addr:housenumber 151/3, addr:street 'J. Skácela'. Used directly as the stop's coordinate; no further offset applied, since the PDF's own description is already this precise."
+    }
+]

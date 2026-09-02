@@ -4,10 +4,11 @@ import { validateNetwork } from '../src/data/validate'
 import { assignLineIds, buildLines, buildPatternsAndTrips, buildServices, parseGtfsTime } from './gtfs/convert'
 import { downloadFeed, extractEntries, loadScope, streamCsv } from './gtfs/read'
 import { assignStopIds, buildParentMap, municipalityOf } from './gtfs/scope'
-import { matchPatternGeometry } from './osm/match'
+import { cumulativeDistances, matchPatternGeometry, remeasureSimplified, straightLine } from './osm/match'
 import { fetchRoutes } from './osm/overpass'
 import { buildRailGraph, fetchRailways } from './osm/railGraph'
 import { routePattern } from './osm/routePattern'
+import { simplifyIndices } from './osm/simplify'
 import { relationToLine } from './osm/stitch'
 import type { PatternRouter, Position, RelationLine } from './osm/match'
 import type {
@@ -25,6 +26,65 @@ import type { OsmNode, OsmRelation, OsmWay } from './osm/overpass'
 import type { RailGraph } from './osm/railGraph'
 
 export const CONVERTER_VERSION = '1.0.0'
+
+export interface GeometryFeature {
+    type: 'Feature'
+    properties: {
+        patternId: string
+        lineId: string
+        lineName: string
+        mode: string
+        color: string
+        source: string
+        stopDistances: number[]
+    }
+    geometry: { type: 'LineString'; coordinates: Position[] }
+}
+
+// How far a pattern's final stopDistance may sit from its simplified line's own length.
+// Simplification legitimately shortens a line by cutting corners — observed up to ~11m even on
+// this dataset's longest route (115km of rail) — so this must clear that, but a genuine bug
+// (a stop re-projected onto the wrong part of a self-proximate line) misses by hundreds of
+// metres at minimum, so 20m keeps a wide margin on both sides.
+const GEOMETRY_LENGTH_TOLERANCE_METRES = 20
+
+/**
+ * Confirms `stopDistances` was actually recomputed against the geometry that ships, not left
+ * over from before simplification: every pattern must start at 0, increase monotonically (a
+ * later stop is never closer to the start than an earlier one), and its last stop must land
+ * within a few metres of the polyline's own total length — the line was built to end at that
+ * stop, so a bigger gap means the stop projected onto the wrong part of a simplified line.
+ */
+export function assertGeometrySane(features: GeometryFeature[]): void {
+    const problems: string[] = []
+
+    for (const feature of features) {
+        const { patternId, stopDistances } = feature.properties
+        const coords = feature.geometry.coordinates
+        const lineLength = cumulativeDistances(coords).at(-1) ?? 0
+
+        if (stopDistances[0] !== 0) {
+            problems.push(`${patternId}: stopDistances[0] = ${stopDistances[0]}, expected 0`)
+        }
+        for (let i = 1; i < stopDistances.length; i += 1) {
+            if (stopDistances[i]! < stopDistances[i - 1]!) {
+                problems.push(
+                    `${patternId}: stopDistances not monotonic at index ${i} (${stopDistances[i - 1]} -> ${stopDistances[i]})`,
+                )
+            }
+        }
+        const last = stopDistances.at(-1)
+        if (last !== undefined && Math.abs(last - lineLength) > GEOMETRY_LENGTH_TOLERANCE_METRES) {
+            problems.push(
+                `${patternId}: final stopDistance ${last.toFixed(1)}m is ${Math.abs(last - lineLength).toFixed(1)}m from the line's own length ${lineLength.toFixed(1)}m`,
+            )
+        }
+    }
+
+    if (problems.length > 0) {
+        throw new Error(`Geometry sanity check failed:\n${problems.join('\n')}`)
+    }
+}
 
 export function assertSane(net: Network, scope: ScopeConfig): void {
     const problems: string[] = []
@@ -245,19 +305,7 @@ async function main(): Promise<void> {
 
     const stopById = new Map(network.stops.map((s) => [s.id, s]))
     const counts = { osm: 0, routed: 0, straight: 0, override: 0 }
-    const features: {
-        type: 'Feature'
-        properties: {
-            patternId: string
-            lineId: string
-            lineName: string
-            mode: string
-            color: string
-            source: string
-            stopDistances: number[]
-        }
-        geometry: { type: 'LineString'; coordinates: Position[] }
-    }[] = []
+    const features: GeometryFeature[] = []
     for (const pattern of network.patterns) {
         const overridePath = join('data/geometry-overrides', `${pattern.id}.geojson`)
         let override: Position[] | undefined
@@ -270,7 +318,11 @@ async function main(): Promise<void> {
         }
 
         const line = network.lines.find((l) => l.id === pattern.line)!
-        const { coordinates, stopDistances, source } = await matchPatternGeometry({
+        const {
+            coordinates,
+            stopDistances: originalStopDistances,
+            source,
+        } = await matchPatternGeometry({
             pattern,
             stops: stopById,
             relations: relationLines,
@@ -278,6 +330,26 @@ async function main(): Promise<void> {
             router,
         })
         counts[source] += 1
+
+        // Simplify only after the geometry tier has resolved, then recompute stopDistances
+        // from scratch by re-projecting each stop onto the simplified line — see
+        // remeasureSimplified's own doc comment for why that re-projection has to be windowed
+        // by the tier's original (dense-line) distances rather than searched fresh and
+        // unguided. Scaling the old distances proportionally, the obvious alternative, would be
+        // wrong wherever simplification removes vertices unevenly along the route; the original
+        // values are used only to place the search, never as the answer.
+        const keptIndices = simplifyIndices(coordinates, scope.geometrySimplifyMetres)
+        const simplified = keptIndices.map((i) => coordinates[i]!)
+        const stopCoords = straightLine(pattern, stopById)
+        const { along } = remeasureSimplified({
+            originalCoordinates: coordinates,
+            originalStopDistances,
+            simplifiedCoordinates: simplified,
+            keptIndices,
+            stopCoords,
+        })
+        const origin = along[0] ?? 0
+        const stopDistances = along.map((a) => Math.max(0, a - origin))
 
         features.push({
             type: 'Feature' as const,
@@ -290,9 +362,11 @@ async function main(): Promise<void> {
                 source,
                 stopDistances,
             },
-            geometry: { type: 'LineString' as const, coordinates },
+            geometry: { type: 'LineString' as const, coordinates: simplified },
         })
     }
+
+    assertGeometrySane(features)
 
     const meta: Meta = {
         feedDate,
@@ -303,9 +377,14 @@ async function main(): Promise<void> {
 
     mkdirSync(outDir, { recursive: true })
     writeFileSync(join(outDir, 'network.json'), `${JSON.stringify(network, null, 1)}\n`, 'utf8')
+    // Unindented, unlike the other two files: pretty-printing puts every coordinate number on
+    // its own line, which was already too sparse to meaningfully review or diff for a file this
+    // size — and indentation alone was costing roughly a third of gzip's achievable compression
+    // on exactly the payload this converter exists to shrink. See task 23's report for the
+    // measured effect.
     writeFileSync(
         join(outDir, 'geometry.geojson'),
-        `${JSON.stringify({ type: 'FeatureCollection', features }, null, 1)}\n`,
+        `${JSON.stringify({ type: 'FeatureCollection', features })}\n`,
         'utf8',
     )
     writeFileSync(join(outDir, 'meta.json'), `${JSON.stringify(meta, null, 2)}\n`, 'utf8')

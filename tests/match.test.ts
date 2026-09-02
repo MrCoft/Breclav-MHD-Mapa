@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { cumulativeDistances, matchPatternGeometry, straightLine, trimToStops } from '../scripts/osm/match'
+import {
+    cumulativeDistances,
+    matchPatternGeometry,
+    remeasureSimplified,
+    straightLine,
+    trimToStops,
+} from '../scripts/osm/match'
 import type { Pattern, Stop } from '../src/types/network'
 import type { PatternRouter } from '../scripts/osm/match'
 
@@ -265,5 +271,70 @@ describe('matchPatternGeometry tier order', () => {
     it('falls back to a straight line when no router is injected at all', async () => {
         const result = await matchPatternGeometry({ pattern, stops: stopById, relations: [] })
         expect(result.source).toBe('straight')
+    })
+})
+
+describe('remeasureSimplified', () => {
+    // A line that runs north along longitude 16.8 from stop0, then loops back to pass within
+    // ~2m of stop0 again (idx5) before finally heading off to stop1 far to the north (idx6).
+    // Path length ("cumulative") only ever increases, so idx5 sits ~887m into the route despite
+    // being almost on top of stop0 geographically — exactly the shape a bus terminus loop or an
+    // out-and-back leg produces in the real network.
+    const originalCoordinates: [number, number][] = [
+        [16.8, 48.7], // idx0 — stop0's own position
+        [16.8, 48.701], // idx1
+        [16.8, 48.702], // idx2
+        [16.8, 48.703], // idx3
+        [16.8, 48.704], // idx4
+        [16.8, 48.70003], // idx5 — the loop-back: ~2m from stop0, ~887m into the path
+        [16.8, 48.8], // idx6 — stop1's own position
+    ]
+    // Simplification kept idx0, idx2, idx4, idx5 and idx6 — including the loop-back point,
+    // exactly the case that makes an unrestricted nearest-point search dangerous.
+    const keptIndices = [0, 2, 4, 5, 6]
+    const simplifiedCoordinates = keptIndices.map((i) => originalCoordinates[i]!)
+    const stopCoords: [number, number][] = [
+        [16.8, 48.70005], // stop0, 5.6m north of idx0 — closer to the idx5 decoy (~2.2m) than to idx0
+        [16.8, 48.8], // stop1, exactly at idx6
+    ]
+
+    it('anchors each stop near where the dense original line placed it, not wherever is geometrically nearest', () => {
+        // Trusted distances from the tier that measured the ORIGINAL (dense) line: stop0 at its
+        // own start (0), stop1 at the line's full length. Neither was computed by re-deriving
+        // against the simplified line — that is exactly what remeasureSimplified must not do.
+        const originalStopDistances = [0, cumulativeDistances(originalCoordinates).at(-1)!]
+
+        const { along, maxOffMetres } = remeasureSimplified({
+            originalCoordinates,
+            originalStopDistances,
+            simplifiedCoordinates,
+            keptIndices,
+            stopCoords,
+        })
+
+        expect(along).toHaveLength(2)
+        // Correct: anchored to idx0's own segment, ~5.6m in. Wrong (what an unrestricted
+        // nearest-point search would return instead): snapped onto the idx5 decoy, ~887m in.
+        expect(along[0]!).toBeCloseTo(5.6, 0)
+        expect(along[1]!).toBeCloseTo(cumulativeDistances(simplifiedCoordinates).at(-1)!, 0)
+        expect(maxOffMetres).toBeLessThan(10)
+    })
+
+    it('never returns a distance smaller than the previous stop', () => {
+        // Both stops anchored to the same point — a degenerate but legal input (two stops at
+        // the same physical stand) — must not produce a pair that reads as moving backwards.
+        const originalStopDistances = [0, 0]
+        const twoStopCoords: [number, number][] = [
+            [16.8, 48.70005],
+            [16.8, 48.70005],
+        ]
+        const { along } = remeasureSimplified({
+            originalCoordinates,
+            originalStopDistances,
+            simplifiedCoordinates,
+            keptIndices,
+            stopCoords: twoStopCoords,
+        })
+        expect(along[1]!).toBeGreaterThanOrEqual(along[0]!)
     })
 })

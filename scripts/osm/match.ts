@@ -55,6 +55,86 @@ export function measureAlong(line: Position[], stopCoords: Position[]): { along:
 }
 
 /**
+ * Recomputes where each stop lands on a *simplified* version of a line already trusted to be
+ * the correct, ordered path — for stop distances that must survive `simplifyIndices` shrinking
+ * the line out from under them.
+ *
+ * The obvious approach is `measureAlong(simplifiedCoordinates, stopCoords)`: a fresh whole-line
+ * nearest-point search, same as everywhere else in this file. It is wrong here specifically. A
+ * route that revisits the same ground — a terminus loop, an out-and-back leg, two carriageways
+ * a few metres apart — can, on a line reduced to a few dozen vertices, put the geometrically
+ * nearest point on an entirely different pass over that ground than the one the stop actually
+ * belongs to; the denser the line, the more clearly the true match wins, and simplification
+ * removes exactly that margin. `originalStopDistances` — the tier's already-correct distances
+ * against the dense pre-simplification line, wherever those came from (a relation's own nearest
+ * point, or OSRM's real routed leg lengths) — is trusted precisely because it was measured with
+ * that margin intact.
+ *
+ * So each original distance is used only to place a search *window*: the pair of simplified
+ * vertices that `simplifyIndices` kept on either side of wherever that distance falls among the
+ * original vertices. Douglas-Peucker guarantees every point of the original path between two
+ * kept vertices lies within `toleranceMetres` of the straight segment joining them, so the
+ * stop's true position is guaranteed to be near that specific segment — and nowhere near a
+ * distant, unrelated one. The projection performed inside the window is a genuine fresh
+ * `nearestPointOnLine`, not the old value scaled or reused; the window only rules out a distant
+ * false match, it never supplies the answer itself.
+ */
+export function remeasureSimplified(args: {
+    originalCoordinates: Position[]
+    originalStopDistances: number[]
+    simplifiedCoordinates: Position[]
+    keptIndices: number[]
+    stopCoords: Position[]
+}): { along: number[]; maxOffMetres: number } {
+    const { originalCoordinates, originalStopDistances, simplifiedCoordinates, keptIndices, stopCoords } = args
+    const origCumulative = cumulativeDistances(originalCoordinates)
+    const keptCumulative = keptIndices.map((i) => origCumulative[i]!)
+    const newCumulative = cumulativeDistances(simplifiedCoordinates)
+    const lastKept = keptCumulative.length - 1
+
+    const along: number[] = []
+    let maxOffMetres = 0
+    let previous = 0
+    let lo = 0
+
+    for (let i = 0; i < stopCoords.length; i += 1) {
+        const target = stopCoords[i]!
+        const anchor = originalStopDistances[i] ?? 0
+        while (lo < lastKept - 1 && keptCumulative[lo + 1]! < anchor) {
+            lo += 1
+        }
+
+        // One extra kept vertex of padding on each side, as slack for floating-point noise
+        // between the anchor's own measurement and this file's distance conventions — not
+        // enough slack to reach a different pass over the same ground (see the doc comment).
+        const windowStart = Math.max(0, lo - 1)
+        const windowEnd = Math.min(simplifiedCoordinates.length - 1, lo + 2)
+        const window = simplifiedCoordinates.slice(windowStart, windowEnd + 1)
+
+        let atMetres: number
+        let offMetres: number
+        if (window.length < 2) {
+            const only = simplifiedCoordinates[windowStart] ?? target
+            atMetres = newCumulative[windowStart] ?? 0
+            offMetres = distance(point(target), point(only), { units: 'meters' })
+        } else {
+            const snapped = nearestPointOnLine(lineString(window), point(target), { units: 'meters' })
+            atMetres = newCumulative[windowStart]! + snapped.properties.totalDistance
+            offMetres = snapped.properties.pointDistance
+        }
+
+        // A safety floor, not a correction: two stops can legitimately share a short window,
+        // where the raw projections could otherwise tie or drift a hair backwards.
+        const clamped = Math.max(atMetres, previous)
+        along.push(clamped)
+        previous = clamped
+        maxOffMetres = Math.max(maxOffMetres, offMetres)
+    }
+
+    return { along, maxOffMetres }
+}
+
+/**
  * Cuts `line` down to the span the stops actually traverse.
  *
  * Returns null when the stops are too far from the line to be on it, or when

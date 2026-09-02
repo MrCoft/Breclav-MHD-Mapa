@@ -12,6 +12,8 @@ export interface ScopeConfig {
     overpassUrl: string
     osmNetwork: string
     expectedRoutes: { min: number; max: number }
+    /** Douglas-Peucker tolerance, in metres, applied to each pattern's line before it ships. */
+    geometrySimplifyMetres: number
 }
 
 export function loadScope(path = 'config/scope.json'): ScopeConfig {

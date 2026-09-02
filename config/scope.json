@@ -4,5 +4,6 @@
     "bbox": { "minLat": 48.55, "minLon": 15.95, "maxLat": 49.35, "maxLon": 17.65 },
     "overpassUrl": "https://overpass-api.de/api/interpreter",
     "osmNetwork": "IDS JMK",
-    "expectedRoutes": { "min": 15, "max": 30 }
+    "expectedRoutes": { "min": 15, "max": 30 },
+    "geometrySimplifyMetres": 2
 }

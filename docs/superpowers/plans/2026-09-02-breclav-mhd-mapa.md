@@ -2091,12 +2091,22 @@ export interface OsmResponse {
   elements: OsmElement[];
 }
 
+/**
+ * Matches `network` and `network:short` as a union. Real IDS JMK relations around Breclav
+ * carry the long Czech name on `network` and only the abbreviation on `network:short`, so
+ * querying `network` alone matched zero of 252 patterns against geometry that exists.
+ * Widening the tag filter does not widen what is accepted: matchPatternGeometry still
+ * demands an exact `ref` match plus a 250 m proximity and monotonicity check.
+ */
 export function buildQuery(scope: ScopeConfig): string {
   const { minLat, minLon, maxLat, maxLon } = scope.bbox;
   const bbox = `${minLat},${minLon},${maxLat},${maxLon}`;
   return [
     '[out:json][timeout:300];',
-    `relation["type"="route"]["network"~"${scope.osmNetwork}"](${bbox});`,
+    '(',
+    `  relation["type"="route"]["network"~"${scope.osmNetwork}"](${bbox});`,
+    `  relation["type"="route"]["network:short"~"${scope.osmNetwork}"](${bbox});`,
+    ');',
     'out body;',
     '>;',
     'out skel qt;',
@@ -2121,7 +2131,11 @@ export async function fetchRoutes(
 
   const res = await fetch(scope.overpassUrl, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      // Overpass rejects a request with no User-Agent outright, with HTTP 406.
+      'User-Agent': 'Breclav-MHD-Mapa/1.0 (https://github.com/MrCoft/Breclav-MHD-Mapa)',
+    },
     body: new URLSearchParams({ data: buildQuery(scope) }),
   });
   if (!res.ok) {

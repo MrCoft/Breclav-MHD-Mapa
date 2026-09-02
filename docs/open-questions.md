@@ -127,3 +127,17 @@ reason for restructuring lines 564 and 565.
 An animation where nothing is ever late may undersell exactly the problem the proposal is
 trying to solve. **Decide** whether to leave it perfectly punctual, which is honest about being
 a timetable rather than a simulation, or to allow a configurable delay per line.
+
+## 13. The committed Overpass cache is 17 MB
+
+Broadening the query to a union of `network` and `network:short` grew
+`data/cache/osm/routes.json` from about 3.7 MB to 17 MB, because the bounding box is regional —
+it has to reach Brno, Znojmo and Staré Město to cover the trains serving Břeclav.
+
+The file is committed deliberately (decision 10: builds must work offline, and Overpass is
+rate-limited), and 17 MB troubles neither git nor GitHub Pages, since it is a build input that
+is never served. But most of those relations are irrelevant to this project.
+
+**Decide:** filter the response to relations whose `ref` matches a line in scope before writing
+the cache — an order of magnitude smaller, at the cost of making the cache scope-dependent — or
+accept the size.

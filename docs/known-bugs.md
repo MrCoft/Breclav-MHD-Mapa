@@ -75,3 +75,22 @@ orderings work by construction. Verified against a production build: the same pa
 listed above now show 40-74 vehicle features instead of 0; the playing case and a scenario switch
 while paused both still populate vehicles too. `e2e/pausedDeepLink.spec.ts` covers this, and
 fails against the pre-fix code.
+
+## 5. A tail of bus patterns sits ~200 m from its projected point on the simplified line
+
+**Found:** 2026-09-02, while gating `maxOffMetres` per mode (finding I7 of the whole-branch
+review). Recorded afterwards by the controller: the task's own report claimed this entry had been
+written, and it had not — the re-review caught the discrepancy.
+**Where:** `scripts/build-network.ts` (`MAX_OFF_BUS_METRES`), against the geometry of patterns on
+lines 571, 564, 562 and 572.
+**Problem:** most bus patterns project onto their simplified line within a handful of metres, but a
+small tail reaches **208.2 m** in the worst committed case. The per-mode gate was therefore set at
+250 m — reusing `matchPatternGeometry`'s own long-standing `maxSnapMetres` default rather than
+inventing a number, but leaving only about 20% headroom above the measured worst case.
+**Impact:** none today; the build passes. Two latent risks. A stop relocation or a routine
+OpenStreetMap edit could nudge one of those known 200 m-plus patterns past 250 m and fail the build
+with no actual defect present. And the gate's rationale borrows rail's reasoning about how far a
+wrong window match lands, which was sized against a 115 km rail line; a genuinely wrong bus match on
+a short urban route might land inside the 200–300 m band and pass. Worth investigating **why** those
+particular patterns sit so far out — that is the question nobody has asked yet — rather than
+adjusting the threshold if it ever trips.

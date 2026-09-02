@@ -25,8 +25,6 @@ describe('buildQuery', () => {
     })
 
     it('matches both network and network:short tags in a union', () => {
-        const query = buildQuery(scope)
-
         // Both tag filters should be present
         expect(query).toContain('"network"~"IDS JMK"')
         expect(query).toContain('"network:short"~"IDS JMK"')
@@ -83,6 +81,10 @@ describe('fetchRoutes', () => {
             expect(mockFetch).toHaveBeenCalledOnce()
 
             const callArgs = mockFetch.mock.calls[0]
+            if (!callArgs) {
+                throw new Error('Expected fetch to be called')
+            }
+
             const init = callArgs[1] as Record<string, any>
 
             expect(init.headers).toBeDefined()

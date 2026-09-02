@@ -110,7 +110,13 @@ export const App = () => {
         // `dvh`, not `vh`: on mobile, `100vh` is taller than the visible viewport (it ignores the
         // browser chrome's address bar), which would push ClockControls — anchored to the bottom
         // of the map area below — off-screen.
-        <div className="grid h-dvh grid-rows-[auto_1fr_auto]">
+        //
+        // Two row templates, because the first child is `md:hidden` and a `display: none` element
+        // is not a grid item at all. With three rows declared but only two items placed at `md`,
+        // the main row silently took `auto` (collapsing to the sidebar's content height) and the
+        // footer took the `1fr` — most visible on the proposed scenario, whose shorter line list
+        // left the footer occupying half the screen.
+        <div className="grid h-dvh grid-rows-[auto_1fr_auto] md:grid-rows-[1fr_auto]">
             {/* Below `md`, the sidebar (further down) is hidden and its line browser instead
                 lives in this drawer, opened from a compact top bar. At `md` and up this whole row
                 collapses to nothing (`md:hidden`), leaving the desktop layout exactly as before. */}

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { loadScenario } from '../src/data/loadScenario'
+import { listScenarios, loadScenario } from '../src/data/loadScenario'
 import { tinyNetwork } from './fixtures/tinyNetwork'
 
 const meta = {
@@ -47,5 +47,19 @@ describe('loadScenario', () => {
                 fakeFetch({ 'network.json': broken, 'meta.json': meta, 'geometry.geojson': geometry }),
             ),
         ).rejects.toThrow(/ghost/)
+    })
+})
+
+describe('listScenarios', () => {
+    it('fetches and returns the scenario list', async () => {
+        const scenarios = [
+            { id: 'current', label: 'Současný stav' },
+            { id: 'proposed', label: 'Návrh 2026' },
+        ]
+        await expect(listScenarios(fakeFetch({ 'scenarios.json': scenarios }))).resolves.toEqual(scenarios)
+    })
+
+    it('names the missing file in the error', async () => {
+        await expect(listScenarios(fakeFetch({}))).rejects.toThrow(/scenarios\.json/)
     })
 })

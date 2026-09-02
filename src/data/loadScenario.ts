@@ -3,7 +3,7 @@ import { buildIndex } from './buildIndex'
 import { validateNetwork } from './validate'
 import type { FeatureCollection, LineString } from 'geojson'
 import type { NetworkIndex } from './buildIndex'
-import type { Meta, Network } from '../types/network'
+import type { Meta, Network, ScenarioRef } from '../types/network'
 
 export interface PatternProperties {
     patternId: string
@@ -56,6 +56,11 @@ function withMappedColors(
             return { ...feature, properties: { ...feature.properties, color, casingColor: casingColor(color) } }
         }),
     }
+}
+
+/** The scenarios the switcher offers, read from `public/data/scenarios.json`. */
+export async function listScenarios(fetchImpl: typeof fetch = fetch): Promise<ScenarioRef[]> {
+    return getJson<ScenarioRef[]>(dataUrl('scenarios.json'), fetchImpl)
 }
 
 export async function loadScenario(id: string, fetchImpl: typeof fetch = fetch): Promise<Scenario> {

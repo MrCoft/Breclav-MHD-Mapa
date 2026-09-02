@@ -42,8 +42,21 @@ export function setScenarioId(scenarioId: string): void {
     appStore.setState((state) => ({ ...state, scenarioId }))
 }
 
+/**
+ * Installs a freshly loaded scenario. In the same update, drops any line or stop selection that
+ * doesn't exist in it — e.g. line 564 exists in "Současný stav" but not "Návrh 2026" — rather
+ * than leaving a dangling id that would show an empty panel or a highlight matching nothing.
+ */
 export function setScenario(scenario: Scenario): void {
-    appStore.setState((state) => ({ ...state, scenario, error: null }))
+    appStore.setState((state) => ({
+        ...state,
+        scenario,
+        error: null,
+        selectedLine:
+            state.selectedLine !== null && scenario.index.lines.has(state.selectedLine) ? state.selectedLine : null,
+        selectedStop:
+            state.selectedStop !== null && scenario.index.stops.has(state.selectedStop) ? state.selectedStop : null,
+    }))
 }
 
 export function setError(error: string | null): void {

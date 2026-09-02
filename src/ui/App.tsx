@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from 
 import { ClockControls } from './ClockControls'
 import { Footer } from './Footer'
 import { LineBrowser } from './LineBrowser'
+import { ScenarioSwitcher } from './ScenarioSwitcher'
 import { StopPanel } from './StopPanel'
 
 export const App = () => {
@@ -127,6 +128,7 @@ export const App = () => {
                         <SheetTitle className="sr-only">Linky</SheetTitle>
                         <SheetDescription className="sr-only">Seznam autobusových a vlakových linek</SheetDescription>
                         <div className="h-full overflow-y-auto p-3">
+                            <ScenarioSwitcher />
                             <LineBrowser />
                         </div>
                     </SheetContent>
@@ -135,6 +137,7 @@ export const App = () => {
             </div>
             <div className="grid grid-cols-1 overflow-hidden md:grid-cols-[280px_1fr]">
                 <aside className="hidden overflow-y-auto border-r border-slate-200 p-3 md:block">
+                    <ScenarioSwitcher />
                     <LineBrowser />
                 </aside>
                 <div className="relative">

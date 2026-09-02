@@ -304,6 +304,27 @@ function installLayers(instance: MapLibreMap, scenario: Scenario): boolean {
     return true
 }
 
+/**
+ * Pushes a freshly loaded scenario's routes and stops into the sources `installLayers` already
+ * created, in place — for a scenario switch that doesn't coincide with a basemap change, so the
+ * sources survive rather than being torn down and rebuilt by `setStyle`. Without this,
+ * `installLayers`'s no-op guard would leave the map drawing the previous scenario's network
+ * indefinitely. `stops-selected` doesn't need pushing here — it updates through `applySelection`,
+ * called by this component's own selection effect right after this one runs — and neither does
+ * `vehicles`, which the clock subscription further down rewrites every animation frame from the
+ * current `scenario` and its freshly rebuilt `PatternGeometry` set.
+ */
+function updateScenarioSources(instance: MapLibreMap, scenario: Scenario): void {
+    const routes = instance.getSource('routes')
+    if (routes) {
+        ;(routes as GeoJSONSource).setData(scenario.geometry)
+    }
+    const stops = instance.getSource('stops')
+    if (stops) {
+        ;(stops as GeoJSONSource).setData(stopsGeoJson(scenario))
+    }
+}
+
 /** Full opacity when nothing is selected or a vehicle's line matches the selection, dimmed otherwise. */
 function vehicleOpacity(selectedLine: string | null): DataDrivenPropertyValueSpecification<number> {
     if (selectedLine === null) {
@@ -468,6 +489,17 @@ export const MapView = () => {
         const instance = map.current
         if (!instance || !scenario) {
             return
+        }
+
+        // A scenario switch (as opposed to the first load, or a basemap change that just
+        // `setStyle`'d the sources away) leaves `routes` and `stops` already installed, so
+        // `installLayers` below would just no-op and the map would keep showing the previous
+        // network forever. Push the new data into them directly, once, right here — not from the
+        // `styledata`-triggered `install` below, which fires on every render frame while vehicles
+        // animate (each of their own per-frame `setData` calls marks the style "changed") and
+        // must stay a cheap no-op on every one of those firings, not repeat this work 60x/s.
+        if (instance.getSource('routes')) {
+            updateScenarioSources(instance, scenario)
         }
 
         const install = () => {

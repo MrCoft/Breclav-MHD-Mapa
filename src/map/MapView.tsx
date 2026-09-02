@@ -190,7 +190,11 @@ function selectedStopsGeoJson(scenario: Scenario, selectedLine: string | null): 
  * Layer order, bottom to top: routes-dim, routes-casing, routes-active, stops-circle,
  * stops-selected-circle, stops-label, vehicles-circle, vehicles-label.
  */
-function installLayers(instance: MapLibreMap, scenario: Scenario): boolean {
+function installLayers(
+    instance: MapLibreMap,
+    scenario: Scenario,
+    initialVehicles: FeatureCollection<Point, VehicleFeatureProperties>,
+): boolean {
     if (instance.getSource('routes')) {
         return false
     }
@@ -264,10 +268,18 @@ function installLayers(instance: MapLibreMap, scenario: Scenario): boolean {
         paint: { 'text-color': '#26303a', 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 },
     })
 
-    // Starts empty: the clock subscription in `MapView` populates this with `setData` on the
-    // very next frame (`clock.subscribe` calls its listener immediately on registration), so
-    // there's no visible flash of an empty map before the first real vehicle positions land.
-    instance.addSource('vehicles', { type: 'geojson', data: emptyVehicleFeatureCollection() })
+    // Seeded with `initialVehicles` — the clock's *current* state, computed by the caller via
+    // `clock.getState()` — rather than starting empty and waiting for the clock subscription's
+    // own `setData` to fill it in. That subscription's inaugural call (`clock.subscribe` calls
+    // its listener once, synchronously, at registration) can land before this function has even
+    // run, in which case it silently drops (see the `getSource('vehicles')` guard in `MapView`'s
+    // clock-subscription effect) — while playing, the very next animation frame repeats it a
+    // moment later and nothing is ever visibly wrong, but a paused clock never schedules another
+    // frame, so that drop used to be permanent (known-bugs.md entry 4: a paused `?d=`/`?t=` deep
+    // link showed routes with zero vehicles, indefinitely). Seeding here instead means the source
+    // is never empty for longer than it takes this function to run, regardless of whether the
+    // map's style finished loading before or after the clock subscription registered.
+    instance.addSource('vehicles', { type: 'geojson', data: initialVehicles })
     instance.addLayer({
         id: 'vehicles-circle',
         type: 'circle',
@@ -384,6 +396,16 @@ function updateRoutesRendered(instance: MapLibreMap, node: HTMLDivElement): void
     node.dataset.routesRendered = String(instance.querySourceFeatures('routes').length)
 }
 
+/**
+ * Same signal as `updateRoutesRendered`, for the `vehicles` source — this is what a Playwright
+ * assertion reads to tell "routes drew but the vehicle race silently dropped every position" (see
+ * known-bugs.md entry 4) apart from "nothing rendered at all", without reaching into the WebGL
+ * canvas or the map instance itself.
+ */
+function updateVehiclesRendered(instance: MapLibreMap, node: HTMLDivElement): void {
+    node.dataset.vehiclesRendered = String(instance.querySourceFeatures('vehicles').length)
+}
+
 function attachInteractions(instance: MapLibreMap): void {
     instance.on('click', 'stops-circle', (event) => {
         const id = event.features?.[0]?.properties.id
@@ -462,7 +484,10 @@ export const MapView = () => {
         // the `idle` listener below was already relying on. Both listeners stay: `idle` still
         // catches genuinely idle moments (e.g. before the clock's first frame, or while paused),
         // `sourcedata` is what makes the attribute update reliably while the clock keeps playing.
-        const onIdle = () => updateRoutesRendered(instance, node)
+        const onIdle = () => {
+            updateRoutesRendered(instance, node)
+            updateVehiclesRendered(instance, node)
+        }
         instance.on('idle', onIdle)
 
         const onRoutesSourceData = (event: MapSourceDataEvent) => {
@@ -472,9 +497,21 @@ export const MapView = () => {
         }
         instance.on('sourcedata', onRoutesSourceData)
 
+        // Scoped to the `vehicles` source the same way `onRoutesSourceData` is scoped to `routes`
+        // — this is what lets a Playwright test observe the vehicle count settle after a paused
+        // deep link's single `setData` call, without waiting on `idle` (which a *playing* clock's
+        // continuous per-frame `setData` calls can starve indefinitely, per the comment above).
+        const onVehiclesSourceData = (event: MapSourceDataEvent) => {
+            if (event.sourceId === 'vehicles') {
+                updateVehiclesRendered(instance, node)
+            }
+        }
+        instance.on('sourcedata', onVehiclesSourceData)
+
         return () => {
             instance.off('idle', onIdle)
             instance.off('sourcedata', onRoutesSourceData)
+            instance.off('sourcedata', onVehiclesSourceData)
             map.current?.remove()
             map.current = null
         }
@@ -503,7 +540,16 @@ export const MapView = () => {
         }
 
         const install = () => {
-            if (!installLayers(instance, scenario)) {
+            // Computed fresh on every call (not hoisted above `install`): this only actually
+            // matters on the one call that goes on to install anything (`installLayers` no-ops
+            // every other time), but `clock.getState()` is cheap and correctness here depends on
+            // reading the clock at the moment the source is created, not at whatever earlier
+            // moment `install` happened to be registered.
+            const clockState = clock.getState()
+            const initialVehicles = vehicleContext
+                ? vehicleFeatureCollection(scenario, vehicleContext, clockState.date, clockState.minutes)
+                : emptyVehicleFeatureCollection()
+            if (!installLayers(instance, scenario, initialVehicles)) {
                 return
             }
             if (!listenersAttached.current) {
@@ -523,7 +569,7 @@ export const MapView = () => {
         return () => {
             instance.off('styledata', install)
         }
-    }, [scenario])
+    }, [scenario, vehicleContext])
 
     useEffect(() => {
         selectedLineRef.current = selectedLine

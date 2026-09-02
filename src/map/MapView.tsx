@@ -567,6 +567,16 @@ export const MapView = () => {
         instance.on('styledata', install)
 
         return () => {
+            // Without this, a superseded run's `install` — bound to whichever `scenario` was
+            // current when this effect last ran — stays queued on `load`. MapLibre's `Evented.off`
+            // removes a listener from both its ordinary and one-time listener lists (see
+            // `evented.ts`), so this is enough to cancel a still-pending `once('load', install)`
+            // even though `once` itself returns no unsubscribe handle. Left unremoved, a scenario
+            // switch that lands before the map's first `load` would let the stale `install` win
+            // the `installLayers` "routes source already exists" guard race on that eventual
+            // `load`, so the map would keep drawing the first scenario while the sidebar, the
+            // vehicles and the URL had already moved on to the new one.
+            instance.off('load', install)
             instance.off('styledata', install)
         }
     }, [scenario, vehicleContext])

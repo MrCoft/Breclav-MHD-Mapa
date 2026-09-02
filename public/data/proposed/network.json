@@ -1,0 +1,5224 @@
+{
+ "stops": [
+  {
+   "id": "breclav-1-maje",
+   "name": "Břeclav, 1. máje",
+   "lat": 48.758461,
+   "lon": 16.878682,
+   "zone": "575",
+   "sourceId": "U15728N1965"
+  },
+  {
+   "id": "breclav-autobusove-nadrazi",
+   "name": "Břeclav, autobusové nádraží",
+   "lat": 48.754552,
+   "lon": 16.893289,
+   "zone": "575",
+   "sourceId": "U15729N402"
+  },
+  {
+   "id": "breclav-autobusove-nadrazi",
+   "name": "Břeclav, autobusové nádraží",
+   "lat": 48.754552,
+   "lon": 16.893289,
+   "zone": "575",
+   "sourceId": "U15729N402"
+  },
+  {
+   "id": "breclav-bors",
+   "name": "Břeclav, BORS",
+   "lat": 48.75025,
+   "lon": 16.893111,
+   "zone": "575",
+   "sourceId": "U15730N1984"
+  },
+  {
+   "id": "breclav-bors",
+   "name": "Břeclav, BORS",
+   "lat": 48.75025,
+   "lon": 16.893111,
+   "zone": "575",
+   "sourceId": "U15730N1984"
+  },
+  {
+   "id": "breclav-cukrovar",
+   "name": "Břeclav, cukrovar",
+   "lat": 48.763461,
+   "lon": 16.885673,
+   "zone": "575",
+   "sourceId": "U15731N1981"
+  },
+  {
+   "id": "breclav-cukrovar",
+   "name": "Břeclav, cukrovar",
+   "lat": 48.763461,
+   "lon": 16.885673,
+   "zone": "575",
+   "sourceId": "U15731N1981"
+  },
+  {
+   "id": "breclav-dum-kultury",
+   "name": "Břeclav, Dům kultury",
+   "lat": 48.7571,
+   "lon": 16.884827,
+   "zone": "575",
+   "sourceId": "U15757N2081"
+  },
+  {
+   "id": "breclav-gumotex",
+   "name": "Břeclav, Gumotex",
+   "lat": 48.751366,
+   "lon": 16.894592,
+   "zone": "575",
+   "sourceId": "U15732N1990"
+  },
+  {
+   "id": "breclav-gumotex",
+   "name": "Břeclav, Gumotex",
+   "lat": 48.751366,
+   "lon": 16.894592,
+   "zone": "575",
+   "sourceId": "U15732N1990"
+  },
+  {
+   "id": "breclav-charvatska-n-ves-obrancu-miru",
+   "name": "Břeclav, Charvátská N. Ves, Obránců míru",
+   "lat": 48.769287,
+   "lon": 16.84762,
+   "zone": "575",
+   "sourceId": "U15754N2083"
+  },
+  {
+   "id": "breclav-charvatska-nova-ves-lednicka",
+   "name": "Břeclav, Charvátská Nová Ves, Lednická",
+   "lat": 48.766752,
+   "lon": 16.846556,
+   "zone": "575",
+   "sourceId": "U15733N1960"
+  },
+  {
+   "id": "breclav-charvatska-nova-ves-palackeho",
+   "name": "Břeclav, Charvátská Nová Ves, Palackého",
+   "lat": 48.762334,
+   "lon": 16.851012,
+   "zone": "575",
+   "sourceId": "U15753N2082"
+  },
+  {
+   "id": "breclav-jana-palacha",
+   "name": "Břeclav, Jana Palacha",
+   "lat": 48.756161,
+   "lon": 16.888901,
+   "zone": "575",
+   "sourceId": "U15751N2075"
+  },
+  {
+   "id": "breclav-lanzhotska",
+   "name": "Břeclav, Lanžhotská",
+   "lat": 48.750778,
+   "lon": 16.903667,
+   "zone": "575",
+   "sourceId": "U15756N2084"
+  },
+  {
+   "id": "breclav-mestsky-hrbitov",
+   "name": "Břeclav, Městský hřbitov",
+   "lat": 48.750368,
+   "lon": 16.906646,
+   "zone": "575",
+   "sourceId": "U15755N2074"
+  },
+  {
+   "id": "breclav-namesti-tgm-kostel",
+   "name": "Břeclav, náměstí TGM, kostel",
+   "lat": 48.759272,
+   "lon": 16.88078,
+   "zone": "575",
+   "sourceId": "U15736N1964"
+  },
+  {
+   "id": "breclav-namesti-tgm-kostel",
+   "name": "Břeclav, náměstí TGM, kostel",
+   "lat": 48.759272,
+   "lon": 16.88078,
+   "zone": "575",
+   "sourceId": "U15736N1964"
+  },
+  {
+   "id": "breclav-namesti-tgm-mestsky-urad",
+   "name": "Břeclav, náměstí TGM, městský úřad",
+   "lat": 48.759683,
+   "lon": 16.881319,
+   "zone": "575",
+   "sourceId": "U15737N1982"
+  },
+  {
+   "id": "breclav-namesti-tgm-mestsky-urad",
+   "name": "Břeclav, náměstí TGM, městský úřad",
+   "lat": 48.759683,
+   "lon": 16.881319,
+   "zone": "575",
+   "sourceId": "U15737N1982"
+  },
+  {
+   "id": "breclav-nemocnice",
+   "name": "Břeclav, nemocnice",
+   "lat": 48.753134,
+   "lon": 16.881758,
+   "zone": "575",
+   "sourceId": "U15738N2088"
+  },
+  {
+   "id": "breclav-pohansko-rozcesti",
+   "name": "Břeclav, Pohansko, rozcestí",
+   "lat": 48.749451,
+   "lon": 16.900769,
+   "zone": "575",
+   "sourceId": "U15739N1985"
+  },
+  {
+   "id": "breclav-pohansko-rozcesti",
+   "name": "Břeclav, Pohansko, rozcestí",
+   "lat": 48.749451,
+   "lon": 16.900769,
+   "zone": "575",
+   "sourceId": "U15739N1985"
+  },
+  {
+   "id": "breclav-poliklinika",
+   "name": "Břeclav, poliklinika",
+   "lat": 48.752843,
+   "lon": 16.883794,
+   "zone": "575",
+   "sourceId": "U15740N1983"
+  },
+  {
+   "id": "breclav-poliklinika",
+   "name": "Břeclav, poliklinika",
+   "lat": 48.752843,
+   "lon": 16.883794,
+   "zone": "575",
+   "sourceId": "U15740N1983"
+  },
+  {
+   "id": "breclav-postorna-fosfa",
+   "name": "Břeclav, Poštorná, FOSFA",
+   "lat": 48.741131,
+   "lon": 16.870569,
+   "zone": "575",
+   "sourceId": "U15764N2087"
+  },
+  {
+   "id": "breclav-postorna-hlavni",
+   "name": "Břeclav, Poštorná, Hlavní",
+   "lat": 48.755394,
+   "lon": 16.863281,
+   "zone": "575",
+   "sourceId": "U15752N2080"
+  },
+  {
+   "id": "breclav-postorna-hlavni-na-konci",
+   "name": "Břeclav, Poštorná, Hlavní na konci",
+   "lat": 48.7586,
+   "lon": 16.859367,
+   "zone": "575",
+   "sourceId": "U15741N1961"
+  },
+  {
+   "id": "breclav-postorna-hranicni",
+   "name": "Břeclav, Poštorná, Hraniční",
+   "lat": 48.746436,
+   "lon": 16.870765,
+   "zone": "575",
+   "sourceId": "U15763N2086"
+  },
+  {
+   "id": "breclav-postorna-j-skacela-1-maje",
+   "name": "Břeclav, Poštorná, J. Skácela / 1. máje",
+   "lat": 48.753123,
+   "lon": 16.869078
+  },
+  {
+   "id": "breclav-postorna-jana-skacela",
+   "name": "Břeclav, Poštorná, Jana Skácela",
+   "lat": 48.749848,
+   "lon": 16.869392,
+   "zone": "575",
+   "sourceId": "U15762N2085"
+  },
+  {
+   "id": "breclav-postorna-kostel",
+   "name": "Břeclav, Poštorná, kostel",
+   "lat": 48.752909,
+   "lon": 16.867413,
+   "zone": "575",
+   "sourceId": "U15742N1962"
+  },
+  {
+   "id": "breclav-postorna-kostel",
+   "name": "Břeclav, Poštorná, kostel",
+   "lat": 48.752909,
+   "lon": 16.867413,
+   "zone": "575",
+   "sourceId": "U15742N1962"
+  },
+  {
+   "id": "breclav-postorna-lesni",
+   "name": "Břeclav, Poštorná, Lesní",
+   "lat": 48.755743,
+   "lon": 16.873957,
+   "zone": "575",
+   "sourceId": "U15743N1963"
+  },
+  {
+   "id": "breclav-postorna-lesni",
+   "name": "Břeclav, Poštorná, Lesní",
+   "lat": 48.755743,
+   "lon": 16.873957,
+   "zone": "575",
+   "sourceId": "U15743N1963"
+  },
+  {
+   "id": "breclav-postorna-nadrazni",
+   "name": "Břeclav, Poštorná, Nádražní",
+   "lat": 48.752103,
+   "lon": 16.858368,
+   "zone": "575",
+   "sourceId": "U15758N2076"
+  },
+  {
+   "id": "breclav-postorna-pkz",
+   "name": "Břeclav, Poštorná, PKZ",
+   "lat": 48.751964,
+   "lon": 16.85204,
+   "zone": "575",
+   "sourceId": "U15744N2077"
+  },
+  {
+   "id": "breclav-postorna-pkz",
+   "name": "Břeclav, Poštorná, PKZ",
+   "lat": 48.751964,
+   "lon": 16.85204,
+   "zone": "575",
+   "sourceId": "U15744N2077"
+  },
+  {
+   "id": "breclav-postorna-tovarni-ctvrt",
+   "name": "Břeclav, Poštorná, Tovární čtvrť",
+   "lat": 48.754713,
+   "lon": 16.849599,
+   "zone": "575",
+   "sourceId": "U15759N2078"
+  },
+  {
+   "id": "breclav-postorna-valticka",
+   "name": "Břeclav, Poštorná, Valtická",
+   "lat": 48.756558,
+   "lon": 16.856743,
+   "zone": "575",
+   "sourceId": "U15745N2033"
+  },
+  {
+   "id": "breclav-postorna-valticka",
+   "name": "Břeclav, Poštorná, Valtická",
+   "lat": 48.756558,
+   "lon": 16.856743,
+   "zone": "575",
+   "sourceId": "U15745N2033"
+  },
+  {
+   "id": "breclav-postorna-valticka-tocna",
+   "name": "Břeclav, Poštorná, Valtická, točna",
+   "lat": 48.758005,
+   "lon": 16.849742,
+   "zone": "575",
+   "sourceId": "U15760N2079"
+  },
+  {
+   "id": "breclav-slovacka",
+   "name": "Břeclav, Slovácká",
+   "lat": 48.759645,
+   "lon": 16.887459,
+   "zone": "575",
+   "sourceId": "U15770N2096"
+  },
+  {
+   "id": "breclav-sovadinova",
+   "name": "Břeclav, Sovadinova",
+   "lat": 48.763067,
+   "lon": 16.88926,
+   "zone": "575",
+   "sourceId": "U15771N2097"
+  },
+  {
+   "id": "breclav-stara-breclav-j-molaka",
+   "name": "Břeclav, Stará Břeclav, J. Moláka",
+   "lat": 48.777407,
+   "lon": 16.897259,
+   "zone": "575",
+   "sourceId": "U15734N2092"
+  },
+  {
+   "id": "breclav-stara-breclav-krizovatka-ladna",
+   "name": "Břeclav, Stará Břeclav, křižovatka Ladná",
+   "lat": 48.779601,
+   "lon": 16.902587,
+   "zone": "575",
+   "sourceId": "U15735N1979"
+  },
+  {
+   "id": "breclav-stara-breclav-krizovatka-ladna",
+   "name": "Břeclav, Stará Břeclav, křižovatka Ladná",
+   "lat": 48.779601,
+   "lon": 16.902587,
+   "zone": "575",
+   "sourceId": "U15735N1979"
+  },
+  {
+   "id": "breclav-stara-breclav-kulturni-dum",
+   "name": "Břeclav, Stará Břeclav, kulturní dům",
+   "lat": 48.774218,
+   "lon": 16.886674,
+   "zone": "575",
+   "sourceId": "U15747N2090"
+  },
+  {
+   "id": "breclav-stara-breclav-lidicka",
+   "name": "Břeclav, Stará Břeclav, Lidická",
+   "lat": 48.76778,
+   "lon": 16.890053,
+   "zone": "575",
+   "sourceId": "U15769N2094"
+  },
+  {
+   "id": "breclav-stara-breclav-manesova",
+   "name": "Břeclav, Stará Břeclav, Mánesova",
+   "lat": 48.772417,
+   "lon": 16.887833,
+   "zone": "575",
+   "sourceId": "U15772N2098"
+  },
+  {
+   "id": "breclav-stara-breclav-manesova-2",
+   "name": "Břeclav, Stará Břeclav, Mánesova",
+   "lat": 48.772506,
+   "lon": 16.887847
+  },
+  {
+   "id": "breclav-stara-breclav-skopalikova",
+   "name": "Břeclav, Stará Břeclav, Skopalíkova",
+   "lat": 48.772893,
+   "lon": 16.891364,
+   "zone": "575",
+   "sourceId": "U15746N1980"
+  },
+  {
+   "id": "breclav-stara-breclav-skopalikova",
+   "name": "Břeclav, Stará Břeclav, Skopalíkova",
+   "lat": 48.772893,
+   "lon": 16.891364,
+   "zone": "575",
+   "sourceId": "U15746N1980"
+  },
+  {
+   "id": "breclav-stara-breclav-u-parku",
+   "name": "Břeclav, Stará Břeclav, u parku",
+   "lat": 48.775273,
+   "lon": 16.890122,
+   "zone": "575",
+   "sourceId": "U15767N2091"
+  },
+  {
+   "id": "breclav-stara-breclav-vinohradni",
+   "name": "Břeclav, Stará Břeclav, Vinohradní",
+   "lat": 48.77552,
+   "lon": 16.89359,
+   "zone": "575",
+   "sourceId": "U15768N2093"
+  },
+  {
+   "id": "ladna-mlynska",
+   "name": "Ladná, Mlýnská",
+   "lat": 48.80821,
+   "lon": 16.884937,
+   "zone": "565",
+   "sourceId": "U15606N2034"
+  },
+  {
+   "id": "ladna-skola",
+   "name": "Ladná, škola",
+   "lat": 48.805472,
+   "lon": 16.872155,
+   "zone": "565",
+   "sourceId": "U15608N2035"
+  },
+  {
+   "id": "ladna-zeleznicni-stanice",
+   "name": "Ladná, železniční stanice",
+   "lat": 48.812202,
+   "lon": 16.88057,
+   "zone": "565",
+   "sourceId": "U15609N442"
+  },
+  {
+   "id": "podivin-besedni-dum",
+   "name": "Podivín, Besední dům",
+   "lat": 48.829762,
+   "lon": 16.847782,
+   "zone": "565",
+   "sourceId": "U15614N2025"
+  },
+  {
+   "id": "podivin-bratislavska",
+   "name": "Podivín, Bratislavská",
+   "lat": 48.829217,
+   "lon": 16.852864,
+   "zone": "565",
+   "sourceId": "U15618N2026"
+  },
+  {
+   "id": "podivin-mechanizacni-stredisko",
+   "name": "Podivín, mechanizační středisko",
+   "lat": 48.819181,
+   "lon": 16.874679,
+   "zone": "565",
+   "sourceId": "U15643N2036"
+  },
+  {
+   "id": "podivin-zeleznicni-stanice",
+   "name": "Podivín, železniční stanice",
+   "lat": 48.83716,
+   "lon": 16.853732,
+   "zone": "565",
+   "sourceId": "U15619N441"
+  },
+  {
+   "id": "valtice-aut-st",
+   "name": "Valtice, aut. st.",
+   "lat": 48.74274,
+   "lon": 16.755533,
+   "zone": "582",
+   "sourceId": "U15801N2015"
+  },
+  {
+   "id": "valtice-ceska-ctvrt",
+   "name": "Valtice, česká čtvrť",
+   "lat": 48.744615,
+   "lon": 16.770629,
+   "zone": "582",
+   "sourceId": "U15804N2031"
+  },
+  {
+   "id": "valtice-hajenka",
+   "name": "Valtice, hájenka",
+   "lat": 48.746276,
+   "lon": 16.792044,
+   "zone": "582",
+   "sourceId": "U15805N2032"
+  },
+  {
+   "id": "valtice-nemocnice",
+   "name": "Valtice, nemocnice",
+   "lat": 48.742883,
+   "lon": 16.760649,
+   "zone": "582",
+   "sourceId": "U15808N2030"
+  }
+ ],
+ "lines": [
+  {
+   "id": "561",
+   "name": "561",
+   "longName": "Městský hřbitov - Poštorná - Charvátská Nová Ves a zpět",
+   "mode": "bus",
+   "color": "#2C89C8",
+   "textColor": "#FFFFFF"
+  },
+  {
+   "id": "562",
+   "name": "562",
+   "longName": "Městský hřbitov - Valtická Točna - Charvátská Nová Ves a zpět",
+   "mode": "bus",
+   "color": "#2C89C8",
+   "textColor": "#FFFFFF"
+  },
+  {
+   "id": "563",
+   "name": "563",
+   "longName": "Autobusové nádraží - Slovácká - Cukrovar - Poliklinika - Poštorná, FOSFA a zpět",
+   "mode": "bus",
+   "color": "#2C89C8",
+   "textColor": "#FFFFFF"
+  },
+  {
+   "id": "565",
+   "name": "565",
+   "longName": "Městský hřbitov - Sovadinova - Stará Břeclav a zpět",
+   "mode": "bus",
+   "color": "#2C89C8",
+   "textColor": "#FFFFFF"
+  },
+  {
+   "id": "566",
+   "name": "566",
+   "longName": "Křižovatka Ladná - Sovadinova - Aut. Nádraží - Nám. TGM - Valtická Točna a zpět",
+   "mode": "bus",
+   "color": "#2C89C8",
+   "textColor": "#FFFFFF"
+  },
+  {
+   "id": "567",
+   "name": "567",
+   "longName": "Autobusové nádraží - Hlavní - Valtická Točna a zpět",
+   "mode": "bus",
+   "color": "#2C89C8",
+   "textColor": "#FFFFFF"
+  },
+  {
+   "id": "568",
+   "name": "568",
+   "longName": "Městský hřbitov - Poliklinika - Valtická Točna a zpět",
+   "mode": "bus",
+   "color": "#2C89C8",
+   "textColor": "#FFFFFF"
+  },
+  {
+   "id": "569",
+   "name": "569",
+   "longName": "Charvátská Nová Ves - Hlavní - Autobusové nádraží - Stará Břeclav a zpět",
+   "mode": "bus",
+   "color": "#2C89C8",
+   "textColor": "#FFFFFF"
+  },
+  {
+   "id": "571",
+   "name": "571",
+   "longName": "Břeclav - Valtice",
+   "mode": "bus",
+   "color": "#7FFFAA",
+   "textColor": "#FFFFFF"
+  },
+  {
+   "id": "574",
+   "name": "574",
+   "longName": "Břeclav - Ladná - Podivín",
+   "mode": "bus",
+   "color": "#7FFFAA",
+   "textColor": "#FFFFFF"
+  }
+ ],
+ "patterns": [
+  {
+   "id": "561-0-1",
+   "line": "561",
+   "direction": 0,
+   "headsign": "Břeclav, Charvátská N. Ves, Obránců míru",
+   "stops": [
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-namesti-tgm-kostel",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-hlavni",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-n-ves-obrancu-miru"
+   ],
+   "offsets": [
+    0,
+    3,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ]
+  },
+  {
+   "id": "561-0-2",
+   "line": "561",
+   "direction": 0,
+   "headsign": "Břeclav, Charvátská N. Ves, Obránců míru",
+   "stops": [
+    "breclav-mestsky-hrbitov",
+    "breclav-pohansko-rozcesti",
+    "breclav-gumotex",
+    "breclav-autobusove-nadrazi",
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-namesti-tgm-kostel",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-hlavni",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-n-ves-obrancu-miru"
+   ],
+   "offsets": [
+    0,
+    2,
+    4,
+    6,
+    7,
+    10,
+    13,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21
+   ]
+  },
+  {
+   "id": "561-1-1",
+   "line": "561",
+   "direction": 1,
+   "headsign": "Břeclav, Městský hřbitov",
+   "stops": [
+    "breclav-charvatska-n-ves-obrancu-miru",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-postorna-hlavni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi",
+    "breclav-autobusove-nadrazi",
+    "breclav-bors",
+    "breclav-pohansko-rozcesti",
+    "breclav-mestsky-hrbitov"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    10,
+    13,
+    17,
+    19,
+    20,
+    22
+   ]
+  },
+  {
+   "id": "562-0-1",
+   "line": "562",
+   "direction": 0,
+   "headsign": "Břeclav, Charvátská N. Ves, Obránců míru",
+   "stops": [
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-dum-kultury",
+    "breclav-poliklinika",
+    "breclav-namesti-tgm-kostel",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-nadrazni",
+    "breclav-postorna-pkz",
+    "breclav-postorna-tovarni-ctvrt",
+    "breclav-postorna-valticka-tocna",
+    "breclav-postorna-valticka",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-n-ves-obrancu-miru"
+   ],
+   "offsets": [
+    0,
+    2,
+    4,
+    5,
+    8,
+    11,
+    12,
+    14,
+    15,
+    17,
+    19,
+    21,
+    22,
+    24,
+    25,
+    26
+   ]
+  },
+  {
+   "id": "562-0-2",
+   "line": "562",
+   "direction": 0,
+   "headsign": "Břeclav, Charvátská N. Ves, Obránců míru",
+   "stops": [
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-namesti-tgm-kostel",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-nadrazni",
+    "breclav-postorna-pkz",
+    "breclav-postorna-tovarni-ctvrt",
+    "breclav-postorna-valticka-tocna",
+    "breclav-postorna-valticka",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-n-ves-obrancu-miru"
+   ],
+   "offsets": [
+    0,
+    2,
+    5,
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    15,
+    16,
+    17,
+    18,
+    19
+   ]
+  },
+  {
+   "id": "562-0-3",
+   "line": "562",
+   "direction": 0,
+   "headsign": "Břeclav, Charvátská N. Ves, Obránců míru",
+   "stops": [
+    "breclav-mestsky-hrbitov",
+    "breclav-pohansko-rozcesti",
+    "breclav-gumotex",
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-dum-kultury",
+    "breclav-poliklinika",
+    "breclav-namesti-tgm-kostel",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-nadrazni",
+    "breclav-postorna-pkz",
+    "breclav-postorna-tovarni-ctvrt",
+    "breclav-postorna-valticka-tocna",
+    "breclav-postorna-valticka",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-n-ves-obrancu-miru"
+   ],
+   "offsets": [
+    0,
+    2,
+    3,
+    5,
+    7,
+    9,
+    10,
+    13,
+    15,
+    16,
+    17,
+    18,
+    20,
+    21,
+    23,
+    24,
+    25,
+    26,
+    27
+   ]
+  },
+  {
+   "id": "562-1-1",
+   "line": "562",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "breclav-charvatska-n-ves-obrancu-miru",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-postorna-valticka",
+    "breclav-postorna-valticka-tocna",
+    "breclav-postorna-tovarni-ctvrt",
+    "breclav-postorna-pkz",
+    "breclav-postorna-nadrazni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-dum-kultury",
+    "breclav-poliklinika",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    4,
+    6,
+    9,
+    11,
+    12,
+    14,
+    16,
+    18,
+    20,
+    21,
+    23,
+    26,
+    29
+   ]
+  },
+  {
+   "id": "562-1-2",
+   "line": "562",
+   "direction": 1,
+   "headsign": "Břeclav, Městský hřbitov",
+   "stops": [
+    "breclav-charvatska-n-ves-obrancu-miru",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-postorna-valticka",
+    "breclav-postorna-valticka-tocna",
+    "breclav-postorna-tovarni-ctvrt",
+    "breclav-postorna-pkz",
+    "breclav-postorna-nadrazni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-dum-kultury",
+    "breclav-poliklinika",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi",
+    "breclav-bors",
+    "breclav-pohansko-rozcesti",
+    "breclav-lanzhotska",
+    "breclav-mestsky-hrbitov"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    4,
+    6,
+    9,
+    11,
+    12,
+    14,
+    16,
+    18,
+    20,
+    21,
+    23,
+    26,
+    29,
+    30,
+    31,
+    32,
+    36
+   ]
+  },
+  {
+   "id": "562-1-3",
+   "line": "562",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "breclav-charvatska-n-ves-obrancu-miru",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-postorna-valticka",
+    "breclav-postorna-valticka-tocna",
+    "breclav-postorna-tovarni-ctvrt",
+    "breclav-postorna-pkz",
+    "breclav-postorna-nadrazni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    4,
+    6,
+    9,
+    11,
+    12,
+    14,
+    16,
+    18,
+    20,
+    23,
+    25
+   ]
+  },
+  {
+   "id": "562-1-4",
+   "line": "562",
+   "direction": 1,
+   "headsign": "Břeclav, Městský hřbitov",
+   "stops": [
+    "breclav-charvatska-n-ves-obrancu-miru",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-postorna-valticka",
+    "breclav-postorna-valticka-tocna",
+    "breclav-postorna-tovarni-ctvrt",
+    "breclav-postorna-pkz",
+    "breclav-postorna-nadrazni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi",
+    "breclav-bors",
+    "breclav-pohansko-rozcesti",
+    "breclav-lanzhotska",
+    "breclav-mestsky-hrbitov"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    6,
+    7,
+    8,
+    9,
+    11,
+    12,
+    13,
+    15,
+    18,
+    19,
+    20,
+    21,
+    25
+   ]
+  },
+  {
+   "id": "563-0-1",
+   "line": "563",
+   "direction": 0,
+   "headsign": "Břeclav, Poštorná, FOSFA",
+   "stops": [
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-slovacka",
+    "breclav-sovadinova",
+    "breclav-cukrovar",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-dum-kultury",
+    "breclav-poliklinika",
+    "breclav-nemocnice",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-jana-skacela",
+    "breclav-postorna-hranicni",
+    "breclav-postorna-fosfa"
+   ],
+   "offsets": [
+    0,
+    3,
+    5,
+    7,
+    9,
+    11,
+    12,
+    13,
+    14,
+    15,
+    17,
+    18,
+    19,
+    21
+   ]
+  },
+  {
+   "id": "563-0-2",
+   "line": "563",
+   "direction": 0,
+   "headsign": "Břeclav, Poštorná, FOSFA",
+   "stops": [
+    "breclav-postorna-kostel",
+    "breclav-postorna-jana-skacela",
+    "breclav-postorna-hranicni",
+    "breclav-postorna-fosfa"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "id": "563-1-1",
+   "line": "563",
+   "direction": 1,
+   "headsign": "Břeclav, Poštorná, kostel",
+   "stops": [
+    "breclav-postorna-fosfa",
+    "breclav-postorna-hranicni",
+    "breclav-postorna-jana-skacela",
+    "breclav-postorna-j-skacela-1-maje",
+    "breclav-postorna-kostel"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "id": "563-1-2",
+   "line": "563",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "breclav-postorna-fosfa",
+    "breclav-postorna-hranicni",
+    "breclav-postorna-jana-skacela",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-nemocnice",
+    "breclav-dum-kultury",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-cukrovar",
+    "breclav-sovadinova",
+    "breclav-slovacka",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    4,
+    5,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18,
+    21
+   ]
+  },
+  {
+   "id": "565-0-1",
+   "line": "565",
+   "direction": 0,
+   "headsign": "Břeclav, Stará Břeclav, křižovatka Ladná",
+   "stops": [
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-slovacka",
+    "breclav-sovadinova",
+    "breclav-stara-breclav-lidicka",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-stara-breclav-vinohradni",
+    "breclav-stara-breclav-krizovatka-ladna"
+   ],
+   "offsets": [
+    0,
+    3,
+    5,
+    7,
+    9,
+    10,
+    11,
+    13
+   ]
+  },
+  {
+   "id": "565-1-1",
+   "line": "565",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "breclav-stara-breclav-krizovatka-ladna",
+    "breclav-stara-breclav-j-molaka",
+    "breclav-stara-breclav-vinohradni",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-stara-breclav-lidicka",
+    "breclav-sovadinova",
+    "breclav-slovacka",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    7,
+    8,
+    10,
+    13
+   ]
+  },
+  {
+   "id": "566-0-1",
+   "line": "566",
+   "direction": 0,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "breclav-stara-breclav-krizovatka-ladna",
+    "breclav-stara-breclav-j-molaka",
+    "breclav-stara-breclav-vinohradni",
+    "breclav-stara-breclav-u-parku",
+    "breclav-stara-breclav-kulturni-dum",
+    "breclav-stara-breclav-manesova",
+    "breclav-stara-breclav-lidicka",
+    "breclav-sovadinova",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    10,
+    13
+   ]
+  },
+  {
+   "id": "566-0-2",
+   "line": "566",
+   "direction": 0,
+   "headsign": "Břeclav, Poštorná, Valtická, točna",
+   "stops": [
+    "breclav-stara-breclav-krizovatka-ladna",
+    "breclav-stara-breclav-j-molaka",
+    "breclav-stara-breclav-vinohradni",
+    "breclav-stara-breclav-u-parku",
+    "breclav-stara-breclav-kulturni-dum",
+    "breclav-stara-breclav-manesova",
+    "breclav-stara-breclav-lidicka",
+    "breclav-sovadinova",
+    "breclav-autobusove-nadrazi",
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-namesti-tgm-kostel",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-nadrazni",
+    "breclav-postorna-pkz",
+    "breclav-postorna-tovarni-ctvrt",
+    "breclav-postorna-valticka-tocna"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    10,
+    13,
+    16,
+    19,
+    22,
+    24,
+    25,
+    27,
+    28,
+    29,
+    31
+   ]
+  },
+  {
+   "id": "566-1-1",
+   "line": "566",
+   "direction": 1,
+   "headsign": "Břeclav, Stará Břeclav, křižovatka Ladná",
+   "stops": [
+    "breclav-autobusove-nadrazi",
+    "breclav-sovadinova",
+    "breclav-stara-breclav-lidicka",
+    "breclav-stara-breclav-manesova-2",
+    "breclav-stara-breclav-kulturni-dum",
+    "breclav-stara-breclav-u-parku",
+    "breclav-stara-breclav-vinohradni",
+    "breclav-stara-breclav-krizovatka-ladna"
+   ],
+   "offsets": [
+    0,
+    2,
+    4,
+    6,
+    7,
+    8,
+    10,
+    12
+   ]
+  },
+  {
+   "id": "566-1-2",
+   "line": "566",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "breclav-postorna-valticka-tocna",
+    "breclav-postorna-tovarni-ctvrt",
+    "breclav-postorna-pkz",
+    "breclav-postorna-nadrazni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    2,
+    4,
+    5,
+    6,
+    7,
+    9,
+    11,
+    14
+   ]
+  },
+  {
+   "id": "566-1-3",
+   "line": "566",
+   "direction": 1,
+   "headsign": "Břeclav, Stará Břeclav, křižovatka Ladná",
+   "stops": [
+    "breclav-postorna-valticka-tocna",
+    "breclav-postorna-tovarni-ctvrt",
+    "breclav-postorna-pkz",
+    "breclav-postorna-nadrazni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi",
+    "breclav-autobusove-nadrazi",
+    "breclav-sovadinova",
+    "breclav-stara-breclav-lidicka",
+    "breclav-stara-breclav-manesova-2",
+    "breclav-stara-breclav-kulturni-dum",
+    "breclav-stara-breclav-u-parku",
+    "breclav-stara-breclav-vinohradni",
+    "breclav-stara-breclav-krizovatka-ladna"
+   ],
+   "offsets": [
+    0,
+    2,
+    4,
+    5,
+    6,
+    7,
+    9,
+    11,
+    14,
+    17,
+    19,
+    21,
+    23,
+    24,
+    25,
+    27,
+    29
+   ]
+  },
+  {
+   "id": "567-0-1",
+   "line": "567",
+   "direction": 0,
+   "headsign": "Břeclav, Poštorná, Valtická, točna",
+   "stops": [
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-namesti-tgm-kostel",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-hlavni",
+    "breclav-postorna-valticka",
+    "breclav-postorna-valticka-tocna"
+   ],
+   "offsets": [
+    0,
+    3,
+    6,
+    8,
+    9,
+    10,
+    12,
+    14
+   ]
+  },
+  {
+   "id": "567-0-2",
+   "line": "567",
+   "direction": 0,
+   "headsign": "Břeclav, Poštorná, Valtická, točna",
+   "stops": [
+    "breclav-mestsky-hrbitov",
+    "breclav-pohansko-rozcesti",
+    "breclav-gumotex",
+    "breclav-autobusove-nadrazi",
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-namesti-tgm-kostel",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-hlavni",
+    "breclav-postorna-valticka",
+    "breclav-postorna-valticka-tocna"
+   ],
+   "offsets": [
+    0,
+    1,
+    3,
+    6,
+    6,
+    9,
+    12,
+    14,
+    15,
+    16,
+    18,
+    20
+   ]
+  },
+  {
+   "id": "567-1-1",
+   "line": "567",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "breclav-postorna-valticka-tocna",
+    "breclav-postorna-valticka",
+    "breclav-postorna-hlavni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    2,
+    4,
+    5,
+    6,
+    8,
+    10,
+    13
+   ]
+  },
+  {
+   "id": "568-0-1",
+   "line": "568",
+   "direction": 0,
+   "headsign": "Břeclav, Poštorná, Valtická, točna",
+   "stops": [
+    "breclav-mestsky-hrbitov",
+    "breclav-pohansko-rozcesti",
+    "breclav-gumotex",
+    "breclav-autobusove-nadrazi",
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-dum-kultury",
+    "breclav-poliklinika",
+    "breclav-namesti-tgm-kostel",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-nadrazni",
+    "breclav-postorna-pkz",
+    "breclav-postorna-tovarni-ctvrt",
+    "breclav-postorna-valticka-tocna"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    5,
+    5,
+    8,
+    10,
+    11,
+    14,
+    16,
+    17,
+    19,
+    20,
+    21,
+    23
+   ]
+  },
+  {
+   "id": "568-1-1",
+   "line": "568",
+   "direction": 1,
+   "headsign": "Břeclav, Městský hřbitov",
+   "stops": [
+    "breclav-postorna-valticka-tocna",
+    "breclav-postorna-tovarni-ctvrt",
+    "breclav-postorna-pkz",
+    "breclav-postorna-nadrazni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-dum-kultury",
+    "breclav-poliklinika",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi",
+    "breclav-autobusove-nadrazi",
+    "breclav-bors",
+    "breclav-pohansko-rozcesti",
+    "breclav-lanzhotska",
+    "breclav-mestsky-hrbitov"
+   ],
+   "offsets": [
+    0,
+    2,
+    3,
+    5,
+    6,
+    7,
+    9,
+    11,
+    12,
+    15,
+    18,
+    19,
+    20,
+    21,
+    23,
+    24
+   ]
+  },
+  {
+   "id": "569-0-1",
+   "line": "569",
+   "direction": 0,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "breclav-charvatska-n-ves-obrancu-miru",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-postorna-hlavni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-dum-kultury",
+    "breclav-poliklinika",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    10,
+    11,
+    12,
+    15,
+    17
+   ]
+  },
+  {
+   "id": "569-0-2",
+   "line": "569",
+   "direction": 0,
+   "headsign": "Břeclav, Stará Břeclav, křižovatka Ladná",
+   "stops": [
+    "breclav-charvatska-n-ves-obrancu-miru",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-postorna-hlavni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-dum-kultury",
+    "breclav-poliklinika",
+    "breclav-jana-palacha",
+    "breclav-autobusove-nadrazi",
+    "breclav-autobusove-nadrazi",
+    "breclav-sovadinova",
+    "breclav-stara-breclav-lidicka",
+    "breclav-stara-breclav-manesova-2",
+    "breclav-stara-breclav-kulturni-dum",
+    "breclav-stara-breclav-u-parku",
+    "breclav-stara-breclav-vinohradni",
+    "breclav-stara-breclav-krizovatka-ladna"
+   ],
+   "offsets": [
+    0,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    10,
+    11,
+    12,
+    15,
+    17,
+    19,
+    21,
+    23,
+    25,
+    26,
+    27,
+    29,
+    31
+   ]
+  },
+  {
+   "id": "569-1-1",
+   "line": "569",
+   "direction": 1,
+   "headsign": "Břeclav, Charvátská N. Ves, Obránců míru",
+   "stops": [
+    "breclav-mestsky-hrbitov",
+    "breclav-pohansko-rozcesti",
+    "breclav-gumotex",
+    "breclav-autobusove-nadrazi",
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-dum-kultury",
+    "breclav-poliklinika",
+    "breclav-namesti-tgm-kostel",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-hlavni",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-n-ves-obrancu-miru"
+   ],
+   "offsets": [
+    0,
+    2,
+    4,
+    6,
+    7,
+    9,
+    12,
+    13,
+    16,
+    18,
+    19,
+    20,
+    22,
+    23,
+    24,
+    25
+   ]
+  },
+  {
+   "id": "569-1-2",
+   "line": "569",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "breclav-stara-breclav-krizovatka-ladna",
+    "breclav-stara-breclav-j-molaka",
+    "breclav-stara-breclav-vinohradni",
+    "breclav-stara-breclav-u-parku",
+    "breclav-stara-breclav-u-parku",
+    "breclav-stara-breclav-kulturni-dum",
+    "breclav-stara-breclav-manesova",
+    "breclav-stara-breclav-lidicka",
+    "breclav-sovadinova",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    10,
+    12
+   ]
+  },
+  {
+   "id": "569-1-3",
+   "line": "569",
+   "direction": 1,
+   "headsign": "Břeclav, Charvátská N. Ves, Obránců míru",
+   "stops": [
+    "breclav-stara-breclav-krizovatka-ladna",
+    "breclav-stara-breclav-j-molaka",
+    "breclav-stara-breclav-vinohradni",
+    "breclav-stara-breclav-u-parku",
+    "breclav-stara-breclav-u-parku",
+    "breclav-stara-breclav-kulturni-dum",
+    "breclav-stara-breclav-manesova",
+    "breclav-stara-breclav-lidicka",
+    "breclav-sovadinova",
+    "breclav-autobusove-nadrazi",
+    "breclav-autobusove-nadrazi",
+    "breclav-jana-palacha",
+    "breclav-dum-kultury",
+    "breclav-poliklinika",
+    "breclav-namesti-tgm-kostel",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-hlavni",
+    "breclav-postorna-hlavni-na-konci",
+    "breclav-charvatska-nova-ves-palackeho",
+    "breclav-charvatska-nova-ves-lednicka",
+    "breclav-charvatska-n-ves-obrancu-miru"
+   ],
+   "offsets": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    10,
+    12,
+    16,
+    18,
+    21,
+    22,
+    25,
+    27,
+    28,
+    29,
+    31,
+    32,
+    33,
+    34
+   ]
+  },
+  {
+   "id": "571-0-1",
+   "line": "571",
+   "direction": 0,
+   "headsign": "Valtice, aut. st.",
+   "stops": [
+    "breclav-1-maje",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-valticka",
+    "valtice-hajenka",
+    "valtice-ceska-ctvrt",
+    "valtice-nemocnice",
+    "valtice-aut-st"
+   ],
+   "offsets": [
+    0,
+    1,
+    3,
+    6,
+    12,
+    14,
+    15,
+    22
+   ]
+  },
+  {
+   "id": "571-0-2",
+   "line": "571",
+   "direction": 0,
+   "headsign": "Valtice, aut. st.",
+   "stops": [
+    "breclav-autobusove-nadrazi",
+    "breclav-1-maje",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-pkz",
+    "valtice-hajenka",
+    "valtice-ceska-ctvrt",
+    "valtice-nemocnice",
+    "valtice-aut-st"
+   ],
+   "offsets": [
+    0,
+    3,
+    4,
+    6,
+    9,
+    15,
+    17,
+    18,
+    29
+   ]
+  },
+  {
+   "id": "571-0-3",
+   "line": "571",
+   "direction": 0,
+   "headsign": "Valtice, aut. st.",
+   "stops": [
+    "breclav-autobusove-nadrazi",
+    "breclav-1-maje",
+    "breclav-postorna-lesni",
+    "breclav-postorna-kostel",
+    "breclav-postorna-valticka",
+    "valtice-hajenka",
+    "valtice-ceska-ctvrt",
+    "valtice-nemocnice",
+    "valtice-aut-st"
+   ],
+   "offsets": [
+    0,
+    3,
+    4,
+    6,
+    9,
+    15,
+    17,
+    18,
+    20
+   ]
+  },
+  {
+   "id": "571-1-1",
+   "line": "571",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "valtice-aut-st",
+    "valtice-nemocnice",
+    "valtice-ceska-ctvrt",
+    "valtice-hajenka",
+    "breclav-postorna-pkz",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    2,
+    3,
+    5,
+    11,
+    14,
+    15,
+    16,
+    40
+   ]
+  },
+  {
+   "id": "571-1-2",
+   "line": "571",
+   "direction": 1,
+   "headsign": "Břeclav, náměstí TGM, kostel",
+   "stops": [
+    "valtice-aut-st",
+    "valtice-nemocnice",
+    "valtice-ceska-ctvrt",
+    "valtice-hajenka",
+    "breclav-postorna-valticka",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel"
+   ],
+   "offsets": [
+    0,
+    2,
+    3,
+    5,
+    11,
+    14,
+    15,
+    16
+   ]
+  },
+  {
+   "id": "571-1-3",
+   "line": "571",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "valtice-aut-st",
+    "valtice-nemocnice",
+    "valtice-ceska-ctvrt",
+    "valtice-hajenka",
+    "breclav-postorna-valticka",
+    "breclav-postorna-kostel",
+    "breclav-postorna-lesni",
+    "breclav-namesti-tgm-kostel",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    2,
+    3,
+    5,
+    11,
+    14,
+    15,
+    16,
+    20
+   ]
+  },
+  {
+   "id": "574-0-1",
+   "line": "574",
+   "direction": 0,
+   "headsign": "Ladná, škola",
+   "stops": [
+    "breclav-autobusove-nadrazi",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-cukrovar",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-stara-breclav-krizovatka-ladna",
+    "ladna-mlynska",
+    "ladna-zeleznicni-stanice",
+    "ladna-skola"
+   ],
+   "offsets": [
+    0,
+    3,
+    5,
+    7,
+    8,
+    15,
+    16,
+    20
+   ]
+  },
+  {
+   "id": "574-0-2",
+   "line": "574",
+   "direction": 0,
+   "headsign": "Podivín, železniční stanice",
+   "stops": [
+    "breclav-autobusove-nadrazi",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-cukrovar",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-stara-breclav-krizovatka-ladna",
+    "ladna-mlynska",
+    "ladna-zeleznicni-stanice",
+    "ladna-skola",
+    "podivin-mechanizacni-stredisko",
+    "podivin-bratislavska",
+    "podivin-besedni-dum",
+    "podivin-zeleznicni-stanice"
+   ],
+   "offsets": [
+    0,
+    3,
+    5,
+    7,
+    8,
+    15,
+    16,
+    17,
+    19,
+    22,
+    24,
+    25
+   ]
+  },
+  {
+   "id": "574-0-3",
+   "line": "574",
+   "direction": 0,
+   "headsign": "Ladná, škola",
+   "stops": [
+    "breclav-autobusove-nadrazi",
+    "breclav-poliklinika",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-cukrovar",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-stara-breclav-krizovatka-ladna",
+    "ladna-mlynska",
+    "ladna-zeleznicni-stanice",
+    "ladna-skola"
+   ],
+   "offsets": [
+    0,
+    4,
+    7,
+    9,
+    11,
+    12,
+    19,
+    20,
+    25
+   ]
+  },
+  {
+   "id": "574-0-4",
+   "line": "574",
+   "direction": 0,
+   "headsign": "Ladná, škola",
+   "stops": [
+    "breclav-gumotex",
+    "breclav-autobusove-nadrazi",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-cukrovar",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-stara-breclav-krizovatka-ladna",
+    "ladna-mlynska",
+    "ladna-zeleznicni-stanice",
+    "ladna-skola"
+   ],
+   "offsets": [
+    0,
+    5,
+    8,
+    10,
+    12,
+    13,
+    20,
+    21,
+    25
+   ]
+  },
+  {
+   "id": "574-0-5",
+   "line": "574",
+   "direction": 0,
+   "headsign": "Podivín, železniční stanice",
+   "stops": [
+    "breclav-gumotex",
+    "breclav-autobusove-nadrazi",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-cukrovar",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-stara-breclav-krizovatka-ladna",
+    "ladna-mlynska",
+    "ladna-zeleznicni-stanice",
+    "ladna-skola",
+    "podivin-mechanizacni-stredisko",
+    "podivin-bratislavska",
+    "podivin-besedni-dum",
+    "podivin-zeleznicni-stanice"
+   ],
+   "offsets": [
+    0,
+    5,
+    8,
+    10,
+    12,
+    13,
+    20,
+    21,
+    22,
+    24,
+    27,
+    29,
+    30
+   ]
+  },
+  {
+   "id": "574-1-1",
+   "line": "574",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "ladna-skola",
+    "ladna-zeleznicni-stanice",
+    "ladna-mlynska",
+    "breclav-stara-breclav-krizovatka-ladna",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-cukrovar",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    2,
+    3,
+    8,
+    9,
+    11,
+    13,
+    16
+   ]
+  },
+  {
+   "id": "574-1-2",
+   "line": "574",
+   "direction": 1,
+   "headsign": "Břeclav, Gumotex",
+   "stops": [
+    "ladna-skola",
+    "ladna-zeleznicni-stanice",
+    "ladna-mlynska",
+    "breclav-stara-breclav-krizovatka-ladna",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-cukrovar",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-autobusove-nadrazi",
+    "breclav-bors",
+    "breclav-pohansko-rozcesti",
+    "breclav-gumotex"
+   ],
+   "offsets": [
+    0,
+    2,
+    3,
+    8,
+    9,
+    11,
+    13,
+    16,
+    17,
+    18,
+    20
+   ]
+  },
+  {
+   "id": "574-1-3",
+   "line": "574",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "ladna-skola",
+    "ladna-zeleznicni-stanice",
+    "ladna-mlynska",
+    "breclav-stara-breclav-krizovatka-ladna",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-cukrovar",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-poliklinika",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    2,
+    3,
+    8,
+    9,
+    11,
+    13,
+    16,
+    20
+   ]
+  },
+  {
+   "id": "574-1-4",
+   "line": "574",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "podivin-zeleznicni-stanice",
+    "podivin-besedni-dum",
+    "podivin-bratislavska",
+    "podivin-mechanizacni-stredisko",
+    "ladna-skola",
+    "ladna-zeleznicni-stanice",
+    "ladna-mlynska",
+    "breclav-stara-breclav-krizovatka-ladna",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-cukrovar",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    1,
+    3,
+    6,
+    8,
+    10,
+    11,
+    16,
+    17,
+    19,
+    21,
+    24
+   ]
+  },
+  {
+   "id": "574-1-5",
+   "line": "574",
+   "direction": 1,
+   "headsign": "Břeclav, Gumotex",
+   "stops": [
+    "podivin-zeleznicni-stanice",
+    "podivin-besedni-dum",
+    "podivin-bratislavska",
+    "podivin-mechanizacni-stredisko",
+    "ladna-skola",
+    "ladna-zeleznicni-stanice",
+    "ladna-mlynska",
+    "breclav-stara-breclav-krizovatka-ladna",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-cukrovar",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-autobusove-nadrazi",
+    "breclav-bors",
+    "breclav-pohansko-rozcesti",
+    "breclav-gumotex"
+   ],
+   "offsets": [
+    0,
+    1,
+    3,
+    6,
+    11,
+    13,
+    14,
+    19,
+    20,
+    22,
+    24,
+    27,
+    28,
+    29,
+    61
+   ]
+  },
+  {
+   "id": "574-1-6",
+   "line": "574",
+   "direction": 1,
+   "headsign": "Břeclav, autobusové nádraží",
+   "stops": [
+    "podivin-zeleznicni-stanice",
+    "podivin-besedni-dum",
+    "podivin-bratislavska",
+    "podivin-mechanizacni-stredisko",
+    "ladna-skola",
+    "ladna-zeleznicni-stanice",
+    "ladna-mlynska",
+    "breclav-stara-breclav-krizovatka-ladna",
+    "breclav-stara-breclav-skopalikova",
+    "breclav-cukrovar",
+    "breclav-namesti-tgm-mestsky-urad",
+    "breclav-poliklinika",
+    "breclav-autobusove-nadrazi"
+   ],
+   "offsets": [
+    0,
+    1,
+    3,
+    6,
+    13,
+    15,
+    16,
+    21,
+    22,
+    24,
+    26,
+    29,
+    33
+   ]
+  }
+ ],
+ "services": [
+  {
+   "id": "1",
+   "days": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0
+   ],
+   "from": "2026-08-28",
+   "to": "2026-12-11",
+   "removed": [
+    "2026-09-28",
+    "2026-10-28",
+    "2026-11-17"
+   ]
+  },
+  {
+   "id": "3",
+   "days": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0
+   ],
+   "from": "2026-08-28",
+   "to": "2026-08-31"
+  },
+  {
+   "id": "26",
+   "days": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0
+   ],
+   "from": "2026-08-28",
+   "to": "2026-10-30",
+   "removed": [
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-03",
+    "2026-09-04",
+    "2026-09-07",
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11",
+    "2026-09-14",
+    "2026-09-15",
+    "2026-09-16",
+    "2026-09-17",
+    "2026-09-18",
+    "2026-09-21",
+    "2026-09-22",
+    "2026-09-23",
+    "2026-09-24",
+    "2026-09-25",
+    "2026-09-28",
+    "2026-09-29",
+    "2026-09-30",
+    "2026-10-01",
+    "2026-10-02",
+    "2026-10-05",
+    "2026-10-06",
+    "2026-10-07",
+    "2026-10-08",
+    "2026-10-09",
+    "2026-10-12",
+    "2026-10-13",
+    "2026-10-14",
+    "2026-10-15",
+    "2026-10-16",
+    "2026-10-19",
+    "2026-10-20",
+    "2026-10-21",
+    "2026-10-22",
+    "2026-10-23",
+    "2026-10-26",
+    "2026-10-27",
+    "2026-10-28"
+   ]
+  },
+  {
+   "id": "39",
+   "days": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1
+   ],
+   "from": "2026-08-29",
+   "to": "2026-08-30"
+  },
+  {
+   "id": "40",
+   "days": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1
+   ],
+   "from": "2026-08-29",
+   "to": "2026-08-29"
+  },
+  {
+   "id": "62",
+   "days": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1
+   ],
+   "from": "2026-08-29",
+   "to": "2026-10-25",
+   "added": [
+    "2026-09-28"
+   ]
+  },
+  {
+   "id": "105",
+   "days": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1
+   ],
+   "from": "2026-08-30",
+   "to": "2026-08-30"
+  },
+  {
+   "id": "161",
+   "days": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0
+   ],
+   "from": "2026-09-01",
+   "to": "2026-12-11",
+   "removed": [
+    "2026-09-28",
+    "2026-10-28",
+    "2026-11-17"
+   ]
+  },
+  {
+   "id": "164",
+   "days": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0
+   ],
+   "from": "2026-09-01",
+   "to": "2026-12-11",
+   "removed": [
+    "2026-09-28",
+    "2026-10-28",
+    "2026-10-29",
+    "2026-10-30",
+    "2026-11-17"
+   ]
+  },
+  {
+   "id": "223",
+   "days": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1
+   ],
+   "from": "2026-09-05",
+   "to": "2026-12-12",
+   "added": [
+    "2026-09-28",
+    "2026-10-28",
+    "2026-11-17"
+   ]
+  },
+  {
+   "id": "370",
+   "days": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1
+   ],
+   "from": "2026-10-28",
+   "to": "2026-12-12",
+   "added": [
+    "2026-10-28",
+    "2026-11-17"
+   ]
+  },
+  {
+   "id": "vsedni-den",
+   "days": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0
+   ],
+   "from": "2026-08-28",
+   "to": "2026-12-11"
+  }
+ ],
+ "trips": [
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 302
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 362
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 422
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 482
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 542
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 602
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 662
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 722
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 782
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 842
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 902
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 962
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 1022
+  },
+  {
+   "pattern": "561-0-1",
+   "service": "vsedni-den",
+   "start": 1082
+  },
+  {
+   "pattern": "561-0-2",
+   "service": "vsedni-den",
+   "start": 315
+  },
+  {
+   "pattern": "561-0-2",
+   "service": "vsedni-den",
+   "start": 375
+  },
+  {
+   "pattern": "561-0-2",
+   "service": "vsedni-den",
+   "start": 435
+  },
+  {
+   "pattern": "561-0-2",
+   "service": "vsedni-den",
+   "start": 855
+  },
+  {
+   "pattern": "561-0-2",
+   "service": "vsedni-den",
+   "start": 915
+  },
+  {
+   "pattern": "561-0-2",
+   "service": "vsedni-den",
+   "start": 975
+  },
+  {
+   "pattern": "561-0-2",
+   "service": "vsedni-den",
+   "start": 1035
+  },
+  {
+   "pattern": "561-0-2",
+   "service": "vsedni-den",
+   "start": 1215
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 305
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 320
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 365
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 380
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 425
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 440
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 500
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 560
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 620
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 680
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 740
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 800
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 845
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 860
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 905
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 920
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 965
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 980
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 1025
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 1040
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 1085
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 1100
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 1167,
+   "offsets": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    10,
+    12,
+    13,
+    15,
+    16,
+    18
+   ]
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 1227,
+   "offsets": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    10,
+    12,
+    13,
+    15,
+    16,
+    18
+   ]
+  },
+  {
+   "pattern": "561-1-1",
+   "service": "vsedni-den",
+   "start": 1287,
+   "offsets": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    10,
+    12,
+    13,
+    15,
+    16,
+    18
+   ]
+  },
+  {
+   "pattern": "562-0-1",
+   "service": "vsedni-den",
+   "start": 1140
+  },
+  {
+   "pattern": "562-0-1",
+   "service": "vsedni-den",
+   "start": 1200
+  },
+  {
+   "pattern": "562-0-2",
+   "service": "vsedni-den",
+   "start": 1401
+  },
+  {
+   "pattern": "562-0-3",
+   "service": "vsedni-den",
+   "start": 1254,
+   "offsets": [
+    0,
+    2,
+    3,
+    6,
+    8,
+    10,
+    11,
+    14,
+    17,
+    18,
+    20,
+    21,
+    23,
+    25,
+    27,
+    28,
+    30,
+    31,
+    32
+   ]
+  },
+  {
+   "pattern": "562-0-3",
+   "service": "vsedni-den",
+   "start": 1289,
+   "offsets": [
+    0,
+    2,
+    3,
+    6,
+    8,
+    10,
+    11,
+    14,
+    16,
+    17,
+    18,
+    19,
+    21,
+    22,
+    24,
+    25,
+    26,
+    27,
+    28
+   ]
+  },
+  {
+   "pattern": "562-0-3",
+   "service": "vsedni-den",
+   "start": 1333
+  },
+  {
+   "pattern": "562-1-1",
+   "service": "vsedni-den",
+   "start": 1145
+  },
+  {
+   "pattern": "562-1-1",
+   "service": "vsedni-den",
+   "start": 1205
+  },
+  {
+   "pattern": "562-1-1",
+   "service": "vsedni-den",
+   "start": 1265
+  },
+  {
+   "pattern": "562-1-2",
+   "service": "vsedni-den",
+   "start": 1317
+  },
+  {
+   "pattern": "562-1-3",
+   "service": "vsedni-den",
+   "start": 1360
+  },
+  {
+   "pattern": "562-1-4",
+   "service": "vsedni-den",
+   "start": 245
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 308
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 368
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 428
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 488
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 548
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 608
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 668
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 728
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 788
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 848
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 908
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 968
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 1028
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 1088
+  },
+  {
+   "pattern": "563-0-1",
+   "service": "vsedni-den",
+   "start": 1208
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 315,
+   "offsets": [
+    0,
+    1,
+    2,
+    4
+   ]
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 345,
+   "offsets": [
+    0,
+    1,
+    2,
+    4
+   ]
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 375,
+   "offsets": [
+    0,
+    1,
+    2,
+    4
+   ]
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 405,
+   "offsets": [
+    0,
+    1,
+    2,
+    4
+   ]
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 435,
+   "offsets": [
+    0,
+    1,
+    2,
+    4
+   ]
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 465,
+   "offsets": [
+    0,
+    1,
+    2,
+    4
+   ]
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 855,
+   "offsets": [
+    0,
+    1,
+    2,
+    4
+   ]
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 885
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 915
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 945
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 975
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 1005
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 1035
+  },
+  {
+   "pattern": "563-0-2",
+   "service": "vsedni-den",
+   "start": 1065
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 311
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 341
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 371
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 401
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 431
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 461
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 851
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 881
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 911
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 941
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 971
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 1001
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 1031
+  },
+  {
+   "pattern": "563-1-1",
+   "service": "vsedni-den",
+   "start": 1061
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 325
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 385
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 445
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 475
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 509
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 569
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 629
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 689
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 749
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 809
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 865
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 925
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 985
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 1045
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 1075
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 1109
+  },
+  {
+   "pattern": "563-1-2",
+   "service": "vsedni-den",
+   "start": 1229
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 274
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 322
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 382
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 442
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 502
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 562
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 622
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 682
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 742
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 802
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 862
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 922
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 982
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 1042
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 1102
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 1162
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 1222
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 1282
+  },
+  {
+   "pattern": "565-0-1",
+   "service": "vsedni-den",
+   "start": 1342,
+   "offsets": [
+    0,
+    2,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10
+   ]
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 287
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 347
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 407
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 467
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 527
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 587
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 647
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 707
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 767
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 827
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 887
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 947
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 1007
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 1067
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 1127
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 1187
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 1247
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 1307
+  },
+  {
+   "pattern": "565-1-1",
+   "service": "vsedni-den",
+   "start": 1352
+  },
+  {
+   "pattern": "566-0-1",
+   "service": "vsedni-den",
+   "start": 1265
+  },
+  {
+   "pattern": "566-0-1",
+   "service": "vsedni-den",
+   "start": 1325
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 305
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 365
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 425
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 485
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 545
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 605
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 665
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 725
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 785
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 845
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 905
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 965
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 1025
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 1085
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 1145
+  },
+  {
+   "pattern": "566-0-2",
+   "service": "vsedni-den",
+   "start": 1205
+  },
+  {
+   "pattern": "566-1-1",
+   "service": "vsedni-den",
+   "start": 1177
+  },
+  {
+   "pattern": "566-1-1",
+   "service": "vsedni-den",
+   "start": 1237
+  },
+  {
+   "pattern": "566-1-1",
+   "service": "vsedni-den",
+   "start": 1297
+  },
+  {
+   "pattern": "566-1-2",
+   "service": "vsedni-den",
+   "start": 360
+  },
+  {
+   "pattern": "566-1-2",
+   "service": "vsedni-den",
+   "start": 420
+  },
+  {
+   "pattern": "566-1-2",
+   "service": "vsedni-den",
+   "start": 449
+  },
+  {
+   "pattern": "566-1-2",
+   "service": "vsedni-den",
+   "start": 900
+  },
+  {
+   "pattern": "566-1-2",
+   "service": "vsedni-den",
+   "start": 960
+  },
+  {
+   "pattern": "566-1-2",
+   "service": "vsedni-den",
+   "start": 1020
+  },
+  {
+   "pattern": "566-1-2",
+   "service": "vsedni-den",
+   "start": 1080
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 320
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 380
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 440
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 500
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 560
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 620
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 680
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 740
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 800
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 860
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 920
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 980
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 1040
+  },
+  {
+   "pattern": "566-1-3",
+   "service": "vsedni-den",
+   "start": 1100
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 305
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 345
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 365
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 405
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 425
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 435
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 485
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 513
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 545
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 573
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 605
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 633
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 665
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 693
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 725
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 753
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 785
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 813
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 845
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 885
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 905
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 945
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 965
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 1005
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 1025
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 1065
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 1085
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 1113
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 1173
+  },
+  {
+   "pattern": "567-0-1",
+   "service": "vsedni-den",
+   "start": 1240
+  },
+  {
+   "pattern": "567-0-2",
+   "service": "vsedni-den",
+   "start": 267
+  },
+  {
+   "pattern": "567-0-2",
+   "service": "vsedni-den",
+   "start": 327
+  },
+  {
+   "pattern": "567-0-2",
+   "service": "vsedni-den",
+   "start": 387
+  },
+  {
+   "pattern": "567-0-2",
+   "service": "vsedni-den",
+   "start": 447
+  },
+  {
+   "pattern": "567-0-2",
+   "service": "vsedni-den",
+   "start": 867
+  },
+  {
+   "pattern": "567-0-2",
+   "service": "vsedni-den",
+   "start": 927
+  },
+  {
+   "pattern": "567-0-2",
+   "service": "vsedni-den",
+   "start": 987
+  },
+  {
+   "pattern": "567-0-2",
+   "service": "vsedni-den",
+   "start": 1047
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 313
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 338
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 373
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 398
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 433
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 458
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 488
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 518
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 548
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 578
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 608
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 638
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 668
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 698
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 728
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 758
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 788
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 818
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 848
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 878
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 913
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 938
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 973
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 998
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 1033
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 1058
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 1093
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 1118
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 1148
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 1178
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 1208
+  },
+  {
+   "pattern": "567-1-1",
+   "service": "vsedni-den",
+   "start": 1238
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 290
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 350
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 410
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 465
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 525
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 585
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 645
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 705
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 765
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 825
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 890
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 950
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 1010
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 1070
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 1125
+  },
+  {
+   "pattern": "568-0-1",
+   "service": "vsedni-den",
+   "start": 1185
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 286
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 346
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 406
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 466
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 526
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 586
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 646
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 706
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 766
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 826
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 886
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 946
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 1006
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 1066
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 1126
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 1186
+  },
+  {
+   "pattern": "568-1-1",
+   "service": "vsedni-den",
+   "start": 1254
+  },
+  {
+   "pattern": "569-0-1",
+   "service": "vsedni-den",
+   "start": 483
+  },
+  {
+   "pattern": "569-0-1",
+   "service": "vsedni-den",
+   "start": 543
+  },
+  {
+   "pattern": "569-0-1",
+   "service": "vsedni-den",
+   "start": 603
+  },
+  {
+   "pattern": "569-0-1",
+   "service": "vsedni-den",
+   "start": 663
+  },
+  {
+   "pattern": "569-0-1",
+   "service": "vsedni-den",
+   "start": 723
+  },
+  {
+   "pattern": "569-0-1",
+   "service": "vsedni-den",
+   "start": 783
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 343
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 403
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 463
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 523
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 583
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 643
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 703
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 763
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 823
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 883
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 943
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 1003
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 1063
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 1123
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 1183
+  },
+  {
+   "pattern": "569-0-2",
+   "service": "vsedni-den",
+   "start": 1243
+  },
+  {
+   "pattern": "569-1-1",
+   "service": "vsedni-den",
+   "start": 495
+  },
+  {
+   "pattern": "569-1-1",
+   "service": "vsedni-den",
+   "start": 555
+  },
+  {
+   "pattern": "569-1-1",
+   "service": "vsedni-den",
+   "start": 615
+  },
+  {
+   "pattern": "569-1-1",
+   "service": "vsedni-den",
+   "start": 675
+  },
+  {
+   "pattern": "569-1-1",
+   "service": "vsedni-den",
+   "start": 735
+  },
+  {
+   "pattern": "569-1-1",
+   "service": "vsedni-den",
+   "start": 795
+  },
+  {
+   "pattern": "569-1-1",
+   "service": "vsedni-den",
+   "start": 1095
+  },
+  {
+   "pattern": "569-1-1",
+   "service": "vsedni-den",
+   "start": 1155
+  },
+  {
+   "pattern": "569-1-2",
+   "service": "vsedni-den",
+   "start": 1282
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 322
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 382
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 442
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 502
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 562
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 622
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 682
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 742
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 802
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 862
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 922
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 982
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 1042
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 1102
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 1162
+  },
+  {
+   "pattern": "569-1-3",
+   "service": "vsedni-den",
+   "start": 1222
+  },
+  {
+   "pattern": "571-0-1",
+   "service": "161",
+   "start": 413
+  },
+  {
+   "pattern": "571-0-2",
+   "service": "161",
+   "start": 862
+  },
+  {
+   "pattern": "571-0-2",
+   "service": "3",
+   "start": 862
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "1",
+   "start": 316
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "1",
+   "start": 346,
+   "offsets": [
+    0,
+    3,
+    4,
+    6,
+    9,
+    15,
+    17,
+    18,
+    25
+   ]
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "164",
+   "start": 382,
+   "offsets": [
+    0,
+    3,
+    4,
+    6,
+    9,
+    15,
+    17,
+    18,
+    24
+   ]
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "26",
+   "start": 382,
+   "offsets": [
+    0,
+    3,
+    4,
+    6,
+    9,
+    15,
+    17,
+    18,
+    24
+   ]
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "1",
+   "start": 412,
+   "offsets": [
+    0,
+    3,
+    4,
+    6,
+    9,
+    15,
+    17,
+    18,
+    24
+   ]
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "1",
+   "start": 472,
+   "offsets": [
+    0,
+    3,
+    4,
+    6,
+    9,
+    15,
+    17,
+    18,
+    25
+   ]
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "1",
+   "start": 622
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "1",
+   "start": 742
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "164",
+   "start": 802,
+   "offsets": [
+    0,
+    3,
+    4,
+    6,
+    9,
+    15,
+    17,
+    18,
+    54
+   ]
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "26",
+   "start": 802,
+   "offsets": [
+    0,
+    3,
+    4,
+    6,
+    9,
+    15,
+    17,
+    18,
+    54
+   ]
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "161",
+   "start": 842
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "3",
+   "start": 842
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "1",
+   "start": 922,
+   "offsets": [
+    0,
+    3,
+    4,
+    6,
+    9,
+    15,
+    17,
+    18,
+    29
+   ]
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "1",
+   "start": 982,
+   "offsets": [
+    0,
+    3,
+    4,
+    6,
+    9,
+    15,
+    17,
+    18,
+    29
+   ]
+  },
+  {
+   "pattern": "571-0-3",
+   "service": "1",
+   "start": 1249,
+   "offsets": [
+    0,
+    3,
+    4,
+    6,
+    9,
+    15,
+    17,
+    18,
+    22
+   ]
+  },
+  {
+   "pattern": "571-1-1",
+   "service": "1",
+   "start": 306
+  },
+  {
+   "pattern": "571-1-1",
+   "service": "1",
+   "start": 371,
+   "offsets": [
+    0,
+    2,
+    3,
+    5,
+    11,
+    14,
+    15,
+    16,
+    41
+   ]
+  },
+  {
+   "pattern": "571-1-2",
+   "service": "161",
+   "start": 393
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "164",
+   "start": 406
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "26",
+   "start": 406
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "1",
+   "start": 436
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "1",
+   "start": 556,
+   "offsets": [
+    0,
+    2,
+    3,
+    5,
+    11,
+    14,
+    15,
+    16,
+    66
+   ]
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "1",
+   "start": 676,
+   "offsets": [
+    0,
+    2,
+    3,
+    5,
+    11,
+    14,
+    15,
+    16,
+    66
+   ]
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "1",
+   "start": 796
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "164",
+   "start": 856
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "26",
+   "start": 856
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "161",
+   "start": 891
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "3",
+   "start": 891
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "1",
+   "start": 951,
+   "offsets": [
+    0,
+    2,
+    3,
+    5,
+    11,
+    14,
+    15,
+    16,
+    31
+   ]
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "1",
+   "start": 1011
+  },
+  {
+   "pattern": "571-1-3",
+   "service": "1",
+   "start": 1371
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "164",
+   "start": 322,
+   "offsets": [
+    0,
+    3,
+    5,
+    7,
+    8,
+    15,
+    16,
+    18
+   ]
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "26",
+   "start": 322,
+   "offsets": [
+    0,
+    3,
+    5,
+    7,
+    8,
+    15,
+    16,
+    18
+   ]
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "161",
+   "start": 433,
+   "offsets": [
+    0,
+    3,
+    5,
+    7,
+    8,
+    15,
+    16,
+    22
+   ]
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "105",
+   "start": 440
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "223",
+   "start": 440
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "40",
+   "start": 440
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "370",
+   "start": 750
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "62",
+   "start": 750
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "161",
+   "start": 775
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "3",
+   "start": 775
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "161",
+   "start": 910,
+   "offsets": [
+    0,
+    3,
+    5,
+    7,
+    8,
+    15,
+    16,
+    25
+   ]
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "3",
+   "start": 910,
+   "offsets": [
+    0,
+    3,
+    5,
+    7,
+    8,
+    15,
+    16,
+    25
+   ]
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "223",
+   "start": 1050
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "39",
+   "start": 1050
+  },
+  {
+   "pattern": "574-0-1",
+   "service": "1",
+   "start": 1210,
+   "offsets": [
+    0,
+    3,
+    5,
+    7,
+    8,
+    15,
+    16,
+    25
+   ]
+  },
+  {
+   "pattern": "574-0-2",
+   "service": "1",
+   "start": 414
+  },
+  {
+   "pattern": "574-0-3",
+   "service": "161",
+   "start": 490
+  },
+  {
+   "pattern": "574-0-3",
+   "service": "3",
+   "start": 490
+  },
+  {
+   "pattern": "574-0-3",
+   "service": "161",
+   "start": 610
+  },
+  {
+   "pattern": "574-0-3",
+   "service": "3",
+   "start": 610
+  },
+  {
+   "pattern": "574-0-3",
+   "service": "161",
+   "start": 670
+  },
+  {
+   "pattern": "574-0-3",
+   "service": "3",
+   "start": 670
+  },
+  {
+   "pattern": "574-0-3",
+   "service": "161",
+   "start": 845,
+   "offsets": [
+    0,
+    4,
+    7,
+    9,
+    11,
+    12,
+    19,
+    20,
+    23
+   ]
+  },
+  {
+   "pattern": "574-0-3",
+   "service": "3",
+   "start": 845,
+   "offsets": [
+    0,
+    4,
+    7,
+    9,
+    11,
+    12,
+    19,
+    20,
+    23
+   ]
+  },
+  {
+   "pattern": "574-0-3",
+   "service": "1",
+   "start": 970
+  },
+  {
+   "pattern": "574-0-3",
+   "service": "1",
+   "start": 1030
+  },
+  {
+   "pattern": "574-0-3",
+   "service": "1",
+   "start": 1090
+  },
+  {
+   "pattern": "574-0-4",
+   "service": "1",
+   "start": 365
+  },
+  {
+   "pattern": "574-0-5",
+   "service": "161",
+   "start": 860
+  },
+  {
+   "pattern": "574-0-5",
+   "service": "3",
+   "start": 860
+  },
+  {
+   "pattern": "574-0-5",
+   "service": "1",
+   "start": 1340
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "164",
+   "start": 340
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "26",
+   "start": 340
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "105",
+   "start": 460
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "223",
+   "start": 460
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "40",
+   "start": 460
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "161",
+   "start": 635,
+   "offsets": [
+    0,
+    2,
+    3,
+    8,
+    9,
+    11,
+    13,
+    35
+   ]
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "3",
+   "start": 635,
+   "offsets": [
+    0,
+    2,
+    3,
+    8,
+    9,
+    11,
+    13,
+    35
+   ]
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "370",
+   "start": 770
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "62",
+   "start": 770
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "1",
+   "start": 995,
+   "offsets": [
+    0,
+    2,
+    3,
+    8,
+    9,
+    11,
+    13,
+    35
+   ]
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "223",
+   "start": 1070
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "39",
+   "start": 1070
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "1",
+   "start": 1115
+  },
+  {
+   "pattern": "574-1-1",
+   "service": "1",
+   "start": 1235
+  },
+  {
+   "pattern": "574-1-2",
+   "service": "161",
+   "start": 795
+  },
+  {
+   "pattern": "574-1-2",
+   "service": "3",
+   "start": 795
+  },
+  {
+   "pattern": "574-1-3",
+   "service": "1",
+   "start": 390,
+   "offsets": [
+    0,
+    2,
+    3,
+    8,
+    9,
+    11,
+    13,
+    16,
+    24
+   ]
+  },
+  {
+   "pattern": "574-1-3",
+   "service": "161",
+   "start": 455,
+   "offsets": [
+    0,
+    2,
+    3,
+    8,
+    9,
+    11,
+    13,
+    16,
+    35
+   ]
+  },
+  {
+   "pattern": "574-1-3",
+   "service": "161",
+   "start": 515,
+   "offsets": [
+    0,
+    2,
+    3,
+    8,
+    9,
+    11,
+    13,
+    16,
+    95
+   ]
+  },
+  {
+   "pattern": "574-1-3",
+   "service": "3",
+   "start": 515,
+   "offsets": [
+    0,
+    2,
+    3,
+    8,
+    9,
+    11,
+    13,
+    16,
+    95
+   ]
+  },
+  {
+   "pattern": "574-1-3",
+   "service": "161",
+   "start": 695
+  },
+  {
+   "pattern": "574-1-3",
+   "service": "3",
+   "start": 695
+  },
+  {
+   "pattern": "574-1-3",
+   "service": "161",
+   "start": 868
+  },
+  {
+   "pattern": "574-1-3",
+   "service": "3",
+   "start": 868
+  },
+  {
+   "pattern": "574-1-3",
+   "service": "161",
+   "start": 935
+  },
+  {
+   "pattern": "574-1-3",
+   "service": "3",
+   "start": 935
+  },
+  {
+   "pattern": "574-1-3",
+   "service": "1",
+   "start": 1055,
+   "offsets": [
+    0,
+    2,
+    3,
+    8,
+    9,
+    11,
+    13,
+    16,
+    35
+   ]
+  },
+  {
+   "pattern": "574-1-4",
+   "service": "161",
+   "start": 422,
+   "offsets": [
+    0,
+    1,
+    3,
+    6,
+    13,
+    15,
+    16,
+    21,
+    22,
+    24,
+    26,
+    29
+   ]
+  },
+  {
+   "pattern": "574-1-4",
+   "service": "161",
+   "start": 912
+  },
+  {
+   "pattern": "574-1-4",
+   "service": "3",
+   "start": 912
+  },
+  {
+   "pattern": "574-1-5",
+   "service": "1",
+   "start": 304
+  },
+  {
+   "pattern": "574-1-5",
+   "service": "1",
+   "start": 1267,
+   "offsets": [
+    0,
+    1,
+    3,
+    6,
+    8,
+    10,
+    11,
+    16,
+    17,
+    19,
+    21,
+    24,
+    25,
+    26,
+    73
+   ]
+  },
+  {
+   "pattern": "574-1-6",
+   "service": "3",
+   "start": 422
+  }
+ ]
+}

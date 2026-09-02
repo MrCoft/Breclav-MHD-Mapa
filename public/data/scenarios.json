@@ -1,1 +1,4 @@
-[{ "id": "current", "label": "Současný stav" }]
+[
+    { "id": "current", "label": "Současný stav" },
+    { "id": "proposed", "label": "Návrh 2026" }
+]

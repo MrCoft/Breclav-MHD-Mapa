@@ -1,0 +1,18 @@
+{
+  "feedDate": "2026-08-28",
+  "generatedAt": "2026-09-02T17:42:25.410Z",
+  "converterVersion": "1.0.0",
+  "geometrySources": {
+    "osm": 19,
+    "routed": 29,
+    "straight": 0,
+    "override": 0
+  },
+  "inheritedLines": {
+    "lines": [
+      "571",
+      "574"
+    ],
+    "note": "The proposal cancels 564 in favour of 574 and has 571 call at every intermediate stop, but supplies no timetable for either change. Both lines are carried over from the current scenario unchanged (same patterns, trips and geometry) rather than synthesised."
+  }
+}

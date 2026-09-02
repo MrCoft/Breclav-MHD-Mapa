@@ -2647,7 +2647,7 @@ export function matchPatternGeometry(args: {
 - [ ] **Step 5: Run tests to verify they pass**
 
 Run: `pnpm exec vitest run tests/match.test.ts`
-Expected: 13 passing.
+Expected: 12 passing.
 
 - [ ] **Step 6: Commit**
 

@@ -10,7 +10,7 @@ import { appStore, selectStop } from '../state/store'
 import { BasemapSwitcher } from './BasemapSwitcher'
 import { BASEMAPS, DEFAULT_BASEMAP_ID } from './basemaps'
 import { BASEMAP_STYLE, BRECLAV_CENTER, DIM_COLOR, INITIAL_ZOOM, NO_LINE, SELECTED_STOP_COLOR } from './style'
-import type { DataDrivenPropertyValueSpecification, GeoJSONSource } from 'maplibre-gl'
+import type { DataDrivenPropertyValueSpecification, GeoJSONSource, MapSourceDataEvent } from 'maplibre-gl'
 import type { FeatureCollection, Point } from 'geojson'
 import type { ClockState } from '../state/clock'
 import type { PatternGeometry } from '../domain/patternGeometry'
@@ -422,18 +422,38 @@ export const MapView = () => {
         })
         map.current.addControl(new NavigationControl(), 'top-right')
 
-        // Re-read on every idle, not just once: a basemap switch (`setStyle`) discards the
-        // `routes` source until `installLayers` re-adds it, so re-checking here is what makes
-        // the attribute drop back to zero for the span where the network is genuinely gone, and
-        // recover once it's reinstalled — matching the count to the map's real state at all
-        // times rather than a one-shot check that could go stale.
         const instance = map.current
         const node = container.current
+
+        // `idle` alone is not a reliable "the map genuinely rendered data" signal any more: the
+        // clock now autoplays from the moment the app loads (see `App.tsx`), and while it plays,
+        // the vehicle-position effect below calls `setData()` on the `vehicles` source on every
+        // animation frame. That is continuous pending work by MapLibre's own definition of the
+        // word, so `idle` — "no camera transition and no source has outstanding work" — can go
+        // unfired indefinitely while vehicles are moving, even though the map is rendering
+        // correctly the whole time (confirmed: `render` keeps firing, `routes`' own `sourcedata`
+        // still reports loaded, the container and canvas are never zero-sized — only `idle`
+        // itself never arrives). `sourcedata` events scoped to the `routes` source specifically
+        // are what `updateRoutesRendered` actually needs — "did that one source finish loading" —
+        // and they fire independently of the vehicles source's unrelated per-frame churn: once on
+        // the initial load, and again after a basemap switch's `setStyle` discards the source and
+        // `installLayers` re-adds it, which is exactly the "recovers once reinstalled" behaviour
+        // the `idle` listener below was already relying on. Both listeners stay: `idle` still
+        // catches genuinely idle moments (e.g. before the clock's first frame, or while paused),
+        // `sourcedata` is what makes the attribute update reliably while the clock keeps playing.
         const onIdle = () => updateRoutesRendered(instance, node)
         instance.on('idle', onIdle)
 
+        const onRoutesSourceData = (event: MapSourceDataEvent) => {
+            if (event.sourceId === 'routes' && event.isSourceLoaded) {
+                updateRoutesRendered(instance, node)
+            }
+        }
+        instance.on('sourcedata', onRoutesSourceData)
+
         return () => {
             instance.off('idle', onIdle)
+            instance.off('sourcedata', onRoutesSourceData)
             map.current?.remove()
             map.current = null
         }

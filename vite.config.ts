@@ -1,9 +1,9 @@
-// defineConfig must come from vitest/config — vite's own does not accept `test`.
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+import viteTsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
-  base: '/Breclav-MHD-Mapa/',
-  plugins: [react()],
-  test: { environment: 'node', include: ['tests/**/*.test.ts'] },
-});
+    base: '/Breclav-MHD-Mapa/',
+    plugins: [viteTsconfigPaths({ projects: ['./tsconfig.json'] }), tailwindcss(), react()],
+})

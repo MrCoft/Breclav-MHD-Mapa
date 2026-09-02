@@ -1,3 +1,3 @@
-export function App() {
-  return <main>MHD Břeclav</main>;
+export const App = () => {
+    return <main>MHD Břeclav</main>
 }

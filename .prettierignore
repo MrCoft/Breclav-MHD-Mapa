@@ -1,0 +1,10 @@
+dist
+storybook-static
+pnpm-lock.yaml
+public/data
+data
+
+# Prose, not code: CLAUDE.md is a synced template file, and docs/ may be edited
+# concurrently by another agent — neither is this project's Prettier surface.
+CLAUDE.md
+docs/

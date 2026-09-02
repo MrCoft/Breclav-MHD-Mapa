@@ -57,9 +57,9 @@ const VEHICLE_TEXT_SIZE: DataDrivenPropertyValueSpecification<number> = [
     ['linear'],
     ['zoom'],
     11,
-    8,
+    9,
     15,
-    12,
+    13,
 ]
 
 /**
@@ -72,8 +72,10 @@ const VEHICLE_TEXT_SIZE: DataDrivenPropertyValueSpecification<number> = [
  * px = 1 CSS px on screen once MapLibre divides by that ratio. `BADGE_CORNER_RADIUS` and
  * `BADGE_BORDER_WIDTH` together form `BADGE_FIXED_MARGIN`, the border strip on every edge that
  * `stretchX`/`stretchY` exclude — MapLibre holds that margin at a constant *screen* pixel size
- * (about 3.5px radius, 1.5px border, echoing the old circle's 2px white stroke and the sidebar's
- * `LineBadge` corner rounding) no matter how large the stretched interior grows. `BADGE_TEMPLATE_SIZE`
+ * (2px radius, 1.5px border) no matter how large the stretched interior grows. Note this margin is
+ * itself padding around the label, and the dominant part of it: it is held constant while
+ * `VEHICLE_BADGE_PADDING` adds on top, so tightening the space around a number means reducing the
+ * radius here, not only the fit-padding below. `BADGE_TEMPLATE_SIZE`
  * is only the source image's own at-rest size — MapLibre stretches from it in either direction, so
  * its exact value doesn't matter beyond leaving a non-zero sliver for `stretchX`/`stretchY` to
  * point at. What does matter: `BADGE_FIXED_MARGIN` (5px per side on screen) must stay comfortably
@@ -81,7 +83,7 @@ const VEHICLE_TEXT_SIZE: DataDrivenPropertyValueSpecification<number> = [
  * or the fixed corners on opposite edges would collide.
  */
 const BADGE_PIXEL_RATIO = 2
-const BADGE_CORNER_RADIUS = 7
+const BADGE_CORNER_RADIUS = 4
 const BADGE_BORDER_WIDTH = 3
 const BADGE_FIXED_MARGIN = BADGE_CORNER_RADIUS + BADGE_BORDER_WIDTH
 const BADGE_STRETCH_SLIVER = 8
@@ -93,7 +95,7 @@ const BADGE_BORDER_COLOR = '#ffffff'
  * proportion, matching the sidebar's `LineBadge` (`px-1.5 py-0.5`). Constant across zoom: the
  * badge's overall size already scales with `VEHICLE_TEXT_SIZE`, so fixed padding just keeps the
  * same visual proportion at every zoom rather than adding a second interpolation to track. */
-const VEHICLE_BADGE_PADDING: [number, number, number, number] = [1, 3.5, 1, 3.5]
+const VEHICLE_BADGE_PADDING: [number, number, number, number] = [0.5, 2, 0.5, 2]
 
 /**
  * The `Noto Sans Bold` font family used here is a deliberate substitute for this project's own

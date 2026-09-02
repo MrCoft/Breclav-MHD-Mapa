@@ -57,9 +57,9 @@ const VEHICLE_TEXT_SIZE: DataDrivenPropertyValueSpecification<number> = [
     ['linear'],
     ['zoom'],
     11,
-    9,
+    8,
     15,
-    13,
+    12,
 ]
 
 /**
@@ -93,7 +93,7 @@ const BADGE_BORDER_COLOR = '#ffffff'
  * proportion, matching the sidebar's `LineBadge` (`px-1.5 py-0.5`). Constant across zoom: the
  * badge's overall size already scales with `VEHICLE_TEXT_SIZE`, so fixed padding just keeps the
  * same visual proportion at every zoom rather than adding a second interpolation to track. */
-const VEHICLE_BADGE_PADDING: [number, number, number, number] = [1.5, 5, 1.5, 5]
+const VEHICLE_BADGE_PADDING: [number, number, number, number] = [1, 3.5, 1, 3.5]
 
 /**
  * The `Noto Sans Bold` font family used here is a deliberate substitute for this project's own

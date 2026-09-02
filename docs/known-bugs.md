@@ -65,3 +65,13 @@ which network is loaded. Every shared "moment" link — the one feature `?d=`/`?
 čas" exist for — opens looking like an empty, unstaffed network. The fix is most likely to make
 the vehicle listener retry once the map's own `load` (or the `styledata`-driven `install`)
 fires, rather than relying on a single immediate call that assumes the source already exists.
+
+**Resolved:** `eaffd3e` (`fix: populate the vehicles source at layer-install time, not just via
+the clock`). `installLayers` now seeds the `vehicles` source with `clock.getState()` at the
+moment it creates the source, instead of starting it empty and waiting on the clock
+subscription's own `setData`. Seeding happens synchronously inside `install()`, so correctness no
+longer depends on which of style-load or clock-subscription-registration happens first — both
+orderings work by construction. Verified against a production build: the same paused deep links
+listed above now show 40-74 vehicle features instead of 0; the playing case and a scenario switch
+while paused both still populate vehicles too. `e2e/pausedDeepLink.spec.ts` covers this, and
+fails against the pre-fix code.

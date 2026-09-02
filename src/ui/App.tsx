@@ -4,6 +4,7 @@ import { MapView } from '../map/MapView'
 import { loadScenario } from '../data/loadScenario'
 import { appStore, setError, setScenario } from '../state/store'
 import { LineBrowser } from './LineBrowser'
+import { StopPanel } from './StopPanel'
 
 export const App = () => {
     const scenarioId = useStore(appStore, (state) => state.scenarioId)
@@ -47,6 +48,7 @@ export const App = () => {
             </aside>
             <div className="relative">
                 <MapView />
+                <StopPanel />
             </div>
         </div>
     )

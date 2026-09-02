@@ -4,7 +4,8 @@ import { useStore } from '@tanstack/react-store'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { appStore, selectStop } from '../state/store'
-import { BASEMAP_STYLE, BRECLAV_CENTER, DIM_COLOR, INITIAL_ZOOM, NO_LINE } from './style'
+import { BASEMAP_STYLE, BRECLAV_CENTER, DIM_COLOR, INITIAL_ZOOM, NO_LINE, SELECTED_STOP_COLOR } from './style'
+import type { GeoJSONSource } from 'maplibre-gl'
 import type { FeatureCollection, Point } from 'geojson'
 import type { Scenario } from '../data/loadScenario'
 
@@ -25,6 +26,33 @@ function stopsGeoJson(scenario: Scenario): FeatureCollection<Point> {
             geometry: { type: 'Point', coordinates: [stop.lon, stop.lat] },
         })),
     }
+}
+
+/** Stops served by `selectedLine`'s patterns, or an empty collection when no line is selected. */
+function selectedStopsGeoJson(scenario: Scenario, selectedLine: string | null): FeatureCollection<Point> {
+    if (selectedLine === null) {
+        return { type: 'FeatureCollection', features: [] }
+    }
+
+    const stopIds = new Set<string>()
+    for (const pattern of scenario.index.patterns.values()) {
+        if (pattern.line === selectedLine) {
+            for (const stopId of pattern.stops) {
+                stopIds.add(stopId)
+            }
+        }
+    }
+
+    const features = [...stopIds]
+        .map((stopId) => scenario.index.stops.get(stopId))
+        .filter((stop) => stop !== undefined)
+        .map((stop) => ({
+            type: 'Feature' as const,
+            properties: { id: stop.id, name: stop.name },
+            geometry: { type: 'Point' as const, coordinates: [stop.lon, stop.lat] },
+        }))
+
+    return { type: 'FeatureCollection', features }
 }
 
 export const MapView = () => {
@@ -64,6 +92,10 @@ export const MapView = () => {
 
             instance.addSource('routes', { type: 'geojson', data: scenario.geometry })
             instance.addSource('stops', { type: 'geojson', data: stopsGeoJson(scenario) })
+            instance.addSource('stops-selected', {
+                type: 'geojson',
+                data: { type: 'FeatureCollection', features: [] },
+            })
 
             instance.addLayer({
                 id: 'routes-dim',
@@ -92,6 +124,17 @@ export const MapView = () => {
                     'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 2.5, 15, 5],
                     'circle-color': '#ffffff',
                     'circle-stroke-color': '#37404a',
+                    'circle-stroke-width': 1.5,
+                },
+            })
+            instance.addLayer({
+                id: 'stops-selected-circle',
+                type: 'circle',
+                source: 'stops-selected',
+                paint: {
+                    'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 4, 15, 8],
+                    'circle-color': SELECTED_STOP_COLOR,
+                    'circle-stroke-color': '#ffffff',
                     'circle-stroke-width': 1.5,
                 },
             })
@@ -144,6 +187,16 @@ export const MapView = () => {
             instance.setFilter('routes-dim', ['!=', ['get', 'lineId'], selectedLine])
         }
     }, [selectedLine])
+
+    useEffect(() => {
+        const instance = map.current
+        const source = instance?.getSource('stops-selected')
+        if (!source || !scenario) {
+            return
+        }
+
+        ;(source as GeoJSONSource).setData(selectedStopsGeoJson(scenario, selectedLine))
+    }, [scenario, selectedLine])
 
     return <div ref={container} className="h-full w-full" />
 }

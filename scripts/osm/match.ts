@@ -4,7 +4,7 @@ import lineSlice from '@turf/line-slice'
 import nearestPointOnLine from '@turf/nearest-point-on-line'
 import type { Pattern, Stop } from '../../src/types/network'
 
-export type GeometrySource = 'override' | 'osm' | 'straight'
+export type GeometrySource = 'override' | 'osm' | 'routed' | 'straight'
 export type Position = [number, number]
 
 export interface RelationLine {
@@ -17,6 +17,13 @@ export interface TrimmedLine {
     /** Metres along `coordinates` at each pattern stop. Same length and order as the stops. */
     stopDistances: number[]
 }
+
+/**
+ * Tier-3 geometry lookup, injected so this file stays free of network/graph concerns.
+ * Called only when no relation matches the pattern; returns null when the router itself
+ * can't produce a usable route, which falls through to the straight-line tier.
+ */
+export type PatternRouter = (pattern: Pattern, stopCoords: Position[]) => Promise<TrimmedLine | null>
 
 export function straightLine(pattern: Pattern, stops: Map<string, Stop>): Position[] {
     return pattern.stops
@@ -87,14 +94,16 @@ export function trimToStops(line: Position[], stopCoords: Position[], maxSnapMet
     return attempt(line) ?? attempt([...line].reverse())
 }
 
-export function matchPatternGeometry(args: {
+export async function matchPatternGeometry(args: {
     pattern: Pattern
     stops: Map<string, Stop>
     relations: RelationLine[]
     override?: Position[]
     maxSnapMetres?: number
-}): { coordinates: Position[]; stopDistances: number[]; source: GeometrySource } {
-    const { pattern, stops, relations, override, maxSnapMetres = 250 } = args
+    /** Tier 3: tried after the relation tier misses, before falling back to a straight line. */
+    router?: PatternRouter
+}): Promise<{ coordinates: Position[]; stopDistances: number[]; source: GeometrySource }> {
+    const { pattern, stops, relations, override, maxSnapMetres = 250, router } = args
     const stopCoords = straightLine(pattern, stops)
 
     if (override && override.length >= 2) {
@@ -117,6 +126,16 @@ export function matchPatternGeometry(args: {
         // that actually reaches every stop rather than stopping short.
         const best = candidates.sort((a, b) => b.coordinates.length - a.coordinates.length)[0]!
         return { ...best, source: 'osm' }
+    }
+
+    // The relation is the published route and knows about bus-only links and one-way loops
+    // a road router would smooth over, so it stays first among the automatic tiers. Only a
+    // pattern no relation covers reaches the router.
+    if (router) {
+        const routed = await router(pattern, stopCoords)
+        if (routed) {
+            return { ...routed, source: 'routed' }
+        }
     }
 
     return { coordinates: stopCoords, stopDistances: cumulativeDistances(stopCoords), source: 'straight' }

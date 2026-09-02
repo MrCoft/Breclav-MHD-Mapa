@@ -77,7 +77,7 @@ export interface Meta {
     feedDate: string
     generatedAt: string
     converterVersion: string
-    geometrySources: { osm: number; straight: number; override: number }
+    geometrySources: { osm: number; routed: number; straight: number; override: number }
 }
 
 export interface ScenarioRef {

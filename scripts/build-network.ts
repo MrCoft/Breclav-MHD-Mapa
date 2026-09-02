@@ -6,8 +6,10 @@ import { downloadFeed, extractEntries, loadScope, streamCsv } from './gtfs/read'
 import { assignStopIds, buildParentMap, municipalityOf } from './gtfs/scope'
 import { matchPatternGeometry } from './osm/match'
 import { fetchRoutes } from './osm/overpass'
+import { buildRailGraph, fetchRailways } from './osm/railGraph'
+import { routePattern } from './osm/routePattern'
 import { relationToLine } from './osm/stitch'
-import type { Position, RelationLine } from './osm/match'
+import type { PatternRouter, Position, RelationLine } from './osm/match'
 import type {
     GtfsCalendarDateRow,
     GtfsCalendarRow,
@@ -20,6 +22,7 @@ import type { ScopeConfig } from './gtfs/read'
 import type { TripShape } from './gtfs/convert'
 import type { Meta, Network, Stop } from '../src/types/network'
 import type { OsmNode, OsmRelation, OsmWay } from './osm/overpass'
+import type { RailGraph } from './osm/railGraph'
 
 export const CONVERTER_VERSION = '1.0.0'
 
@@ -67,6 +70,7 @@ function sortNetwork(net: Network): Network {
 
 async function main(): Promise<void> {
     const refreshOsm = process.argv.includes('--refresh-osm')
+    const refreshRouting = process.argv.includes('--refresh-routing')
     const scope = loadScope()
     const cacheDir = 'data/cache/gtfs'
     const outDir = 'public/data/current'
@@ -211,9 +215,50 @@ async function main(): Promise<void> {
         .map((r) => ({ ref: r.tags.ref ?? '', coordinates: relationToLine(r, ways, nodes) }))
         .filter((r) => r.ref !== '' && r.coordinates.length >= 2)
 
+    // The rail graph needs its own Overpass query and is only worth fetching if some rail
+    // pattern actually reaches tier 3 (no relation covers it). Built at most once per run.
+    let railGraphPromise: Promise<RailGraph> | null = null
+    const getRailGraph = (): Promise<RailGraph> => {
+        if (!railGraphPromise) {
+            railGraphPromise = (async () => {
+                console.log('Fetching OSM railways…')
+                const railways = await fetchRailways(scope, { refresh: refreshRouting })
+                const railWays = railways.elements.filter((e): e is OsmWay => e.type === 'way')
+                const railNodes = railways.elements.filter((e): e is OsmNode => e.type === 'node')
+                return buildRailGraph(railWays, railNodes)
+            })()
+        }
+        return railGraphPromise
+    }
+
+    // Tier 3: road routing for buses via OSRM, rail-graph Dijkstra for trains. Patterns are
+    // routed one at a time, in a plain loop rather than Promise.all, so OSRM — a free
+    // community server — only ever sees one request in flight at a time.
+    const router: PatternRouter = async (pattern, stopCoords) => {
+        const line = network.lines.find((l) => l.id === pattern.line)!
+        if (line.mode === 'rail') {
+            const railGraph = await getRailGraph()
+            return routePattern(pattern, stopCoords, { mode: 'rail', railGraph, refresh: refreshRouting })
+        }
+        return routePattern(pattern, stopCoords, { mode: 'bus', refresh: refreshRouting })
+    }
+
     const stopById = new Map(network.stops.map((s) => [s.id, s]))
-    const counts = { osm: 0, straight: 0, override: 0 }
-    const features = network.patterns.map((pattern) => {
+    const counts = { osm: 0, routed: 0, straight: 0, override: 0 }
+    const features: {
+        type: 'Feature'
+        properties: {
+            patternId: string
+            lineId: string
+            lineName: string
+            mode: string
+            color: string
+            source: string
+            stopDistances: number[]
+        }
+        geometry: { type: 'LineString'; coordinates: Position[] }
+    }[] = []
+    for (const pattern of network.patterns) {
         const overridePath = join('data/geometry-overrides', `${pattern.id}.geojson`)
         let override: Position[] | undefined
         if (existsSync(overridePath)) {
@@ -225,15 +270,16 @@ async function main(): Promise<void> {
         }
 
         const line = network.lines.find((l) => l.id === pattern.line)!
-        const { coordinates, stopDistances, source } = matchPatternGeometry({
+        const { coordinates, stopDistances, source } = await matchPatternGeometry({
             pattern,
             stops: stopById,
             relations: relationLines,
             override,
+            router,
         })
         counts[source] += 1
 
-        return {
+        features.push({
             type: 'Feature' as const,
             properties: {
                 patternId: pattern.id,
@@ -245,8 +291,8 @@ async function main(): Promise<void> {
                 stopDistances,
             },
             geometry: { type: 'LineString' as const, coordinates },
-        }
-    })
+        })
+    }
 
     const meta: Meta = {
         feedDate,
@@ -268,7 +314,7 @@ async function main(): Promise<void> {
         `Feed ${feedDate}: ${network.lines.length} lines, ${network.stops.length} stops, ${network.patterns.length} patterns, ${network.trips.length} trips`,
     )
     console.log(
-        `Geometry: ${counts.osm} from OSM, ${counts.override} overridden, ${counts.straight} straight-line fallbacks`,
+        `Geometry: ${counts.osm} from OSM relations, ${counts.routed} routed, ${counts.override} overridden, ${counts.straight} straight-line fallbacks`,
     )
     if (counts.straight > 0) {
         const fallbacks = features.filter((f) => f.properties.source === 'straight').map((f) => f.properties.patternId)

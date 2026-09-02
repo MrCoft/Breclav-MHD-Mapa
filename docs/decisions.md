@@ -308,3 +308,38 @@ building them desktop-only would mean rebuilding them.
 **This raises the stakes on open question 14.** The geometry payload is 1.07 MB gzipped, which is
 a different proposition on a phone than on a desktop. Deciding whether to simplify the routed
 geometry is no longer a matter of taste — it should be measured on a real device.
+
+## 30. Stop countdowns (decision 26) are dropped from v1, not built
+
+**Supersedes decision 26.**
+
+**Decided:** No live "next arrival in N min" countdown ships in v1, on any stop, at any zoom.
+Decision 26 specified showing one for the selected stop and for all stops above a zoom threshold;
+neither half was ever implemented — `grep -rn countdown src/` returns nothing.
+**Rejected:** Implementing it now as part of a review-fix pass; silently leaving decision 26
+standing as if it described shipped behaviour.
+**Why:** A live countdown is a real feature — a repaint on a timer, a chosen refresh cadence, and
+a decision about what "live" even means for scheduled-only data with no delay model (open question
+12) — not a one-line fix, and it touches the same map stop layer as concurrent work already in
+flight on this branch. `StopPanel`'s departure board already answers "when does the next bus
+leave this stop", on demand rather than continuously, which covers the need decision 26 was
+reaching for. Revisit as a scoped task if a continuously-updating countdown turns out to matter
+enough to justify the added repaint cost decision 26 itself flagged as the reason to be selective.
+
+## 31. The basemap switcher ships two of the six basemaps decision 27 verified
+
+**Supersedes decision 27.**
+
+**Decided:** `src/map/basemaps.ts`'s `BASEMAPS` offers exactly two choices — "Mapa" (OpenFreeMap
+Bright, `style.ts`'s `BASEMAP_STYLE`) and "Satelitní" (Esri World Imagery raster). Positron, Dark,
+Liberty and the terrarium hillshade DEM, all verified working and keyless in decision 27, were
+never wired into the switcher.
+**Rejected:** Adding the remaining four now as part of a review-fix pass; leaving decision 27
+standing as a description of what ships rather than what was checked.
+**Why:** Two is the pairing users already know from Google Maps — a drawn map and satellite
+imagery — and was evidently judged enough for v1. The other four remain fully specified in
+decision 27's own table (URLs and all) and need no re-verification, only `BasemapOption` entries
+in `basemaps.ts`, so re-adding any of them is a small, low-risk follow-up rather than a rebuild —
+worth doing if a reviewer wants the pale ground `mapColor`/`casingColor` were originally tuned
+against back as an option (`style.ts`'s own comment on `BASEMAP_STYLE`), or the dark pairing for
+the Storybook dark theme.

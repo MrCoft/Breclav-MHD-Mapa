@@ -142,7 +142,21 @@ is never served. But most of those relations are irrelevant to this project.
 the cache — an order of magnitude smaller, at the cost of making the cache scope-dependent — or
 accept the size.
 
-## 14. Routed geometry tripled the map payload
+## 14. Routed geometry tripled the map payload — RESOLVED 2026-09-02
+
+Decided: simplify at build time. `config/scope.json`'s `geometrySimplifyMetres` (2m) drives
+`simplifyIndices`, run in both `build-network.ts` and `build-proposal.ts` before geometry is
+written — see decision 24's neighbourhood and task 23's report for the implementation. The
+counter-argument recorded below (oversimplifying would make animated vehicles visibly cut
+corners) was addressed by `remeasureSimplified` re-projecting `stopDistances` onto the simplified
+line rather than scaling the old values, so animation still tracks the drawn line exactly.
+
+Measured against the current committed `public/data/current/geometry.geojson`: 1.05 MB raw,
+**~99 KB gzipped** (`gzip -c public/data/current/geometry.geojson | wc -c` — reproduce rather
+than trust this number as the file keeps changing). Down from the 1.07 MB gzipped this entry
+originally measured before simplification existed.
+
+### Original (2026-09-02, before simplification)
 
 Adding the routing tier took `geometry.geojson` from 3.5 MB to 8.1 MB raw, and from 0.40 MB to
 **1.07 MB gzipped**. The cause is fidelity: OSRM is queried with `overview=full`, which returns

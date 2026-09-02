@@ -3,6 +3,19 @@
 Date: 2026-09-02
 Status: Approved, ready for implementation planning
 
+> **Superseded.** This document is the v1 plan, written before implementation started, and is
+> kept as historical record rather than rewritten. Substantial parts of it no longer describe the
+> shipped app: state lives in `@tanstack/react-store`, not Zustand; geometry resolution has four
+> tiers (manual override, OSM relation, routed, straight — decision 28), not three; the Břeclav
+> subset is 164 parent-station stops, not the 380 this page's own table two rows up already
+> contradicts (380 is the platform-level count before collapsing); and the app has vehicle
+> animation, a simulation clock, a scenario toggle, a basemap switcher and a mobile layout, none
+> of which this document mentions because none of it was planned yet. For what actually shipped
+> and why, read `docs/decisions.md` — the append-only, numbered decision log — rather than
+> treating anything below as current. Two specific gaps are called out where they arose:
+> decision 26 (stop countdowns) and decision 27 (basemap count) are both superseded by later
+> entries in that log.
+
 ## Goal
 
 An interactive web map of public transport serving Břeclav, deployed as static files on

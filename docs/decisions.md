@@ -287,3 +287,24 @@ exact for the vehicle animation that will consume them.
 **Cost if wrong:** the routed geometry may differ from the true bus path where a driver takes a
 street the router avoids. That is still a road, and still a large improvement on a line drawn
 through a field. Manual overrides remain the escape hatch.
+
+## 29. The app must work on mobile
+
+**Decided:** A dedicated responsive pass, and touch-friendly interaction built into new controls
+from the start rather than retrofitted.
+
+The current layout assumes a desktop: `grid-cols-[280px_1fr]` with a fixed 280 px sidebar, and a
+stop panel floating at 320 px wide over the map. Task 16's review noted that narrow-viewport
+behaviour was never actually verified, only assumed.
+
+What the pass has to cover: the line browser becoming a drawer rather than a permanent column;
+the stop panel becoming a bottom sheet; touch targets of at least 44 px; `dvh` instead of `vh`,
+because a mobile address bar makes `100vh` taller than the visible viewport and pushes controls
+off-screen; and the map keeping usable room once panels are open.
+
+**Rejected:** treating it as CSS polish at the end. The clock controls are being built now, and
+building them desktop-only would mean rebuilding them.
+
+**This raises the stakes on open question 14.** The geometry payload is 1.07 MB gzipped, which is
+a different proposition on a phone than on a desktop. Deciding whether to simplify the routed
+geometry is no longer a matter of taste — it should be measured on a real device.

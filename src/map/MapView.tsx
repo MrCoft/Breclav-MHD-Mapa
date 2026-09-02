@@ -48,17 +48,10 @@ const CASING_WIDTH: DataDrivenPropertyValueSpecification<number> = [
     10,
 ]
 
-// Sized well clear of stops-circle (2.5-5px across the same zoom range) — vehicles are the
-// moving focus of the map and must read as unmistakably vehicles, not dots, at the default zoom.
-const VEHICLE_RADIUS: DataDrivenPropertyValueSpecification<number> = [
-    'interpolate',
-    ['linear'],
-    ['zoom'],
-    11,
-    7,
-    15,
-    12,
-]
+// Vehicles are the moving focus of the map and must read as unmistakably vehicles, not dots, at
+// the default zoom — the label text drives the badge's on-screen size (via icon-text-fit below),
+// so this interpolation is what makes the whole badge, not just a fixed circle, unmistakable at
+// zoom 12 and not overwhelming at zoom 15.
 const VEHICLE_TEXT_SIZE: DataDrivenPropertyValueSpecification<number> = [
     'interpolate',
     ['linear'],
@@ -68,6 +61,39 @@ const VEHICLE_TEXT_SIZE: DataDrivenPropertyValueSpecification<number> = [
     15,
     13,
 ]
+
+/**
+ * A rounded-rectangle badge, drawn once per line onto a canvas and registered with
+ * `map.addImage(..., { stretchX, stretchY, content })`, so a symbol layer's `icon-text-fit: 'both'`
+ * can stretch it to fit whatever label it holds — wide for "572", narrow for "S8" — rather than the
+ * fixed-radius circle this replaces, which could not grow to fit a three-character line number.
+ *
+ * All dimensions below are raw image pixels at `BADGE_PIXEL_RATIO`, i.e. `BADGE_PIXEL_RATIO` raw
+ * px = 1 CSS px on screen once MapLibre divides by that ratio. `BADGE_CORNER_RADIUS` and
+ * `BADGE_BORDER_WIDTH` together form `BADGE_FIXED_MARGIN`, the border strip on every edge that
+ * `stretchX`/`stretchY` exclude — MapLibre holds that margin at a constant *screen* pixel size
+ * (about 3.5px radius, 1.5px border, echoing the old circle's 2px white stroke and the sidebar's
+ * `LineBadge` corner rounding) no matter how large the stretched interior grows. `BADGE_TEMPLATE_SIZE`
+ * is only the source image's own at-rest size — MapLibre stretches from it in either direction, so
+ * its exact value doesn't matter beyond leaving a non-zero sliver for `stretchX`/`stretchY` to
+ * point at. What does matter: `BADGE_FIXED_MARGIN` (5px per side on screen) must stay comfortably
+ * smaller than the smallest badge this ever renders — a two-character label at the minimum zoom —
+ * or the fixed corners on opposite edges would collide.
+ */
+const BADGE_PIXEL_RATIO = 2
+const BADGE_CORNER_RADIUS = 7
+const BADGE_BORDER_WIDTH = 3
+const BADGE_FIXED_MARGIN = BADGE_CORNER_RADIUS + BADGE_BORDER_WIDTH
+const BADGE_STRETCH_SLIVER = 8
+const BADGE_TEMPLATE_SIZE = BADGE_FIXED_MARGIN * 2 + BADGE_STRETCH_SLIVER
+const BADGE_BORDER_COLOR = '#ffffff'
+
+/** Extra breathing room (CSS px: top, right, bottom, left) added around the fitted text, on top
+ * of the stretched badge's own content box — more on the sides than top/bottom for a pill-ish
+ * proportion, matching the sidebar's `LineBadge` (`px-1.5 py-0.5`). Constant across zoom: the
+ * badge's overall size already scales with `VEHICLE_TEXT_SIZE`, so fixed padding just keeps the
+ * same visual proportion at every zoom rather than adding a second interpolation to track. */
+const VEHICLE_BADGE_PADDING: [number, number, number, number] = [1.5, 5, 1.5, 5]
 
 /**
  * The `Noto Sans Bold` font family used here is a deliberate substitute for this project's own
@@ -177,6 +203,100 @@ function selectedStopsGeoJson(scenario: Scenario, selectedLine: string | null): 
     return { type: 'FeatureCollection', features }
 }
 
+function badgeImageId(lineId: string): string {
+    return `badge-${lineId}`
+}
+
+/** The pixel data plus the `addImage` stretch metadata for one line's badge — computed together
+ * since both derive from the same `BADGE_*` template geometry. */
+interface BadgeImage {
+    pixels: ImageData
+    options: {
+        pixelRatio: number
+        stretchX: [number, number][]
+        stretchY: [number, number][]
+        content: [number, number, number, number]
+    }
+}
+
+/**
+ * Draws one line's badge — a rounded rectangle filled in `color` with a light border, the same
+ * pairing the old circle used (`circle-color` plus a white `circle-stroke`) so the badge still
+ * separates from the coloured route line it sits on — onto a small canvas, sized and stretch-
+ * mapped per the `BADGE_*` constants above. Called once per line per style load, never per frame.
+ */
+function renderBadgeImage(color: string): BadgeImage {
+    const canvas = document.createElement('canvas')
+    canvas.width = BADGE_TEMPLATE_SIZE
+    canvas.height = BADGE_TEMPLATE_SIZE
+    const context = canvas.getContext('2d')
+    if (!context) {
+        throw new Error('2D canvas context unavailable — cannot render a vehicle badge image.')
+    }
+
+    const inset = BADGE_BORDER_WIDTH / 2
+    context.beginPath()
+    context.roundRect(
+        inset,
+        inset,
+        BADGE_TEMPLATE_SIZE - BADGE_BORDER_WIDTH,
+        BADGE_TEMPLATE_SIZE - BADGE_BORDER_WIDTH,
+        BADGE_CORNER_RADIUS,
+    )
+    context.fillStyle = color
+    context.fill()
+    context.strokeStyle = BADGE_BORDER_COLOR
+    context.lineWidth = BADGE_BORDER_WIDTH
+    context.stroke()
+
+    const stretchStart = BADGE_FIXED_MARGIN
+    const stretchEnd = BADGE_TEMPLATE_SIZE - BADGE_FIXED_MARGIN
+    return {
+        pixels: context.getImageData(0, 0, BADGE_TEMPLATE_SIZE, BADGE_TEMPLATE_SIZE),
+        options: {
+            pixelRatio: BADGE_PIXEL_RATIO,
+            stretchX: [[stretchStart, stretchEnd]],
+            stretchY: [[stretchStart, stretchEnd]],
+            content: [stretchStart, stretchStart, stretchEnd, stretchEnd],
+        },
+    }
+}
+
+/**
+ * Registers (or refreshes) one line's badge image under a stable `badge-<lineId>` id — the name
+ * `vehicles-badge`'s `icon-image` expression looks up with `['concat', 'badge-', ['get', 'lineId']]`.
+ * `updateImage` is used instead of `removeImage`+`addImage` when the id is already known: it
+ * replaces only the pixels, keeping the `addImage` stretch/content metadata (which never changes
+ * for a given line) intact, and — unlike calling `addImage` on an id that already exists — never
+ * fires an `ErrorEvent`. The two paths converge to the same visible result either way; `updateImage`
+ * is just the cheaper, quieter one when the image is already there.
+ */
+function ensureBadgeImage(instance: MapLibreMap, lineId: string, color: string): void {
+    const id = badgeImageId(lineId)
+    const { pixels, options } = renderBadgeImage(color)
+    if (instance.hasImage(id)) {
+        instance.updateImage(id, pixels)
+    } else {
+        instance.addImage(id, pixels, options)
+    }
+}
+
+/**
+ * Registers every line's badge image. `map.setStyle()` discards the image registry along with
+ * every custom source and layer, so this needs the same "re-run it" treatment `installLayers`
+ * documents for sources and layers — it's called from inside `installLayers` on every fresh
+ * install (after a basemap switch discards the previous style's images) and, separately, whenever
+ * a scenario switch lands without a style reset (`updateScenarioSources`'s caller, since that path
+ * never runs `installLayers` at all — the `routes` source already exists so its guard no-ops).
+ * There are only about twenty lines, and this only ever runs at either of those two moments, never
+ * per animation frame.
+ */
+function installBadgeImages(instance: MapLibreMap, colorsByLine: ReadonlyMap<string, LineDisplayColors>): void {
+    for (const [lineId, colors] of colorsByLine) {
+        ensureBadgeImage(instance, lineId, colors.color)
+    }
+}
+
 /**
  * Adds every route/stop source and layer. Idempotent — a no-op once `routes` exists — so it's
  * safe to call again after a basemap switch. `map.setStyle()` discards every custom source and
@@ -188,12 +308,13 @@ function selectedStopsGeoJson(scenario: Scenario, selectedLine: string | null): 
  * own load, leaving the map blank.
  *
  * Layer order, bottom to top: routes-dim, routes-casing, routes-active, stops-circle,
- * stops-selected-circle, stops-label, vehicles-circle, vehicles-label.
+ * stops-selected-circle, stops-label, vehicles-badge.
  */
 function installLayers(
     instance: MapLibreMap,
     scenario: Scenario,
     initialVehicles: FeatureCollection<Point, VehicleFeatureProperties>,
+    colorsByLine: ReadonlyMap<string, LineDisplayColors>,
 ): boolean {
     if (instance.getSource('routes')) {
         return false
@@ -280,34 +401,46 @@ function installLayers(
     // is never empty for longer than it takes this function to run, regardless of whether the
     // map's style finished loading before or after the clock subscription registered.
     instance.addSource('vehicles', { type: 'geojson', data: initialVehicles })
+
+    // One badge image per line, in that line's own mapped colour — not a single SDF image tinted
+    // per feature via `icon-color`. There are only about twenty lines, so pre-rendering each is
+    // cheap, gives exact colours with no tinting-precision concerns, and sidesteps having to
+    // verify SDF recolouring composes correctly with stretchable `icon-text-fit` content regions
+    // in this MapLibre version — a real fiddly-detail risk the per-line-image route avoids outright.
+    // Must run before the layer below is added, so the very first paint already has every image
+    // `icon-image`'s expression can look up rather than falling back to nothing for one frame.
+    installBadgeImages(instance, colorsByLine)
+
     instance.addLayer({
-        id: 'vehicles-circle',
-        type: 'circle',
-        source: 'vehicles',
-        paint: {
-            'circle-radius': VEHICLE_RADIUS,
-            'circle-color': ['get', 'color'],
-            'circle-stroke-color': '#ffffff',
-            'circle-stroke-width': 2,
-            'circle-opacity': 1,
-            'circle-stroke-opacity': 1,
-        },
-    })
-    instance.addLayer({
-        id: 'vehicles-label',
+        id: 'vehicles-badge',
         type: 'symbol',
         source: 'vehicles',
         layout: {
+            // Matches `badgeImageId` exactly — this is how each vehicle picks its own line's
+            // pre-rendered, pre-coloured badge out of the images `installBadgeImages` registered.
+            'icon-image': ['concat', 'badge-', ['get', 'lineId']],
+            // Stretches the badge (see the BADGE_* constants above) to wrap whatever `text-field`
+            // needs on both axes — this is what lets "572" and "S8" each get a badge sized to fit,
+            // rather than a fixed circle either overflows or wastes.
+            'icon-text-fit': 'both',
+            'icon-text-fit-padding': VEHICLE_BADGE_PADDING,
+            // Same reasoning as text-allow-overlap/text-ignore-placement below, applied to the icon
+            // half of this layer: vehicles are few and keep moving, so every badge should always
+            // show rather than flicker in and out as MapLibre's default collision avoidance jostles
+            // them for space.
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true,
             'text-field': ['get', 'lineName'],
             'text-font': VEHICLE_TEXT_FONT,
             'text-size': VEHICLE_TEXT_SIZE,
-            // Vehicles are few (about 45-47 at peak) and keep moving, so MapLibre's default
-            // collision avoidance would make labels flicker in and out as they jostle for space —
-            // always showing every line number is worth more here than tidy label placement.
             'text-allow-overlap': true,
             'text-ignore-placement': true,
         },
         paint: {
+            // The badge's border lives baked into its image, not a separate stroke paint property
+            // — dimming `icon-opacity` alone (see `vehicleOpacity`/`applySelection`) dims the whole
+            // badge, border included, the same way the old circle-plus-stroke pair dimmed together.
+            'icon-opacity': 1,
             'text-color': ['get', 'textColor'],
             'text-opacity': 1,
         },
@@ -372,12 +505,11 @@ function applySelection(instance: MapLibreMap, scenario: Scenario, selectedLine:
     }
 
     // Vehicles of other lines dim rather than disappear — a `setPaintProperty` on the existing
-    // layers, same as the filters above, never a `setData` rebuild of the `vehicles` source.
-    if (instance.getLayer('vehicles-circle')) {
+    // layer, same as the filters above, never a `setData` rebuild of the `vehicles` source.
+    if (instance.getLayer('vehicles-badge')) {
         const opacity = vehicleOpacity(selectedLine)
-        instance.setPaintProperty('vehicles-circle', 'circle-opacity', opacity)
-        instance.setPaintProperty('vehicles-circle', 'circle-stroke-opacity', opacity)
-        instance.setPaintProperty('vehicles-label', 'text-opacity', opacity)
+        instance.setPaintProperty('vehicles-badge', 'icon-opacity', opacity)
+        instance.setPaintProperty('vehicles-badge', 'text-opacity', opacity)
     }
 }
 
@@ -534,9 +666,16 @@ export const MapView = () => {
         // network forever. Push the new data into them directly, once, right here — not from the
         // `styledata`-triggered `install` below, which fires on every render frame while vehicles
         // animate (each of their own per-frame `setData` calls marks the style "changed") and
-        // must stay a cheap no-op on every one of those firings, not repeat this work 60x/s.
+        // must stay a cheap no-op on every one of those firings, not repeat this work 60x/s. Badge
+        // images need the same one-off treatment: `installLayers`'s own `installBadgeImages` call
+        // never runs on this path (its "routes already exists" guard returns before reaching it),
+        // so a scenario that introduces a line the previous one never had would otherwise leave
+        // that line's vehicles with no badge image to look up.
         if (instance.getSource('routes')) {
             updateScenarioSources(instance, scenario)
+            if (vehicleContext) {
+                installBadgeImages(instance, vehicleContext.colorsByLine)
+            }
         }
 
         const install = () => {
@@ -549,7 +688,7 @@ export const MapView = () => {
             const initialVehicles = vehicleContext
                 ? vehicleFeatureCollection(scenario, vehicleContext, clockState.date, clockState.minutes)
                 : emptyVehicleFeatureCollection()
-            if (!installLayers(instance, scenario, initialVehicles)) {
+            if (!installLayers(instance, scenario, initialVehicles, vehicleContext?.colorsByLine ?? new Map())) {
                 return
             }
             if (!listenersAttached.current) {

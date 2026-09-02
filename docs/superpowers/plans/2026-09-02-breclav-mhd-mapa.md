@@ -23,6 +23,22 @@
 - Attribution is mandatory and must be visible in the UI: timetable data © KORDIS JMK, CC-BY-4.0; map data © OpenStreetMap contributors, ODbL.
 - Generated scenario data under `public/data/` and the Overpass cache under `data/cache/osm/` are committed. Extracted GTFS CSVs under `data/cache/gtfs/` are not.
 - Every `if`, `else`, `for` and `while` body is braced, even a single statement.
+- **The toolchain changed after this plan was written.** The project now uses pnpm, Tailwind 4,
+  shadcn/ui, Storybook, ESLint and Prettier, copied from the user's reference React project.
+  Use `pnpm` for every command in this plan: `pnpm install`, `pnpm test`, `pnpm run build`,
+  `pnpm lint`. `npm` commands in task steps below predate the switch — translate them.
+- **This plan's code blocks are written in the old formatting style** (semicolons, two-space
+  indent, double quotes in places). The project's Prettier config is now the reference
+  project's: no semicolons, single quotes, trailing commas, tab width 4, print width 120.
+  Transcribe the plan's code for its *logic*, then run `pnpm exec prettier --write` on the
+  files you touched before committing. Do not hand-reformat, and do not treat Prettier's
+  changes as deviations from the brief.
+- React components are arrow functions, not function declarations
+  (`react/function-component-definition`). No default exports under `src/` except Storybook
+  stories and `*.d.ts` (`import/no-default-export`).
+- `@/` is an alias for `src/`.
+- The full check is now typecheck, lint and tests: `pnpm run build`, `pnpm lint`, `pnpm test`.
+  All three must pass before a task is done.
 - One thing per file, named after the file.
 - Before calling a task done, run the project's full check — typecheck and tests (`npm run build` and `npm test`). There is no linter configured yet; see `docs/open-questions.md`.
 

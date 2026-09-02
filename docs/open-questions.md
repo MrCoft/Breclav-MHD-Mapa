@@ -2,7 +2,13 @@
 
 Read before starting a task; revise when finishing one. Log questions here rather than guessing or silently picking.
 
-## 1. There is no lint step, but the guidelines require one
+## 1. There is no lint step, but the guidelines require one — RESOLVED 2026-09-02
+
+Resolved by decision 21: adopting the reference project's stack brings ESLint 9 with
+`@tanstack/eslint-config`, so "the full check" is now typecheck, lint and tests. Original text
+below.
+
+### Original
 
 `CLAUDE.md` says to run the project's full check — typecheck, lint and tests — before calling anything done. This project has typecheck (`tsc`) and tests (Vitest) but no linter, so "the full check" is currently two thirds of a check.
 
@@ -104,3 +110,20 @@ also moves Průmyslová škola and proposes cutting Domov důchodců.
 The importer must therefore create stops that have no GTFS parent station and no coordinates,
 and the map has to place them. **Decide:** hand-place them in a small overrides file, or omit
 them and accept that those patterns will be geometrically wrong.
+
+## 11. Motion profile parameters need real values
+
+Decision 23 fixes the shape of the motion model but not its numbers: dwell seconds at a stop,
+acceleration, and the cap on dwell as a fraction of segment time. Sensible starting points are
+20-30 s dwell and roughly 1.0 m/s^2, but the honest test is whether the animation looks right
+against a known route. **Decide by watching it**, then record the values chosen.
+
+## 12. Does the simulated clock need to model schedule deviation?
+
+Simulated vehicles will run exactly on time, always. Real ones do not, and the proposal's own
+rationale cites "pravidelného zpoždění spojů" — regular delays caused by congestion — as a
+reason for restructuring lines 564 and 565.
+
+An animation where nothing is ever late may undersell exactly the problem the proposal is
+trying to solve. **Decide** whether to leave it perfectly punctual, which is honest about being
+a timetable rather than a simulation, or to allow a configurable delay per line.

@@ -144,3 +144,110 @@ validation cross-check.
 recovered by whitespace alignment, which is fragile. The PDF is better for the things the
 spreadsheet lacks: which sheet is which direction, per-trip kilometres, and the prose
 description of what is being changed and why.
+
+## 21. Adopt the reference project's frontend stack, minus its server layer
+
+**Decided:** Bring this project onto the same toolchain as the user's Hearthstone Clone Editor
+Frontend: pnpm, Tailwind 4, shadcn/ui (radix-ui, class-variance-authority, clsx,
+tailwind-merge, lucide-react, tw-animate-css), Storybook 9 with addon-themes, ESLint 9 with
+`@tanstack/eslint-config`, that project's exact Prettier config, Vitest with jsdom and Testing
+Library, `@tanstack/react-store` in place of Zustand, fontsource variable fonts, `@/` path
+aliases.
+**Rejected:** `@tanstack/react-start` and `nitro`, the `start` script, the Dockerfile;
+`orval`, `axios` and `@tanstack/react-query`; `react-hook-form`, `@hookform/resolvers` and
+`zod`; `@faker-js/faker`; `@tanstack/react-router`; `@tanstack/react-table`; `vite-imagetools`
+and `@unpic/react`; the YAML and JSON-schema generation plugins.
+**Why:** The user asked for the stack. The exclusions are not preference — TanStack Start with
+Nitro is a server-rendered framework whose build produces `.output/server/index.mjs`, and this
+project's first decision was static hosting on GitHub Pages, where no server runs. The rest of
+the exclusions are packages that exist to talk to a backend this project does not have
+(`orval`, `axios`, Query), to build forms it does not contain (react-hook-form, zod), or to
+solve problems it does not have (routing for a single view, a table library for a
+twelve-row departure list, image tooling for an app with no raster images).
+
+Supersedes the Zustand choice implied by the original plan, and resolves open question 1: the
+project now has a linter, so "the full check" means typecheck, lint and tests.
+
+## 22. Adopt the reference project's code conventions
+
+**Decided:** No semicolons, single quotes, trailing commas, tab width 4, print width 120.
+React components are arrow functions (`react/function-component-definition`). No default
+exports under `src/` except Storybook stories and ambient declaration files
+(`import/no-default-export`). Tailwind size utilities stop at roughly `w-8`; anything larger is
+expressed in pixels.
+**Rejected:** Keeping the formatting Tasks 1–3 were written in.
+**Why:** The point of copying a stack is that code moves between the two projects without
+reformatting churn. The cost is a one-off mechanical reformat of existing code, kept in its own
+commit so the history stays readable.
+
+## 23. Animate vehicles from the timetable, with a synthesized motion profile
+
+**Decided:** Vehicles are simulated from the scheduled timetable, not fetched. A trip's position
+at time *t* is found by locating *t* between two consecutive stop times and interpolating along
+the pattern's polyline. Motion within a segment follows a trapezoidal speed profile: dwell at
+the stop, accelerate, cruise, decelerate.
+**Rejected:** Linear interpolation between stops; live vehicle positions (already rejected in
+decision 5, and unavailable for the proposed network).
+**Why:** The format stores one time per stop — the departure — so dwell time is not in the data
+and must be synthesized. A trapezoid is the smallest model that produces believable motion from
+departure-only data. Two degenerate cases are handled explicitly rather than ignored: dwell is
+clamped to a fraction of the segment's time, because minute-resolution timetables routinely put
+stops 60 seconds apart; and a segment too short for a full trapezoid degrades to a triangular
+profile with no cruise phase.
+
+## 24. Geometry carries each stop's distance along its pattern
+
+**Decided:** `geometry.geojson` features gain `stopDistances: number[]` — metres along the
+polyline for each of the pattern's stops, same length and order as `pattern.stops`.
+**Rejected:** Computing the projection in the browser at load time.
+**Why:** The converter already projects every stop onto the line in order to trim it
+(decision 3), so the distances are a by-product it currently discards. Recomputing them in the
+client would mean shipping a projection routine and paying for it on every load, to derive
+numbers the build already knew. This is what makes vehicle animation a lookup rather than a
+geometry problem.
+
+## 25. The animation clock lives outside React
+
+**Decided:** A simulation clock — date, fractional minutes, playing state, speed multiplier —
+is driven by `requestAnimationFrame` outside React. It updates the vehicle GeoJSON source
+imperatively via MapLibre, and pushes a coarse update into the store only when the simulated
+minute changes.
+**Rejected:** Holding the clock in the component store and re-rendering per frame.
+**Why:** At 60fps a store write per frame re-renders every subscribed panel sixty times a
+second to move some dots. The panels only care about whole minutes. This keeps the same
+imperative-MapLibre discipline already chosen for highlighting.
+
+## 26. Countdowns are shown selectively, not on every stop
+
+**Decided:** The next-arrival countdown always shows for the selected stop, and for all stops
+above a zoom threshold.
+**Rejected:** A live countdown on all 164 stops at every zoom.
+**Why:** 164 simultaneous countdowns is unreadable at city zoom and repaints a symbol layer
+every second to render text nobody can distinguish. Selection and zoom are the two signals that
+say which stops the user actually cares about.
+
+## 27. A basemap switcher, from keyless sources only
+
+**Decided:** The user can switch basemap. Verified working and keyless on 2026-09-02:
+
+| Option | Source | Note |
+| --- | --- | --- |
+| Liberty | `https://tiles.openfreemap.org/styles/liberty` | default, detailed vector |
+| Positron | `https://tiles.openfreemap.org/styles/positron` | pale; transit lines read best against it |
+| Bright | `https://tiles.openfreemap.org/styles/bright` | |
+| Dark | `https://tiles.openfreemap.org/styles/dark` | pairs with the Storybook dark theme |
+| Satellite | Esri `World_Imagery` raster tiles | attribution required |
+| Hillshade | AWS `elevation-tiles-prod` terrarium DEM | MapLibre `encoding: 'terrarium'` |
+
+**Rejected:** MapTiler and any other keyed provider.
+**Why:** Decision 1 puts the bundle on GitHub Pages, where every shipped string is public, so a
+keyed tile provider is not an option. All six sources above were checked with a live request
+before being offered.
+
+**Caveat recorded deliberately:** Břeclav sits in the Dyje floodplain at roughly 155 m and is
+almost perfectly flat. 3D terrain and hillshade will show close to nothing there. The DEM source
+is listed because it works and costs nothing to wire up, not because it will look impressive.
+
+The switcher must re-add the transit sources and layers after every style change — MapLibre
+drops all custom sources and layers when `setStyle` runs, which is the classic bug in
+style-switching map apps.

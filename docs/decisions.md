@@ -251,3 +251,39 @@ is listed because it works and costs nothing to wire up, not because it will loo
 The switcher must re-add the transit sources and layers after every style change — MapLibre
 drops all custom sources and layers when `setStyle` runs, which is the classic bug in
 style-switching map apps.
+
+## 28. Route patterns along real infrastructure, adding a routing tier
+
+**Supersedes part of decision 3.**
+
+**Decided:** Geometry is resolved in four tiers: manual override, OSM route relation, **routed**,
+straight line. The new routed tier sends a pattern's stops through OSRM's public demo server for
+buses, and through a Dijkstra shortest path over an OSM railway graph for trains. Results are
+cached per pattern and committed.
+**Rejected:** Leaving straight lines as the fallback; replacing the relation tier with routing.
+
+**Why the relation tier survives.** A route relation is the published route. It knows about
+bus-only links and one-way loops that a road router smooths over, so where a relation fits it is
+better evidence than a routed path. It stays first among the automatic tiers.
+
+**Why routing was needed at all.** Decision 3 assumed a relation could be trimmed to each
+pattern. Measured on the real data, that holds for 93 of 192 bus patterns and 34 of 60 rail. The
+failures are not missing data — line 572 has 16 patterns matched and 36 not, from the same
+relation. A line carries one relation per direction, but many pattern variants: short-turns,
+loops, peak deviations. Each variant fails the proximity or monotonic check and falls to a
+straight line across open country, which is what the user saw and objected to.
+
+Routing between consecutive stops needs no relation to cover the pattern, only the underlying
+network, so it handles every variant.
+
+**Why rail needs its own router.** OSRM has no rail profile. R13 and R50 have no OSM route
+relation either, which is why they were the long straight lines cutting across fields to Brno
+and Hodonín. A graph over `railway=rail` ways plus Dijkstra is small and self-contained.
+
+**`stopDistances` come out of the routers directly** — OSRM's cumulative leg distances, or the
+cumulative path length at each snapped node — rather than being re-projected, which keeps them
+exact for the vehicle animation that will consume them.
+
+**Cost if wrong:** the routed geometry may differ from the true bus path where a driver takes a
+street the router avoids. That is still a road, and still a large improvement on a line drawn
+through a field. Manual overrides remain the escape hatch.

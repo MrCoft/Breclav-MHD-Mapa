@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { buildQuery, fetchRoutes } from '../scripts/osm/overpass'
 import { loadScope } from '../scripts/gtfs/read'
 
@@ -23,6 +23,27 @@ describe('buildQuery', () => {
         expect(query).toContain('out body')
         expect(query).toContain('>;')
     })
+
+    it('matches both network and network:short tags in a union', () => {
+        const query = buildQuery(scope)
+
+        // Both tag filters should be present
+        expect(query).toContain('"network"~"IDS JMK"')
+        expect(query).toContain('"network:short"~"IDS JMK"')
+
+        // Union syntax should be present
+        expect(query).toContain('(')
+        expect(query).toContain(');')
+
+        // Both clauses should have the type constraint
+        expect(query).toMatch(/relation\["type"="route"\].*"network"~/)
+        expect(query).toMatch(/relation\["type"="route"\].*"network:short"~/)
+
+        // Bbox should appear at least twice (once per clause)
+        const bboxString = '48.55,15.95,49.35,17.65'
+        const bboxMatches = (query.match(new RegExp(bboxString, 'g')) || []).length
+        expect(bboxMatches).toBeGreaterThanOrEqual(2)
+    })
 })
 
 describe('fetchRoutes', () => {
@@ -43,5 +64,33 @@ describe('fetchRoutes', () => {
 
         await fetchRoutes(scope, { cacheDir })
         expect(readFileSync(path, 'utf8')).toBe(before)
+    })
+
+    it('sends a User-Agent header in the request', async () => {
+        const cacheDir = mkdtempSync(join(tmpdir(), 'osm-'))
+
+        const mockResponse = new Response(JSON.stringify({ version: 0.6, generator: 'test', elements: [] }), {
+            status: 200,
+            statusText: 'OK',
+        })
+
+        const mockFetch = vi.fn().mockResolvedValue(mockResponse)
+        vi.stubGlobal('fetch', mockFetch)
+
+        try {
+            await fetchRoutes(scope, { cacheDir, refresh: true })
+
+            expect(mockFetch).toHaveBeenCalledOnce()
+
+            const callArgs = mockFetch.mock.calls[0]
+            const init = callArgs[1] as Record<string, any>
+
+            expect(init.headers).toBeDefined()
+            const headers = init.headers as Record<string, string>
+            expect(headers['User-Agent']).toBeTruthy()
+            expect(headers['User-Agent']).toMatch(/Breclav-MHD-Mapa/)
+        } finally {
+            vi.unstubAllGlobals()
+        }
     })
 })

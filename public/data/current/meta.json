@@ -1,0 +1,10 @@
+{
+  "feedDate": "2026-08-28",
+  "generatedAt": "2026-09-02T10:19:12.509Z",
+  "converterVersion": "1.0.0",
+  "geometrySources": {
+    "osm": 127,
+    "straight": 125,
+    "override": 0
+  }
+}

@@ -134,14 +134,29 @@ describe('trimToStops', () => {
 
 describe('matchPatternGeometry', () => {
     it('prefers an explicit override', async () => {
-        const override: [number, number][] = [
-            [1, 1],
-            [2, 2],
-        ]
+        // Finding I11: the override tier now runs the same monotonicity/snap checks the relation
+        // tier does, so — unlike before that fix — this has to be a line the pattern's stops
+        // actually lie near and traverse in order, not an arbitrary pair of points.
+        const override: [number, number][] = [...corridor]
         const result = await matchPatternGeometry({ pattern, stops: stopById, relations: [], override })
         expect(result.source).toBe('override')
         expect(result.coordinates).toEqual(override)
         expect(result.stopDistances).toHaveLength(3)
+    })
+
+    it('rejects an override that fails the relation tier’s own monotonicity/snap checks', async () => {
+        // Finding I11: before this fix, an override called `measureAlong` on the whole line
+        // unconditionally, with no monotonicity check and no `maxSnapMetres` gate — exactly the
+        // operation `remeasureSimplified`'s own doc comment explains is unsafe, and overrides are
+        // documented as the fix for precisely that case. A point nowhere near any of the pattern's
+        // stops must now fail loudly instead of being trusted silently.
+        const uselessOverride: [number, number][] = [
+            [1, 1],
+            [2, 2],
+        ]
+        await expect(
+            matchPatternGeometry({ pattern, stops: stopById, relations: [], override: uselessOverride }),
+        ).rejects.toThrow(/override for pattern.*563-0-1/is)
     })
 
     it('uses a matching OSM relation', async () => {
@@ -216,10 +231,7 @@ describe('matchPatternGeometry tier order', () => {
             called = true
             return Promise.resolve({ coordinates: [], stopDistances: [] })
         }
-        const override: [number, number][] = [
-            [1, 1],
-            [2, 2],
-        ]
+        const override: [number, number][] = [...corridor]
         const result = await matchPatternGeometry({ pattern, stops: stopById, relations: [], override, router })
         expect(result.source).toBe('override')
         expect(called).toBe(false)
@@ -339,12 +351,15 @@ describe('remeasureSimplified', () => {
     })
 
     it('floors — and reports — a non-monotonic anchor sequence, rather than crashing or hiding it', () => {
-        // Every tier except 'override' guarantees originalStopDistances is non-decreasing before
-        // it ever reaches this function (straight and routed by construction; osm because
-        // trimToStops rejects a non-monotonic relation outright). An override is hand-authored
-        // and nothing validates its distances, so it is the one input shape that can arrive here
-        // out of order — this is what that looks like: stop2's anchor (445m) is far behind
-        // stop1's (~12016m, the line's own length).
+        // Every tier guarantees originalStopDistances is non-decreasing before it ever reaches
+        // this function — straight and routed by construction; osm because trimToStops rejects a
+        // non-monotonic relation outright; override because it now runs the same check (finding
+        // I11's fix — before it, an override was the one tier that skipped this, which is why
+        // this test exists). remeasureSimplified's own floor is still exercised here directly,
+        // independent of any tier, as a defence against a *simplified*-line search going backwards
+        // even when the dense-line input it was windowed from was correctly monotonic — this is
+        // what that looks like: stop2's anchor (445m) is far behind stop1's (~12016m, the line's
+        // own length).
         const fullLength = cumulativeDistances(originalCoordinates).at(-1)!
         const backwardsAnchor = cumulativeDistances(originalCoordinates)[4]! // idx4's position, ~445m
         const originalStopDistances = [0, fullLength, backwardsAnchor]

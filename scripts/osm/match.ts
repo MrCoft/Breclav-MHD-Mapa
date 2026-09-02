@@ -143,6 +143,28 @@ export function remeasureSimplified(args: {
 }
 
 /**
+ * The two checks that decide whether stops genuinely lie on, and traverse, `coords`: none
+ * projects further than `maxSnapMetres` off it, and their projections strictly increase (so the
+ * line runs the same way the stops are visited, rather than backwards or through an unrelated
+ * pass of a self-revisiting route). Shared by `trimToStops` (the relation tier) and
+ * `matchPatternGeometry`'s manual-override tier (finding I11) — a hand-authored override is
+ * exactly the kind of geometry `remeasureSimplified`'s own doc comment warns an unchecked
+ * `measureAlong` can silently mis-snap on a loop or an out-and-back leg, which is precisely what
+ * an override is meant to be the fix for.
+ */
+function isMonotonicAndSnapped(along: number[], maxOffMetres: number, maxSnapMetres: number): boolean {
+    if (maxOffMetres > maxSnapMetres) {
+        return false
+    }
+    for (let i = 1; i < along.length; i += 1) {
+        if (along[i]! < along[i - 1]!) {
+            return false
+        }
+    }
+    return true
+}
+
+/**
  * Cuts `line` down to the span the stops actually traverse.
  *
  * Returns null when the stops are too far from the line to be on it, or when
@@ -158,13 +180,8 @@ export function trimToStops(line: Position[], stopCoords: Position[], maxSnapMet
     const attempt = (coords: Position[]): TrimmedLine | null => {
         const { along, maxOffMetres } = measureAlong(coords, stopCoords)
 
-        if (maxOffMetres > maxSnapMetres) {
+        if (!isMonotonicAndSnapped(along, maxOffMetres, maxSnapMetres)) {
             return null
-        }
-        for (let i = 1; i < along.length; i += 1) {
-            if (along[i]! < along[i - 1]!) {
-                return null
-            }
         }
 
         const feature = lineString(coords)
@@ -195,11 +212,28 @@ export async function matchPatternGeometry(args: {
     const stopCoords = straightLine(pattern, stops)
 
     if (override && override.length >= 2) {
-        const { along } = measureAlong(override, stopCoords)
-        const origin = along[0]!
+        // Same checks the relation tier enforces (see `isMonotonicAndSnapped`'s doc comment) —
+        // an override used to skip both and call `measureAlong` on the whole line unconditionally
+        // (finding I11). Retried reversed for the same reason `trimToStops` retries reversed: a
+        // hand-drawn override may run start-to-end opposite the pattern's own stop order.
+        const attempt = (coords: Position[]): { coords: Position[]; along: number[] } | null => {
+            const { along, maxOffMetres } = measureAlong(coords, stopCoords)
+            return isMonotonicAndSnapped(along, maxOffMetres, maxSnapMetres) ? { coords, along } : null
+        }
+        const fit = attempt(override) ?? attempt([...override].reverse())
+        if (!fit) {
+            throw new Error(
+                `matchPatternGeometry: override for pattern ${pattern.id} fails the relation tier's own checks ` +
+                    `(stops within ${maxSnapMetres}m of the line, projecting onto it in increasing order) in ` +
+                    'either direction. An override exists to fix exactly the self-revisiting-route case an ' +
+                    'unchecked nearest-point search gets wrong, so a broken override fails the build loudly ' +
+                    'rather than silently falling through to the router or a straight line.',
+            )
+        }
+        const origin = fit.along[0]!
         return {
-            coordinates: override,
-            stopDistances: along.map((a) => Math.max(0, a - origin)),
+            coordinates: fit.coords,
+            stopDistances: fit.along.map((a) => Math.max(0, a - origin)),
             source: 'override',
         }
     }

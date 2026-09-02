@@ -4,7 +4,13 @@
         "target": "ES2023",
         "lib": ["ES2023"],
         "module": "ESNext",
-        "types": ["node"],
+        // "vite/client" alongside "node": `e2e/` (Node-side Playwright specs, compiled under this
+        // program) now imports runtime code from `src/domain/` (finding C1's fix, deriving a
+        // moment from the committed data via the app's own `vehiclesAt`), which references
+        // `import.meta.env.DEV` — a Vite-only augmentation of `ImportMeta`, otherwise unknown to
+        // this Node-flavoured program. Same cross-boundary friction as docs/known-bugs.md entry 3,
+        // in the opposite direction (there it was `scripts/` picking up DOM lib via `tests/`).
+        "types": ["node", "vite/client"],
 
         "moduleResolution": "bundler",
         "allowImportingTsExtensions": true,

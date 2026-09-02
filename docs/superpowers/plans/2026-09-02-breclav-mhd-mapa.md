@@ -22,6 +22,9 @@
 - UI copy is Czech only. No i18n layer.
 - Attribution is mandatory and must be visible in the UI: timetable data © KORDIS JMK, CC-BY-4.0; map data © OpenStreetMap contributors, ODbL.
 - Generated scenario data under `public/data/` and the Overpass cache under `data/cache/osm/` are committed. Extracted GTFS CSVs under `data/cache/gtfs/` are not.
+- Every `if`, `else`, `for` and `while` body is braced, even a single statement.
+- One thing per file, named after the file.
+- Before calling a task done, run the project's full check — typecheck and tests (`npm run build` and `npm test`). There is no linter configured yet; see `docs/open-questions.md`.
 
 ---
 
@@ -555,29 +558,49 @@ export function validateNetwork(value: unknown): asserts value is Network {
     if (p.stops.length !== p.offsets.length) {
       problems.push(`pattern ${p.id}: offsets length ${p.offsets.length} != stops length ${p.stops.length}`);
     }
-    if (!lineIds.has(p.line)) problems.push(`pattern ${p.id}: unknown line ${p.line}`);
-    for (const s of p.stops) if (!stopIds.has(s)) problems.push(`pattern ${p.id}: unknown stop ${s}`);
+    if (!lineIds.has(p.line)) {
+      problems.push(`pattern ${p.id}: unknown line ${p.line}`);
+    }
+    for (const s of p.stops) {
+      if (!stopIds.has(s)) {
+        problems.push(`pattern ${p.id}: unknown stop ${s}`);
+      }
+    }
     for (let i = 1; i < p.offsets.length; i += 1) {
-      if (p.offsets[i]! < p.offsets[i - 1]!) problems.push(`pattern ${p.id}: offsets decrease at index ${i}`);
+      if (p.offsets[i]! < p.offsets[i - 1]!) {
+        problems.push(`pattern ${p.id}: offsets decrease at index ${i}`);
+      }
     }
   }
 
   const patternStops = new Map(net.patterns.map((p) => [p.id, p.stops.length]));
   for (const t of net.trips) {
-    if (!patternIds.has(t.pattern)) problems.push(`trip: unknown pattern ${t.pattern}`);
-    if (!serviceIds.has(t.service)) problems.push(`trip: unknown service ${t.service}`);
+    if (!patternIds.has(t.pattern)) {
+      problems.push(`trip: unknown pattern ${t.pattern}`);
+    }
+    if (!serviceIds.has(t.service)) {
+      problems.push(`trip: unknown service ${t.service}`);
+    }
     if (t.offsets && patternStops.get(t.pattern) !== t.offsets.length) {
       problems.push(`trip on ${t.pattern}: override offsets length ${t.offsets.length} != stops length`);
     }
   }
 
   for (const f of net.frequencies ?? []) {
-    if (!patternIds.has(f.pattern)) problems.push(`frequency: unknown pattern ${f.pattern}`);
-    if (!serviceIds.has(f.service)) problems.push(`frequency: unknown service ${f.service}`);
-    if (f.to < f.from) problems.push(`frequency on ${f.pattern}: to < from`);
+    if (!patternIds.has(f.pattern)) {
+      problems.push(`frequency: unknown pattern ${f.pattern}`);
+    }
+    if (!serviceIds.has(f.service)) {
+      problems.push(`frequency: unknown service ${f.service}`);
+    }
+    if (f.to < f.from) {
+      problems.push(`frequency on ${f.pattern}: to < from`);
+    }
   }
 
-  if (problems.length > 0) throw new Error(`Neplatná síť (reference):\n${problems.join('\n')}`);
+  if (problems.length > 0) {
+    throw new Error(`Neplatná síť (reference):\n${problems.join('\n')}`);
+  }
 }
 ```
 
@@ -700,14 +723,20 @@ export function servicesOnDate(services: Iterable<Service>, date: string): Set<s
   const dow = weekdayIndex(date);
   const active = new Set<string>();
   for (const s of services) {
-    if (s.removed?.includes(date)) continue;
+    if (s.removed?.includes(date)) {
+      continue;
+    }
     if (s.added?.includes(date)) {
       active.add(s.id);
       continue;
     }
     // YYYY-MM-DD strings compare correctly with < and >.
-    if (date < s.from || date > s.to) continue;
-    if (s.days[dow] === 1) active.add(s.id);
+    if (date < s.from || date > s.to) {
+      continue;
+    }
+    if (s.days[dow] === 1) {
+      active.add(s.id);
+    }
   }
   return active;
 }
@@ -877,8 +906,11 @@ export function buildIndex(net: Network): NetworkIndex {
   const tripsByPattern = new Map<string, Trip[]>();
   for (const trip of expandFrequencies(net)) {
     const list = tripsByPattern.get(trip.pattern);
-    if (list) list.push(trip);
-    else tripsByPattern.set(trip.pattern, [trip]);
+    if (list) {
+      list.push(trip);
+    } else {
+      tripsByPattern.set(trip.pattern, [trip]);
+    }
   }
 
   const patternsByStop = new Map<string, StopPosition[]>();
@@ -886,12 +918,18 @@ export function buildIndex(net: Network): NetworkIndex {
   for (const pattern of net.patterns) {
     pattern.stops.forEach((stopId, index) => {
       const list = patternsByStop.get(stopId);
-      if (list) list.push({ pattern, index });
-      else patternsByStop.set(stopId, [{ pattern, index }]);
+      if (list) {
+        list.push({ pattern, index });
+      } else {
+        patternsByStop.set(stopId, [{ pattern, index }]);
+      }
 
       const seen = lineIdsByStop.get(stopId);
-      if (seen) seen.add(pattern.line);
-      else lineIdsByStop.set(stopId, new Set([pattern.line]));
+      if (seen) {
+        seen.add(pattern.line);
+      } else {
+        lineIdsByStop.set(stopId, new Set([pattern.line]));
+      }
     });
   }
 
@@ -927,26 +965,22 @@ git commit -m "feat: build lookup indexes and expand frequency blocks"
 The post-midnight case is the whole reason this task exists. GTFS encodes a 00:20 departure as minute 1460 of the *previous* service day, so a query that only looks at today silently loses the night bus.
 
 **Files:**
-- Create: `src/domain/departures.ts`
-- Test: `tests/departures.test.ts`
+- Create: `src/domain/departures.ts`, `src/domain/formatMinutes.ts`
+- Test: `tests/departures.test.ts`, `tests/formatMinutes.test.ts`
 
 **Interfaces:**
 - Consumes: `NetworkIndex` from Task 4; `servicesOnDate`, `previousDate` from Task 3.
 - Produces:
   - `Departure` interface.
   - `departuresAt(index: NetworkIndex, stopId: string, date: string, fromMinutes: number, limit?: number): Departure[]`
-  - `formatMinutes(minutes: number): string` — `"06:14"`, wrapping values ≥ 1440.
+  - `src/domain/formatMinutes.ts`: `formatMinutes(minutes: number): string` — `"06:14"`, wrapping values ≥ 1440.
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write the failing tests**
 
 ```ts
-// tests/departures.test.ts
+// tests/formatMinutes.test.ts
 import { describe, expect, it } from 'vitest';
-import { buildIndex } from '../src/data/buildIndex';
-import { departuresAt, formatMinutes } from '../src/domain/departures';
-import { tinyNetwork } from './fixtures/tinyNetwork';
-
-const index = buildIndex(tinyNetwork);
+import { formatMinutes } from '../src/domain/formatMinutes';
 
 describe('formatMinutes', () => {
   it('formats a normal time', () => {
@@ -957,6 +991,16 @@ describe('formatMinutes', () => {
     expect(formatMinutes(1460)).toBe('00:20');
   });
 });
+```
+
+```ts
+// tests/departures.test.ts
+import { describe, expect, it } from 'vitest';
+import { buildIndex } from '../src/data/buildIndex';
+import { departuresAt } from '../src/domain/departures';
+import { tinyNetwork } from './fixtures/tinyNetwork';
+
+const index = buildIndex(tinyNetwork);
 
 describe('departuresAt', () => {
   it('returns the weekday departure from the first stop', () => {
@@ -1010,6 +1054,14 @@ Expected: FAIL — cannot resolve `../src/domain/departures`.
 - [ ] **Step 3: Write the implementation**
 
 ```ts
+// src/domain/formatMinutes.ts
+export function formatMinutes(minutes: number): string {
+  const m = ((minutes % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+}
+```
+
+```ts
 // src/domain/departures.ts
 import type { NetworkIndex } from '../data/buildIndex';
 import { previousDate, servicesOnDate } from './calendar';
@@ -1023,11 +1075,6 @@ export interface Departure {
   time: number;
   /** The service day the trip belongs to, which may be the previous date. */
   serviceDate: string;
-}
-
-export function formatMinutes(minutes: number): string {
-  const m = ((minutes % 1440) + 1440) % 1440;
-  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 }
 
 /**
@@ -1046,7 +1093,9 @@ export function departuresAt(
   limit = 12,
 ): Departure[] {
   const positions = index.patternsByStop.get(stopId);
-  if (!positions || positions.length === 0) return [];
+  if (!positions || positions.length === 0) {
+    return [];
+  }
 
   const days: Array<{ serviceDate: string; shift: number }> = [
     { serviceDate: previousDate(date), shift: 1440 },
@@ -1056,20 +1105,30 @@ export function departuresAt(
   const found: Departure[] = [];
   for (const { serviceDate, shift } of days) {
     const active = servicesOnDate(index.services, serviceDate);
-    if (active.size === 0) continue;
+    if (active.size === 0) {
+      continue;
+    }
 
     for (const { pattern, index: stopIndex } of positions) {
       const line = index.lines.get(pattern.line);
-      if (!line) continue;
+      if (!line) {
+        continue;
+      }
       const trips = index.tripsByPattern.get(pattern.id) ?? [];
 
       for (const trip of trips) {
-        if (!active.has(trip.service)) continue;
+        if (!active.has(trip.service)) {
+          continue;
+        }
         const offsets = trip.offsets ?? pattern.offsets;
         const offset = offsets[stopIndex];
-        if (offset === undefined) continue;
+        if (offset === undefined) {
+          continue;
+        }
         const time = trip.start + offset - shift;
-        if (time < fromMinutes || time >= 1440) continue;
+        if (time < fromMinutes || time >= 1440) {
+          continue;
+        }
         found.push({
           patternId: pattern.id,
           lineId: line.id,
@@ -1089,15 +1148,15 @@ export function departuresAt(
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npx vitest run tests/departures.test.ts`
-Expected: 9 passing.
+Run: `npx vitest run tests/departures.test.ts tests/formatMinutes.test.ts`
+Expected: `tests/departures.test.ts` 7 passing, `tests/formatMinutes.test.ts` 2 passing.
 
 Note the `time >= 1440` guard: a departure later than the queried date's midnight belongs to the *next* date's board, not this one. Without it the 1450 trip would appear both as "1450" today and "10" tomorrow.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/domain/departures.ts tests/departures.test.ts
+git add src/domain/departures.ts src/domain/formatMinutes.ts tests/departures.test.ts tests/formatMinutes.test.ts
 git commit -m "feat: query departures at a stop, including post-midnight trips"
 ```
 
@@ -1215,7 +1274,9 @@ export async function downloadFeed(url: string, destDir: string): Promise<{ zipP
   const zipPath = join(destDir, 'gtfs.zip');
 
   const head = await fetch(url, { method: 'HEAD' });
-  if (!head.ok) throw new Error(`HEAD ${url} failed: ${head.status}`);
+  if (!head.ok) {
+    throw new Error(`HEAD ${url} failed: ${head.status}`);
+  }
   const lastModified = head.headers.get('last-modified');
   const feedDate = lastModified ? new Date(lastModified).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
 
@@ -1229,7 +1290,9 @@ export async function downloadFeed(url: string, destDir: string): Promise<{ zipP
 
   if (!haveCurrent) {
     const res = await fetch(url);
-    if (!res.ok || !res.body) throw new Error(`GET ${url} failed: ${res.status}`);
+    if (!res.ok || !res.body) {
+      throw new Error(`GET ${url} failed: ${res.status}`);
+    }
     await pipeline(res.body, createWriteStream(zipPath));
   }
 
@@ -1243,7 +1306,9 @@ export function extractEntries(zipPath: string, destDir: string, names: string[]
 
   return new Promise((resolve, reject) => {
     yauzl.open(zipPath, { lazyEntries: true }, (err, zip) => {
-      if (err || !zip) return reject(err ?? new Error('cannot open zip'));
+      if (err || !zip) {
+        return reject(err ?? new Error('cannot open zip'));
+      }
 
       zip.on('error', reject);
       zip.on('end', resolve);
@@ -1255,7 +1320,9 @@ export function extractEntries(zipPath: string, destDir: string, names: string[]
           return;
         }
         zip.openReadStream(entry, (streamErr, stream) => {
-          if (streamErr || !stream) return reject(streamErr ?? new Error('cannot read entry'));
+          if (streamErr || !stream) {
+            return reject(streamErr ?? new Error('cannot read entry'));
+          }
           const out = join(destDir, entry.fileName);
           mkdirSync(dirname(out), { recursive: true });
           stream.pipe(createWriteStream(out)).on('close', () => zip.readEntry()).on('error', reject);
@@ -1268,7 +1335,9 @@ export function extractEntries(zipPath: string, destDir: string, names: string[]
 /** Streams a CSV file row by row. Never holds the whole file in memory. */
 export async function streamCsv<T>(path: string, onRow: (row: T) => void): Promise<void> {
   const parser = createReadStream(path).pipe(parse({ columns: true, bom: true, skip_empty_lines: true }));
-  for await (const row of parser) onRow(row as T);
+  for await (const row of parser) {
+    onRow(row as T);
+  }
 }
 ```
 
@@ -1443,7 +1512,9 @@ export function municipalityOf(stopName: string): string {
 /** Every stop id — platform or station — mapped to the station it belongs to. */
 export function buildParentMap(rows: Iterable<GtfsStopRow>): Map<string, string> {
   const parents = new Map<string, string>();
-  for (const row of rows) parents.set(row.stop_id, row.parent_station || row.stop_id);
+  for (const row of rows) {
+    parents.set(row.stop_id, row.parent_station || row.stop_id);
+  }
   return parents;
 }
 
@@ -1678,7 +1749,9 @@ function isoDate(yyyymmdd: string): string {
 export function assignLineIds(routes: Iterable<GtfsRouteRow>): Map<string, string> {
   const all = [...routes].sort((a, b) => a.route_id.localeCompare(b.route_id));
   const counts = new Map<string, number>();
-  for (const r of all) counts.set(r.route_short_name, (counts.get(r.route_short_name) ?? 0) + 1);
+  for (const r of all) {
+    counts.set(r.route_short_name, (counts.get(r.route_short_name) ?? 0) + 1);
+  }
 
   const ids = new Map<string, string>();
   for (const r of all) {
@@ -1734,10 +1807,17 @@ export function buildServices(
       byId.set(row.service_id, service);
     }
     const date = isoDate(row.date);
-    if (row.exception_type === '1') (service.added ??= []).push(date);
-    else (service.removed ??= []).push(date);
-    if (date < service.from) service.from = date;
-    if (date > service.to) service.to = date;
+    if (row.exception_type === '1') {
+      (service.added ??= []).push(date);
+    } else {
+      (service.removed ??= []).push(date);
+    }
+    if (date < service.from) {
+      service.from = date;
+    }
+    if (date > service.to) {
+      service.to = date;
+    }
   }
 
   return [...byId.values()]
@@ -1779,8 +1859,9 @@ export function buildPatternsAndTrips(
 
     const entry: Entry = { start, offsets, service: shape.serviceId };
     const group = groups.get(key);
-    if (group) group.entries.push(entry);
-    else {
+    if (group) {
+      group.entries.push(entry);
+    } else {
       groups.set(key, {
         lineId,
         direction: shape.directionId,
@@ -1993,7 +2074,9 @@ export async function fetchRoutes(
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ data: buildQuery(scope) }),
   });
-  if (!res.ok) throw new Error(`Overpass failed: ${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    throw new Error(`Overpass failed: ${res.status} ${res.statusText}`);
+  }
 
   const body = (await res.json()) as OsmResponse;
   mkdirSync(cacheDir, { recursive: true });
@@ -2153,11 +2236,17 @@ export function stitchWays(ways: number[][]): number[][] {
         const head = chain[0]!;
         const tail = chain[chain.length - 1]!;
 
-        if (way[0] === tail) chain.push(...way.slice(1));
-        else if (way[way.length - 1] === tail) chain.push(...[...way].reverse().slice(1));
-        else if (way[way.length - 1] === head) chain.unshift(...way.slice(0, -1));
-        else if (way[0] === head) chain.unshift(...[...way].reverse().slice(0, -1));
-        else continue;
+        if (way[0] === tail) {
+          chain.push(...way.slice(1));
+        } else if (way[way.length - 1] === tail) {
+          chain.push(...[...way].reverse().slice(1));
+        } else if (way[way.length - 1] === head) {
+          chain.unshift(...way.slice(0, -1));
+        } else if (way[0] === head) {
+          chain.unshift(...[...way].reverse().slice(0, -1));
+        } else {
+          continue;
+        }
 
         remaining.splice(i, 1);
         extended = true;
@@ -2177,9 +2266,13 @@ export function relationToLine(
   nodes: Iterable<OsmNode>,
 ): [number, number][] {
   const wayById = new Map<number, OsmWay>();
-  for (const w of ways) wayById.set(w.id, w);
+  for (const w of ways) {
+    wayById.set(w.id, w);
+  }
   const nodeById = new Map<number, OsmNode>();
-  for (const n of nodes) nodeById.set(n.id, n);
+  for (const n of nodes) {
+    nodeById.set(n.id, n);
+  }
 
   // Members with a role are stops and platforms; only roleless ways form the path.
   const path = relation.members
@@ -2189,7 +2282,9 @@ export function relationToLine(
     .map((w) => w.nodes);
 
   const [longest] = stitchWays(path);
-  if (!longest) return [];
+  if (!longest) {
+    return [];
+  }
 
   return longest
     .map((id) => nodeById.get(id))
@@ -2308,7 +2403,10 @@ describe('matchPatternGeometry', () => {
     const result = matchPatternGeometry({
       pattern, stops: stopById, relations: [{ ref: '999', coordinates: corridor }],
     });
-    expect(result).toEqual({ coordinates: straightLine(pattern, stopById), source: 'straight' });
+    expect(result).toEqual({
+      coordinates: [[16.80, 48.70], [16.80, 48.75], [16.80, 48.80]],
+      source: 'straight',
+    });
   });
 
   it('falls back to straight lines when the matching relation is nowhere near the stops', () => {
@@ -2371,7 +2469,9 @@ export function straightLine(pattern: Pattern, stops: Map<string, Stop>): Positi
  * before giving up, since OSM relations are commonly drawn in one direction only.
  */
 export function trimToStops(line: Position[], stopCoords: Position[], maxSnapMetres: number): Position[] | null {
-  if (line.length < 2 || stopCoords.length < 2) return null;
+  if (line.length < 2 || stopCoords.length < 2) {
+    return null;
+  }
 
   const attempt = (coords: Position[]): Position[] | null => {
     const feature = lineString(coords);
@@ -2383,9 +2483,13 @@ export function trimToStops(line: Position[], stopCoords: Position[], maxSnapMet
       };
     });
 
-    if (measured.some((m) => m.offMetres > maxSnapMetres)) return null;
+    if (measured.some((m) => m.offMetres > maxSnapMetres)) {
+      return null;
+    }
     for (let i = 1; i < measured.length; i += 1) {
-      if (measured[i]!.along < measured[i - 1]!.along) return null;
+      if (measured[i]!.along < measured[i - 1]!.along) {
+        return null;
+      }
     }
 
     const sliced = lineSlice(point(stopCoords[0]!), point(stopCoords[stopCoords.length - 1]!), feature);
@@ -2404,7 +2508,9 @@ export function matchPatternGeometry(args: {
 }): { coordinates: Position[]; source: GeometrySource } {
   const { pattern, stops, relations, override, maxSnapMetres = 250 } = args;
 
-  if (override && override.length >= 2) return { coordinates: override, source: 'override' };
+  if (override && override.length >= 2) {
+    return { coordinates: override, source: 'override' };
+  }
 
   const stopCoords = straightLine(pattern, stops);
   const candidates = relations
@@ -2522,15 +2628,23 @@ export function assertSane(net: Network, scope: ScopeConfig): void {
   if (net.lines.length < scope.expectedRoutes.min || net.lines.length > scope.expectedRoutes.max) {
     problems.push(`lines: ${net.lines.length} outside expected ${scope.expectedRoutes.min}..${scope.expectedRoutes.max}`);
   }
-  if (net.trips.length === 0) problems.push('trips: none produced');
-  if (net.patterns.some((p) => p.stops.length < 2)) problems.push('patterns: at least one has fewer than 2 stops');
+  if (net.trips.length === 0) {
+    problems.push('trips: none produced');
+  }
+  if (net.patterns.some((p) => p.stops.length < 2)) {
+    problems.push('patterns: at least one has fewer than 2 stops');
+  }
 
   const served = new Set(net.patterns.flatMap((p) => p.stops));
   for (const stop of net.stops) {
-    if (!served.has(stop.id)) problems.push(`stop ${stop.id} is served by no pattern`);
+    if (!served.has(stop.id)) {
+      problems.push(`stop ${stop.id} is served by no pattern`);
+    }
   }
 
-  if (problems.length > 0) throw new Error(`Sanity check failed:\n${problems.join('\n')}`);
+  if (problems.length > 0) {
+    throw new Error(`Sanity check failed:\n${problems.join('\n')}`);
+  }
 }
 
 function sortNetwork(net: Network): Network {
@@ -2575,10 +2689,15 @@ async function main(): Promise<void> {
     const station = parents.get(r.stop_id) ?? r.stop_id;
     const list = sequences.get(r.trip_id);
     const entry = { seq: Number(r.stop_sequence), station, minutes: parseGtfsTime(r.departure_time) };
-    if (list) list.push(entry);
-    else sequences.set(r.trip_id, [entry]);
+    if (list) {
+      list.push(entry);
+    } else {
+      sequences.set(r.trip_id, [entry]);
+    }
   });
-  for (const list of sequences.values()) list.sort((a, b) => a.seq - b.seq);
+  for (const list of sequences.values()) {
+    list.sort((a, b) => a.seq - b.seq);
+  }
 
   // Pass 2: routes touching Břeclav, then every trip of those routes.
   const breclavStations = new Set(
@@ -2586,9 +2705,13 @@ async function main(): Promise<void> {
   );
   const routeIds = new Set<string>();
   for (const [tripId, list] of sequences) {
-    if (!list.some((e) => breclavStations.has(e.station))) continue;
+    if (!list.some((e) => breclavStations.has(e.station))) {
+      continue;
+    }
     const trip = tripRows.get(tripId);
-    if (trip) routeIds.add(trip.route_id);
+    if (trip) {
+      routeIds.add(trip.route_id);
+    }
   }
 
   const selectedRoutes = routeRows.filter((r) => routeIds.has(r.route_id));
@@ -2598,8 +2721,12 @@ async function main(): Promise<void> {
   const usedStations = new Set<string>();
   for (const [tripId, list] of sequences) {
     const trip = tripRows.get(tripId);
-    if (!trip || !routeIds.has(trip.route_id)) continue;
-    for (const e of list) usedStations.add(e.station);
+    if (!trip || !routeIds.has(trip.route_id)) {
+      continue;
+    }
+    for (const e of list) {
+      usedStations.add(e.station);
+    }
     shapes.push({
       tripId,
       routeId: trip.route_id,
@@ -2615,14 +2742,18 @@ async function main(): Promise<void> {
   const childOf = new Map<string, GtfsStopRow>();
   for (const r of stopRows) {
     const parent = r.parent_station || r.stop_id;
-    if (!childOf.has(parent)) childOf.set(parent, r);
+    if (!childOf.has(parent)) {
+      childOf.set(parent, r);
+    }
   }
 
   const stopIds = assignStopIds([...usedStations].map((id) => stationById.get(id)).filter((r): r is GtfsStopRow => !!r));
   const stops: Stop[] = [...usedStations]
     .map((id) => {
       const station = stationById.get(id);
-      if (!station) return null;
+      if (!station) {
+        return null;
+      }
       const child = childOf.get(id) ?? station;
       return {
         id: stopIds.get(id)!,
@@ -2637,7 +2768,9 @@ async function main(): Promise<void> {
     .filter((s): s is Stop => s !== null);
 
   // Re-key trip shapes from GTFS station ids to the readable slugs.
-  for (const shape of shapes) shape.stops = shape.stops.map((id) => stopIds.get(id) ?? id);
+  for (const shape of shapes) {
+    shape.stops = shape.stops.map((id) => stopIds.get(id) ?? id);
+  }
 
   const calendarRows: GtfsCalendarRow[] = [];
   await streamCsv<GtfsCalendarRow>(join(cacheDir, 'calendar.txt'), (r) => calendarRows.push(r));
@@ -2789,7 +2922,9 @@ function fakeFetch(bodies: Record<string, unknown>): typeof fetch {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
     const key = Object.keys(bodies).find((k) => url.endsWith(k));
-    if (!key) return new Response('not found', { status: 404 });
+    if (!key) {
+      return new Response('not found', { status: 404 });
+    }
     return new Response(JSON.stringify(bodies[key]), { status: 200 });
   }) as unknown as typeof fetch;
 }
@@ -2859,7 +2994,9 @@ function dataUrl(path: string): string {
 
 async function getJson<T>(url: string, fetchImpl: typeof fetch): Promise<T> {
   const res = await fetchImpl(url);
-  if (!res.ok) throw new Error(`Nepodařilo se načíst ${url} (HTTP ${res.status})`);
+  if (!res.ok) {
+    throw new Error(`Nepodařilo se načíst ${url} (HTTP ${res.status})`);
+  }
   return (await res.json()) as T;
 }
 
@@ -2981,7 +3118,9 @@ export function MapView() {
   // The map instance is created once and never re-created; state is pushed
   // into it imperatively below.
   useEffect(() => {
-    if (map.current || !container.current) return;
+    if (map.current || !container.current) {
+      return;
+    }
     map.current = new maplibregl.Map({
       container: container.current,
       style: BASEMAP_STYLE,
@@ -2998,10 +3137,14 @@ export function MapView() {
 
   useEffect(() => {
     const m = map.current;
-    if (!m || !scenario) return;
+    if (!m || !scenario) {
+      return;
+    }
 
     const install = () => {
-      if (m.getSource('routes')) return;
+      if (m.getSource('routes')) {
+        return;
+      }
 
       m.addSource('routes', { type: 'geojson', data: scenario.geometry });
       m.addSource('stops', { type: 'geojson', data: stopsGeoJson(scenario) });
@@ -3064,7 +3207,9 @@ export function MapView() {
 
       m.on('click', 'stops-circle', (event) => {
         const id = event.features?.[0]?.properties?.id;
-        if (typeof id === 'string') selectStop(id);
+        if (typeof id === 'string') {
+          selectStop(id);
+        }
       });
       for (const layer of ['stops-circle', 'stops-selected-circle']) {
         m.on('mouseenter', layer, () => { m.getCanvas().style.cursor = 'pointer'; });
@@ -3072,14 +3217,19 @@ export function MapView() {
       }
     };
 
-    if (m.isStyleLoaded()) install();
-    else m.once('load', install);
+    if (m.isStyleLoaded()) {
+      install();
+    } else {
+      m.once('load', install);
+    }
   }, [scenario, selectStop]);
 
   // Highlight by filter — the sources are never rebuilt.
   useEffect(() => {
     const m = map.current;
-    if (!m || !m.getLayer('routes-active')) return;
+    if (!m || !m.getLayer('routes-active')) {
+      return;
+    }
 
     if (selectedLine === null) {
       m.setFilter('routes-active', null);
@@ -3132,13 +3282,25 @@ export function App() {
   useEffect(() => {
     let cancelled = false;
     loadScenario(scenarioId)
-      .then((loaded) => { if (!cancelled) setScenario(loaded); })
-      .catch((err: unknown) => { if (!cancelled) setError(err instanceof Error ? err.message : String(err)); });
+      .then((loaded) => {
+        if (!cancelled) {
+          setScenario(loaded);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      });
     return () => { cancelled = true; };
   }, [scenarioId, setScenario, setError]);
 
-  if (error !== null) return <div className="banner">Data se nepodařilo načíst: {error}</div>;
-  if (scenario === null) return <div className="banner">Načítám síť…</div>;
+  if (error !== null) {
+    return <div className="banner">Data se nepodařilo načíst: {error}</div>;
+  }
+  if (scenario === null) {
+    return <div className="banner">Načítám síť…</div>;
+  }
 
   return (
     <div className="layout">
@@ -3185,7 +3347,9 @@ export function LineBrowser() {
   const scenario = useStore((s) => s.scenario);
   const selectedLine = useStore((s) => s.selectedLine);
   const selectLine = useStore((s) => s.selectLine);
-  if (!scenario) return null;
+  if (!scenario) {
+    return null;
+  }
 
   const lines = scenario.index.network.lines;
   const buses = lines.filter((l) => l.mode === 'bus');
@@ -3285,7 +3449,7 @@ git commit -m "feat: add line browser with map highlight"
 
 ```tsx
 // src/ui/TimeControl.tsx
-import { formatMinutes } from '../domain/departures';
+import { formatMinutes } from '../domain/formatMinutes';
 import { nowInPrague, useStore } from '../state/store';
 
 export function TimeControl() {
@@ -3306,7 +3470,9 @@ export function TimeControl() {
           value={formatMinutes(minutes)}
           onChange={(e) => {
             const [h, m] = e.target.value.split(':');
-            if (h !== undefined && m !== undefined) setMoment(date, Number(h) * 60 + Number(m));
+            if (h !== undefined && m !== undefined) {
+              setMoment(date, Number(h) * 60 + Number(m));
+            }
           }}
         />
       </label>
@@ -3322,7 +3488,8 @@ export function TimeControl() {
 
 ```tsx
 // src/ui/StopPanel.tsx
-import { departuresAt, formatMinutes } from '../domain/departures';
+import { departuresAt } from '../domain/departures';
+import { formatMinutes } from '../domain/formatMinutes';
 import { useStore } from '../state/store';
 import { TimeControl } from './TimeControl';
 
@@ -3334,10 +3501,14 @@ export function StopPanel() {
   const date = useStore((s) => s.date);
   const minutes = useStore((s) => s.minutes);
 
-  if (!scenario || selectedStop === null) return null;
+  if (!scenario || selectedStop === null) {
+    return null;
+  }
 
   const stop = scenario.index.stops.get(selectedStop);
-  if (!stop) return null;
+  if (!stop) {
+    return null;
+  }
 
   const lines = scenario.index.linesByStop.get(stop.id) ?? [];
   const departures = departuresAt(scenario.index, stop.id, date, minutes);
@@ -3418,9 +3589,13 @@ Add this effect to `src/map/MapView.tsx`, after the existing highlight effect. I
 ```tsx
   useEffect(() => {
     const m = map.current;
-    if (!m || !scenario) return;
+    if (!m || !scenario) {
+      return;
+    }
     const source = m.getSource('stops-selected') as maplibregl.GeoJSONSource | undefined;
-    if (!source) return;
+    if (!source) {
+      return;
+    }
 
     if (selectedLine === null) {
       source.setData({ type: 'FeatureCollection', features: [] });
@@ -3545,7 +3720,7 @@ Expected: FAIL — cannot resolve `../src/state/urlState`.
 
 ```ts
 // src/state/urlState.ts
-import { formatMinutes } from '../domain/departures';
+import { formatMinutes } from '../domain/formatMinutes';
 
 export interface UrlState {
   scenarioId: string;
@@ -3560,16 +3735,24 @@ export function readUrlState(search: string): Partial<UrlState> {
   const state: Partial<UrlState> = {};
 
   const scenarioId = params.get('s');
-  if (scenarioId) state.scenarioId = scenarioId;
+  if (scenarioId) {
+    state.scenarioId = scenarioId;
+  }
 
   const line = params.get('line');
-  if (line) state.selectedLine = line;
+  if (line) {
+    state.selectedLine = line;
+  }
 
   const stop = params.get('stop');
-  if (stop) state.selectedStop = stop;
+  if (stop) {
+    state.selectedStop = stop;
+  }
 
   const date = params.get('d');
-  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) state.date = date;
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    state.date = date;
+  }
 
   const time = params.get('t');
   if (time && /^\d{2}:\d{2}$/.test(time)) {
@@ -3583,8 +3766,12 @@ export function readUrlState(search: string): Partial<UrlState> {
 export function writeUrlState(state: UrlState): string {
   const params = new URLSearchParams();
   params.set('s', state.scenarioId);
-  if (state.selectedLine !== null) params.set('line', state.selectedLine);
-  if (state.selectedStop !== null) params.set('stop', state.selectedStop);
+  if (state.selectedLine !== null) {
+    params.set('line', state.selectedLine);
+  }
+  if (state.selectedStop !== null) {
+    params.set('stop', state.selectedStop);
+  }
   params.set('d', state.date);
   params.set('t', formatMinutes(state.minutes));
   return `?${params.toString()}`;
@@ -3630,10 +3817,18 @@ Add to `src/ui/App.tsx`: import `Footer`, `readUrlState`, `writeUrlState`, and `
   useEffect(() => {
     const initial = readUrlState(window.location.search);
     const store = useStore.getState();
-    if (initial.scenarioId) store.setScenarioId(initial.scenarioId);
-    if (initial.selectedLine) store.selectLine(initial.selectedLine);
-    if (initial.selectedStop) store.selectStop(initial.selectedStop);
-    if (initial.date && initial.minutes !== undefined) store.setMoment(initial.date, initial.minutes);
+    if (initial.scenarioId) {
+      store.setScenarioId(initial.scenarioId);
+    }
+    if (initial.selectedLine) {
+      store.selectLine(initial.selectedLine);
+    }
+    if (initial.selectedStop) {
+      store.selectStop(initial.selectedStop);
+    }
+    if (initial.date && initial.minutes !== undefined) {
+      store.setMoment(initial.date, initial.minutes);
+    }
   }, []);
 
   // Mirror state back into the URL so any view is linkable.

@@ -40,6 +40,17 @@ test('production build renders, a line selects, and a deep link restores a stop'
     const lineButton = page.getByRole('button', { name: line.longName })
     await expect(lineButton).toBeVisible()
 
+    // 1b. The map itself actually rendered something, not just the chrome around it. MapLibre
+    // parses GeoJSON sources in a web worker, so if the worker script fails to load — exactly
+    // the production-only regression this suite exists to catch — the `routes` source never
+    // produces features while the sidebar, footer and stop panel are entirely unaffected (they
+    // render from React state, not from the map). MapView writes the live
+    // `querySourceFeatures('routes').length` count to `data-routes-rendered` on the map
+    // container every time the map goes idle, so this asserts the worker did real work without
+    // touching the canvas itself.
+    const mapContainer = page.locator('[data-routes-rendered]')
+    await expect(mapContainer).toHaveAttribute('data-routes-rendered', /^[1-9]\d*$/)
+
     // 2. Selecting a line is reflected in aria-pressed.
     await lineButton.click()
     await expect(lineButton).toHaveAttribute('aria-pressed', 'true')

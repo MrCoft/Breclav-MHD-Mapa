@@ -197,6 +197,21 @@ function applySelection(instance: MapLibreMap, scenario: Scenario, selectedLine:
     }
 }
 
+/**
+ * `routes` is a GeoJSON source, so MapLibre parses its data inside the worker script set up by
+ * `setWorkerUrl` above — if the worker never loads (the historical failure this signal exists to
+ * catch), that source never produces features while every React-rendered element (sidebar,
+ * footer, stop panel) renders normally regardless. `querySourceFeatures` only returns features
+ * from tiles that have actually finished loading for the current viewport, so it is genuinely
+ * zero when the worker is dead and non-zero once the worker has done real work — unlike
+ * `getSource`, which only proves the source was *configured*, not that it produced anything.
+ * Writing the count to a `data-` attribute on the map container turns that into a signal a
+ * Playwright assertion can wait on without touching the canvas.
+ */
+function updateRoutesRendered(instance: MapLibreMap, node: HTMLDivElement): void {
+    node.dataset.routesRendered = String(instance.querySourceFeatures('routes').length)
+}
+
 function attachInteractions(instance: MapLibreMap): void {
     instance.on('click', 'stops-circle', (event) => {
         const id = event.features?.[0]?.properties.id
@@ -233,7 +248,18 @@ export const MapView = () => {
         })
         map.current.addControl(new NavigationControl(), 'top-right')
 
+        // Re-read on every idle, not just once: a basemap switch (`setStyle`) discards the
+        // `routes` source until `installLayers` re-adds it, so re-checking here is what makes
+        // the attribute drop back to zero for the span where the network is genuinely gone, and
+        // recover once it's reinstalled — matching the count to the map's real state at all
+        // times rather than a one-shot check that could go stale.
+        const instance = map.current
+        const node = container.current
+        const onIdle = () => updateRoutesRendered(instance, node)
+        instance.on('idle', onIdle)
+
         return () => {
+            instance.off('idle', onIdle)
             map.current?.remove()
             map.current = null
         }

@@ -29,8 +29,10 @@ const LineGroup = ({ label, lines, selectedLine }: { label: string; lines: Line[
                                 type="button"
                                 aria-pressed={isSelected}
                                 onClick={() => selectLine(isSelected ? null : line.id)}
-                                className={`flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm ${
-                                    isSelected ? 'bg-accent text-accent-foreground' : 'hover:bg-slate-100'
+                                className={`flex w-full items-center gap-2 rounded border-l-2 px-2 py-1 text-left text-sm ${
+                                    isSelected
+                                        ? 'border-primary bg-accent font-semibold text-accent-foreground'
+                                        : 'border-transparent hover:bg-slate-100'
                                 }`}
                             >
                                 <LineBadge line={line} />

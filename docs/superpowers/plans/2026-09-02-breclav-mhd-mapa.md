@@ -2333,9 +2333,17 @@ git commit -m "feat: stitch OSM relation ways into ordered polylines"
 - Consumes: `relationToLine` (Task 10), `OsmResponse` (Task 9), `Pattern`/`Stop` (Task 2).
 - Produces:
   - `GeometrySource = 'override' | 'osm' | 'straight'`
-  - `straightLine(pattern, stops): [number, number][]`
-  - `trimToStops(line, coords, maxSnapMetres): [number, number][] | null` — `null` when the stops do not lie along the line in order.
-  - `matchPatternGeometry(args): { coordinates: [number,number][]; source: GeometrySource }`
+  - `straightLine(pattern, stops): Position[]`
+  - `cumulativeDistances(coords): number[]` — metres along a polyline at each of its own vertices.
+  - `measureAlong(line, stopCoords): { along: number[]; maxOffMetres: number }` — where each stop projects onto a line.
+  - `trimToStops(line, stopCoords, maxSnapMetres): TrimmedLine | null` — `null` when the stops do not lie along the line in order. `TrimmedLine` is `{ coordinates: Position[]; stopDistances: number[] }`.
+  - `matchPatternGeometry(args): { coordinates: Position[]; stopDistances: number[]; source: GeometrySource }`
+
+**Why `stopDistances` exists:** vehicle animation needs to know where along a route each stop
+sits, so that a bus's position at a given moment is a lookup between two stop distances rather
+than a geometry problem solved in the browser. The converter already projects every stop onto
+the line in order to trim it — these are the numbers it would otherwise discard. See decision
+24 in `docs/decisions.md`.
 
 - [ ] **Step 1: Install Turf**
 
@@ -2348,7 +2356,7 @@ npm install -D @turf/helpers @turf/nearest-point-on-line @turf/line-slice @turf/
 ```ts
 // tests/match.test.ts
 import { describe, expect, it } from 'vitest';
-import { matchPatternGeometry, straightLine, trimToStops } from '../scripts/osm/match';
+import { cumulativeDistances, matchPatternGeometry, straightLine, trimToStops } from '../scripts/osm/match';
 import type { Pattern, Stop } from '../src/types/network';
 
 const stops: Stop[] = [
@@ -2368,6 +2376,15 @@ const corridor: [number, number][] = [
   [16.80, 48.60], [16.80, 48.70], [16.80, 48.75], [16.80, 48.80], [16.80, 48.90],
 ];
 
+describe('cumulativeDistances', () => {
+  it('measures zero at the first vertex and grows along the line', () => {
+    const measured = cumulativeDistances([[16.80, 48.70], [16.80, 48.75], [16.80, 48.80]]);
+    expect(measured[0]).toBe(0);
+    expect(measured[1]!).toBeCloseTo(5560, -2);
+    expect(measured[2]!).toBeCloseTo(11119, -2);
+  });
+});
+
 describe('straightLine', () => {
   it('connects the pattern stops in order', () => {
     expect(straightLine(pattern, stopById)).toEqual([[16.80, 48.70], [16.80, 48.75], [16.80, 48.80]]);
@@ -2377,15 +2394,26 @@ describe('straightLine', () => {
 describe('trimToStops', () => {
   it('cuts the corridor down to the span between first and last stop', () => {
     const trimmed = trimToStops(corridor, [[16.80, 48.70], [16.80, 48.80]], 250)!;
-    expect(trimmed[0]![1]).toBeCloseTo(48.70, 4);
-    expect(trimmed[trimmed.length - 1]![1]).toBeCloseTo(48.80, 4);
+    const coords = trimmed.coordinates;
+    expect(coords[0]![1]).toBeCloseTo(48.70, 4);
+    expect(coords[coords.length - 1]![1]).toBeCloseTo(48.80, 4);
+  });
+
+  it('reports each stop distance along the trimmed line, starting at zero', () => {
+    // 0.10 degrees of latitude is about 11.1 km; the first stop anchors the origin.
+    const trimmed = trimToStops(corridor, [[16.80, 48.70], [16.80, 48.75], [16.80, 48.80]], 250)!;
+    expect(trimmed.stopDistances).toHaveLength(3);
+    expect(trimmed.stopDistances[0]).toBe(0);
+    expect(trimmed.stopDistances[1]!).toBeCloseTo(5560, -2);
+    expect(trimmed.stopDistances[2]!).toBeCloseTo(11119, -2);
   });
 
   it('reverses the line when the stops run against its direction', () => {
     const reversed = [...corridor].reverse();
     const trimmed = trimToStops(reversed, [[16.80, 48.70], [16.80, 48.80]], 250)!;
-    expect(trimmed[0]![1]).toBeCloseTo(48.70, 4);
-    expect(trimmed[trimmed.length - 1]![1]).toBeCloseTo(48.80, 4);
+    const coords = trimmed.coordinates;
+    expect(coords[0]![1]).toBeCloseTo(48.70, 4);
+    expect(coords[coords.length - 1]![1]).toBeCloseTo(48.80, 4);
   });
 
   it('rejects a line the stops do not lie near', () => {
@@ -2404,7 +2432,9 @@ describe('matchPatternGeometry', () => {
   it('prefers an explicit override', () => {
     const override: [number, number][] = [[1, 1], [2, 2]];
     const result = matchPatternGeometry({ pattern, stops: stopById, relations: [], override });
-    expect(result).toEqual({ coordinates: override, source: 'override' });
+    expect(result.source).toBe('override');
+    expect(result.coordinates).toEqual(override);
+    expect(result.stopDistances).toHaveLength(3);
   });
 
   it('uses a matching OSM relation', () => {
@@ -2419,10 +2449,10 @@ describe('matchPatternGeometry', () => {
     const result = matchPatternGeometry({
       pattern, stops: stopById, relations: [{ ref: '999', coordinates: corridor }],
     });
-    expect(result).toEqual({
-      coordinates: [[16.80, 48.70], [16.80, 48.75], [16.80, 48.80]],
-      source: 'straight',
-    });
+    expect(result.source).toBe('straight');
+    expect(result.coordinates).toEqual([[16.80, 48.70], [16.80, 48.75], [16.80, 48.80]]);
+    expect(result.stopDistances[0]).toBe(0);
+    expect(result.stopDistances[2]!).toBeCloseTo(11119, -2);
   });
 
   it('falls back to straight lines when the matching relation is nowhere near the stops', () => {
@@ -2469,11 +2499,39 @@ export interface RelationLine {
   coordinates: Position[];
 }
 
+export interface TrimmedLine {
+  coordinates: Position[];
+  /** Metres along `coordinates` at each pattern stop. Same length and order as the stops. */
+  stopDistances: number[];
+}
+
 export function straightLine(pattern: Pattern, stops: Map<string, Stop>): Position[] {
   return pattern.stops
     .map((id) => stops.get(id))
     .filter((s): s is Stop => s !== undefined)
     .map((s) => [s.lon, s.lat] as Position);
+}
+
+/** Metres from the start of the polyline to each of its own vertices. */
+export function cumulativeDistances(coords: Position[]): number[] {
+  const out: number[] = [0];
+  for (let i = 1; i < coords.length; i += 1) {
+    out.push(out[i - 1]! + distance(point(coords[i - 1]!), point(coords[i]!), { units: 'meters' }));
+  }
+  return out;
+}
+
+/** Where each stop projects onto `line`, and how far the worst one sits off it. */
+export function measureAlong(line: Position[], stopCoords: Position[]): { along: number[]; maxOffMetres: number } {
+  const feature = lineString(line);
+  const along: number[] = [];
+  let maxOffMetres = 0;
+  for (const c of stopCoords) {
+    const snapped = nearestPointOnLine(feature, point(c), { units: 'meters' });
+    along.push(snapped.properties.location as number);
+    maxOffMetres = Math.max(maxOffMetres, distance(point(c), snapped, { units: 'meters' }));
+  }
+  return { along, maxOffMetres };
 }
 
 /**
@@ -2484,32 +2542,33 @@ export function straightLine(pattern: Pattern, stops: Map<string, Stop>): Positi
  * the other way, or is the wrong variant entirely. The line is retried reversed
  * before giving up, since OSM relations are commonly drawn in one direction only.
  */
-export function trimToStops(line: Position[], stopCoords: Position[], maxSnapMetres: number): Position[] | null {
+export function trimToStops(line: Position[], stopCoords: Position[], maxSnapMetres: number): TrimmedLine | null {
   if (line.length < 2 || stopCoords.length < 2) {
     return null;
   }
 
-  const attempt = (coords: Position[]): Position[] | null => {
-    const feature = lineString(coords);
-    const measured = stopCoords.map((c) => {
-      const snapped = nearestPointOnLine(feature, point(c), { units: 'meters' });
-      return {
-        along: snapped.properties.location as number,
-        offMetres: distance(point(c), snapped, { units: 'meters' }),
-      };
-    });
+  const attempt = (coords: Position[]): TrimmedLine | null => {
+    const { along, maxOffMetres } = measureAlong(coords, stopCoords);
 
-    if (measured.some((m) => m.offMetres > maxSnapMetres)) {
+    if (maxOffMetres > maxSnapMetres) {
       return null;
     }
-    for (let i = 1; i < measured.length; i += 1) {
-      if (measured[i]!.along < measured[i - 1]!.along) {
+    for (let i = 1; i < along.length; i += 1) {
+      if (along[i]! < along[i - 1]!) {
         return null;
       }
     }
 
+    const feature = lineString(coords);
     const sliced = lineSlice(point(stopCoords[0]!), point(stopCoords[stopCoords.length - 1]!), feature);
-    return sliced.geometry.coordinates as Position[];
+
+    // The slice starts at the first stop, so distances rebase onto it. The slice is a
+    // sub-path of the same line, so subtracting the origin is exact rather than an estimate.
+    const origin = along[0]!;
+    return {
+      coordinates: sliced.geometry.coordinates as Position[],
+      stopDistances: along.map((a) => Math.max(0, a - origin)),
+    };
   };
 
   return attempt(line) ?? attempt([...line].reverse());
@@ -2521,34 +2580,40 @@ export function matchPatternGeometry(args: {
   relations: RelationLine[];
   override?: Position[];
   maxSnapMetres?: number;
-}): { coordinates: Position[]; source: GeometrySource } {
+}): { coordinates: Position[]; stopDistances: number[]; source: GeometrySource } {
   const { pattern, stops, relations, override, maxSnapMetres = 250 } = args;
+  const stopCoords = straightLine(pattern, stops);
 
   if (override && override.length >= 2) {
-    return { coordinates: override, source: 'override' };
+    const { along } = measureAlong(override, stopCoords);
+    const origin = along[0]!;
+    return {
+      coordinates: override,
+      stopDistances: along.map((a) => Math.max(0, a - origin)),
+      source: 'override',
+    };
   }
 
-  const stopCoords = straightLine(pattern, stops);
   const candidates = relations
     .filter((r) => r.ref === pattern.line)
     .map((r) => trimToStops(r.coordinates, stopCoords, maxSnapMetres))
-    .filter((c): c is Position[] => c !== null);
+    .filter((c): c is TrimmedLine => c !== null);
 
   if (candidates.length > 0) {
     // Several relation variants can fit. The longest surviving trim is the one
     // that actually reaches every stop rather than stopping short.
-    const best = candidates.sort((a, b) => b.length - a.length)[0]!;
-    return { coordinates: best, source: 'osm' };
+    const best = candidates.sort((a, b) => b.coordinates.length - a.coordinates.length)[0]!;
+    return { ...best, source: 'osm' };
   }
 
-  return { coordinates: stopCoords, source: 'straight' };
+  return { coordinates: stopCoords, stopDistances: cumulativeDistances(stopCoords), source: 'straight' };
 }
 ```
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `npx vitest run tests/match.test.ts`
-Expected: 10 passing.
+Run: `pnpm exec vitest run tests/match.test.ts`
+Expected: 13 passing.
 
 - [ ] **Step 6: Commit**
 
@@ -2825,7 +2890,12 @@ async function main(): Promise<void> {
     }
 
     const line = network.lines.find((l) => l.id === pattern.line)!;
-    const { coordinates, source } = matchPatternGeometry({ pattern, stops: stopById, relations: relationLines, override });
+    const { coordinates, stopDistances, source } = matchPatternGeometry({
+      pattern,
+      stops: stopById,
+      relations: relationLines,
+      override,
+    });
     counts[source] += 1;
 
     return {
@@ -2837,6 +2907,7 @@ async function main(): Promise<void> {
         mode: line.mode,
         color: line.color,
         source,
+        stopDistances,
       },
       geometry: { type: 'LineString' as const, coordinates },
     };
@@ -2995,6 +3066,8 @@ export interface PatternProperties {
   mode: string;
   color: string;
   source: string;
+  /** Metres along the feature's line at each of the pattern's stops. Drives vehicle animation. */
+  stopDistances: number[];
 }
 
 export interface Scenario {
@@ -3101,6 +3174,9 @@ export const BRECLAV_CENTER: [number, number] = [16.882, 48.759];
 export const INITIAL_ZOOM = 12;
 
 export const DIM_COLOR = '#b6bcc4';
+
+/** Sentinel for "match nothing" — no line id can equal it, so the layer draws empty. */
+export const NO_LINE = '__none__';
 ```
 
 ```tsx
@@ -3109,7 +3185,7 @@ import maplibregl from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useStore } from '../state/store';
-import { BASEMAP_STYLE, BRECLAV_CENTER, DIM_COLOR, INITIAL_ZOOM } from './style';
+import { BASEMAP_STYLE, BRECLAV_CENTER, DIM_COLOR, INITIAL_ZOOM, NO_LINE } from './style';
 import type { Scenario } from '../data/loadScenario';
 import type { FeatureCollection, Point } from 'geojson';
 
@@ -3170,7 +3246,7 @@ export function MapView() {
         id: 'routes-dim',
         type: 'line',
         source: 'routes',
-        filter: ['==', ['get', 'lineId'], ' '],
+        filter: ['==', ['get', 'lineId'], '\u0000'],
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': DIM_COLOR, 'line-width': 2 },
       });
@@ -3249,7 +3325,7 @@ export function MapView() {
 
     if (selectedLine === null) {
       m.setFilter('routes-active', null);
-      m.setFilter('routes-dim', ['==', ['get', 'lineId'], ' ']);
+      m.setFilter('routes-dim', ['==', ['get', 'lineId'], '\u0000']);
     } else {
       m.setFilter('routes-active', ['==', ['get', 'lineId'], selectedLine]);
       m.setFilter('routes-dim', ['!=', ['get', 'lineId'], selectedLine]);

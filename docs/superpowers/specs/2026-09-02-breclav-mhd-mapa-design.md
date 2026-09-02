@@ -50,6 +50,10 @@ Measured subset of the feed for routes touching Břeclav:
 | Stops, parent stations | 3 258 | 164 |
 | Patterns | — | 252 |
 
+These figures are a snapshot taken while designing; the feed changes weekly. `npm run
+build:network` prints the current values at the end of its run, and the converter asserts the
+route count against the band in `config/scope.json`.
+
 The subset is small enough to ship as a single bundle, expected around 300 KB gzipped. No
 lazy loading, data tiling, or server component is needed.
 

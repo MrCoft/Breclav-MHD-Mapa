@@ -2,8 +2,10 @@ import { useEffect } from 'react'
 import { useStore } from '@tanstack/react-store'
 import { MapView } from '../map/MapView'
 import { loadScenario } from '../data/loadScenario'
-import { appStore, selectLine, selectStop, setError, setMoment, setScenario, setScenarioId } from '../state/store'
+import { clock } from '../state/clock'
+import { appStore, selectLine, selectStop, setError, setScenario, setScenarioId } from '../state/store'
 import { readUrlState, writeUrlState } from '../state/urlState'
+import { ClockControls } from './ClockControls'
 import { Footer } from './Footer'
 import { LineBrowser } from './LineBrowser'
 import { StopPanel } from './StopPanel'
@@ -19,7 +21,10 @@ export const App = () => {
 
     // Read the URL once, on mount, and apply whatever it contains before the scenario load below
     // fires. Date and time are restored independently — the store already defaults the date to
-    // today, so a bare `?t=07:30` is a valid, unambiguous link even with no `?d=`.
+    // today, so a bare `?t=07:30` is a valid, unambiguous link even with no `?d=`. Routed through
+    // `clock.seek`, not `setMoment` directly — the clock is the app's single source of truth for
+    // time, and writing `appStore` here without it would leave the clock (and so the map's
+    // vehicles) sitting at "now" while every whole-minute panel showed the deep-linked moment.
     useEffect(() => {
         const urlState = readUrlState(window.location.search)
         if (urlState.scenarioId !== undefined) {
@@ -32,7 +37,8 @@ export const App = () => {
             selectStop(urlState.selectedStop)
         }
         if (urlState.date !== undefined || urlState.minutes !== undefined) {
-            setMoment(urlState.date ?? appStore.state.date, urlState.minutes ?? appStore.state.minutes)
+            const current = clock.getState()
+            clock.seek(urlState.date ?? current.date, urlState.minutes ?? current.minutes)
         }
     }, [])
 
@@ -74,7 +80,10 @@ export const App = () => {
     }
 
     return (
-        <div className="grid h-screen grid-rows-[1fr_auto]">
+        // `dvh`, not `vh`: on mobile, `100vh` is taller than the visible viewport (it ignores the
+        // browser chrome's address bar), which would push ClockControls — anchored to the bottom
+        // of the map area below — off-screen.
+        <div className="grid h-dvh grid-rows-[1fr_auto]">
             <div className="grid grid-cols-[280px_1fr] overflow-hidden">
                 <aside className="overflow-y-auto border-r border-slate-200 p-3">
                     <LineBrowser />
@@ -82,6 +91,7 @@ export const App = () => {
                 <div className="relative">
                     <MapView />
                     <StopPanel />
+                    <ClockControls />
                 </div>
             </div>
             <Footer feedDate={scenario.meta.feedDate} />

@@ -1,7 +1,16 @@
 import { useStore } from '@tanstack/react-store'
 import { formatMinutes, parseMinutes } from '../domain/formatMinutes'
-import { appStore, nowInPrague, setMoment } from '../state/store'
+import { clock } from '../state/clock'
+import { appStore } from '../state/store'
 
+/**
+ * Date/time inputs for jumping straight to a moment. `date` and `minutes` are read from
+ * `appStore`, which the clock mirrors on every whole-minute change — plenty granular for inputs
+ * that only ever hold a whole minute. Every write goes through `clock.seek`, never `setMoment`
+ * directly: the clock is the single source of truth for time, and `ClockControls`'s scrub slider
+ * and this panel would silently disagree the moment a played-through minute here wasn't also
+ * reflected there.
+ */
 export const TimeControl = () => {
     const date = useStore(appStore, (state) => state.date)
     const minutes = useStore(appStore, (state) => state.minutes)
@@ -17,7 +26,7 @@ export const TimeControl = () => {
                         // A cleared date field reports an empty string; writing that would
                         // break every date-string comparison downstream, so ignore it.
                         if (event.target.value !== '') {
-                            setMoment(event.target.value, minutes)
+                            clock.seek(event.target.value, minutes)
                         }
                     }}
                     className="rounded border border-slate-300 px-1.5 py-1 text-sm text-slate-900"
@@ -31,7 +40,7 @@ export const TimeControl = () => {
                     onChange={(event) => {
                         const parsed = parseMinutes(event.target.value)
                         if (parsed !== null) {
-                            setMoment(date, parsed)
+                            clock.seek(date, parsed)
                         }
                     }}
                     className="rounded border border-slate-300 px-1.5 py-1 font-mono text-sm text-slate-900 tabular-nums"
@@ -39,10 +48,7 @@ export const TimeControl = () => {
             </label>
             <button
                 type="button"
-                onClick={() => {
-                    const now = nowInPrague()
-                    setMoment(now.date, now.minutes)
-                }}
+                onClick={() => clock.resetToNow()}
                 className="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100"
             >
                 Teď

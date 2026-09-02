@@ -1,14 +1,19 @@
 import { MapLibreMap, NavigationControl, setWorkerUrl } from 'maplibre-gl'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from '@tanstack/react-store'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
+import { buildPatternGeometry } from '../domain/patternGeometry'
+import { vehiclesAt } from '../domain/vehicles'
+import { clock } from '../state/clock'
 import { appStore, selectStop } from '../state/store'
 import { BasemapSwitcher } from './BasemapSwitcher'
 import { BASEMAPS, DEFAULT_BASEMAP_ID } from './basemaps'
 import { BASEMAP_STYLE, BRECLAV_CENTER, DIM_COLOR, INITIAL_ZOOM, NO_LINE, SELECTED_STOP_COLOR } from './style'
 import type { DataDrivenPropertyValueSpecification, GeoJSONSource } from 'maplibre-gl'
 import type { FeatureCollection, Point } from 'geojson'
+import type { ClockState } from '../state/clock'
+import type { PatternGeometry } from '../domain/patternGeometry'
 import type { Scenario } from '../data/loadScenario'
 
 // maplibre-gl computes its worker script's URL at runtime relative to its own bundled
@@ -42,6 +47,87 @@ const CASING_WIDTH: DataDrivenPropertyValueSpecification<number> = [
     17,
     10,
 ]
+
+const VEHICLE_RADIUS: DataDrivenPropertyValueSpecification<number> = ['interpolate', ['linear'], ['zoom'], 11, 5, 15, 9]
+const VEHICLE_TEXT_SIZE: DataDrivenPropertyValueSpecification<number> = [
+    'interpolate',
+    ['linear'],
+    ['zoom'],
+    11,
+    8,
+    15,
+    11,
+]
+
+/**
+ * The `Noto Sans Bold` font family used here is a deliberate substitute for this project's own
+ * `@fontsource-variable/geist-mono` — that face is a *web* font, loaded via `@font-face` for
+ * ordinary DOM text (see `ClockControls`'s digital clock), and MapLibre symbol layers cannot use
+ * it. `text-font` instead names a font stack that must be pre-rendered as SDF glyph tiles and
+ * served from the active style's `glyphs` URL; every basemap here points at
+ * `tiles.openfreemap.org/fonts`, which does not host "Geist Mono" under any spelling (confirmed:
+ * `/fonts/Geist%20Mono%20Regular/0-255.pbf` 404s) — self-hosting a generated glyph set is real
+ * build-pipeline work outside this task's scope. `Noto Sans Bold` is hosted there and used by the
+ * basemaps' own labels, so it renders reliably everywhere routes-active pattern selection does.
+ */
+const VEHICLE_TEXT_FONT = ['Noto Sans Bold']
+
+interface VehicleFeatureProperties {
+    tripKey: string
+    lineId: string
+    lineName: string
+    color: string
+    textColor: string
+}
+
+/** A pattern's line id paired with the same mapped route colour drawn on the map, and the line's
+ * (unmapped) text colour — everything a vehicle feature needs to be styled like its line. */
+interface LineDisplayColors {
+    color: string
+    textColor: string
+}
+
+/** Every pattern's precomputed polyline, keyed by pattern id, plus each line's display colours —
+ * built once per scenario load (see the `useMemo` in `MapView`), never recomputed per frame. */
+interface VehicleGeometryContext {
+    geometries: ReadonlyMap<string, PatternGeometry>
+    colorsByLine: ReadonlyMap<string, LineDisplayColors>
+}
+
+function emptyVehicleFeatureCollection(): FeatureCollection<Point, VehicleFeatureProperties> {
+    return { type: 'FeatureCollection', features: [] }
+}
+
+/**
+ * Every running vehicle at `date`/`minutes`, as a GeoJSON `FeatureCollection` ready for
+ * `setData`. `minutes` stays fractional (never rounded) — that fractional value is exactly what
+ * makes motion between stops continuous rather than a jump once per whole minute.
+ */
+function vehicleFeatureCollection(
+    scenario: Scenario,
+    context: VehicleGeometryContext,
+    date: string,
+    minutes: number,
+): FeatureCollection<Point, VehicleFeatureProperties> {
+    const vehicles = vehiclesAt(scenario.index, context.geometries, date, minutes)
+    return {
+        type: 'FeatureCollection',
+        features: vehicles.map((vehicle) => {
+            const colors = context.colorsByLine.get(vehicle.lineId)
+            return {
+                type: 'Feature',
+                properties: {
+                    tripKey: vehicle.tripKey,
+                    lineId: vehicle.lineId,
+                    lineName: vehicle.lineName,
+                    color: colors?.color ?? DIM_COLOR,
+                    textColor: colors?.textColor ?? '#ffffff',
+                },
+                geometry: { type: 'Point', coordinates: [vehicle.lon, vehicle.lat] },
+            }
+        }),
+    }
+}
 
 function stopsGeoJson(scenario: Scenario): FeatureCollection<Point> {
     return {
@@ -92,7 +178,7 @@ function selectedStopsGeoJson(scenario: Scenario, selectedLine: string | null): 
  * own load, leaving the map blank.
  *
  * Layer order, bottom to top: routes-dim, routes-casing, routes-active, stops-circle,
- * stops-selected-circle, stops-label.
+ * stops-selected-circle, stops-label, vehicles-circle, vehicles-label.
  */
 function installLayers(instance: MapLibreMap, scenario: Scenario): boolean {
     if (instance.getSource('routes')) {
@@ -168,13 +254,59 @@ function installLayers(instance: MapLibreMap, scenario: Scenario): boolean {
         paint: { 'text-color': '#26303a', 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 },
     })
 
+    // Starts empty: the clock subscription in `MapView` populates this with `setData` on the
+    // very next frame (`clock.subscribe` calls its listener immediately on registration), so
+    // there's no visible flash of an empty map before the first real vehicle positions land.
+    instance.addSource('vehicles', { type: 'geojson', data: emptyVehicleFeatureCollection() })
+    instance.addLayer({
+        id: 'vehicles-circle',
+        type: 'circle',
+        source: 'vehicles',
+        paint: {
+            'circle-radius': VEHICLE_RADIUS,
+            'circle-color': ['get', 'color'],
+            'circle-stroke-color': '#ffffff',
+            'circle-stroke-width': 2,
+            'circle-opacity': 1,
+            'circle-stroke-opacity': 1,
+        },
+    })
+    instance.addLayer({
+        id: 'vehicles-label',
+        type: 'symbol',
+        source: 'vehicles',
+        layout: {
+            'text-field': ['get', 'lineName'],
+            'text-font': VEHICLE_TEXT_FONT,
+            'text-size': VEHICLE_TEXT_SIZE,
+            // Vehicles are few (67 at peak) and keep moving, so MapLibre's default collision
+            // avoidance would make labels flicker in and out as they jostle for space — always
+            // showing every line number is worth more here than tidy label placement.
+            'text-allow-overlap': true,
+            'text-ignore-placement': true,
+        },
+        paint: {
+            'text-color': ['get', 'textColor'],
+            'text-opacity': 1,
+        },
+    })
+
     return true
 }
 
+/** Full opacity when nothing is selected or a vehicle's line matches the selection, dimmed otherwise. */
+function vehicleOpacity(selectedLine: string | null): DataDrivenPropertyValueSpecification<number> {
+    if (selectedLine === null) {
+        return 1
+    }
+    return ['case', ['==', ['get', 'lineId'], selectedLine], 1, 0.25]
+}
+
 /**
- * Re-applies the current line selection to the route filters and the selected-stops source.
- * Needed both on ordinary selection changes and after `installLayers` re-runs post basemap
- * switch, when the freshly re-added layers are back to their unfiltered defaults.
+ * Re-applies the current line selection to the route filters, the selected-stops source, and
+ * vehicle prominence. Needed both on ordinary selection changes and after `installLayers`
+ * re-runs post basemap switch, when the freshly re-added layers are back to their unfiltered
+ * defaults.
  */
 function applySelection(instance: MapLibreMap, scenario: Scenario, selectedLine: string | null): void {
     if (!instance.getLayer('routes-active')) {
@@ -194,6 +326,15 @@ function applySelection(instance: MapLibreMap, scenario: Scenario, selectedLine:
     const source = instance.getSource('stops-selected')
     if (source) {
         ;(source as GeoJSONSource).setData(selectedStopsGeoJson(scenario, selectedLine))
+    }
+
+    // Vehicles of other lines dim rather than disappear — a `setPaintProperty` on the existing
+    // layers, same as the filters above, never a `setData` rebuild of the `vehicles` source.
+    if (instance.getLayer('vehicles-circle')) {
+        const opacity = vehicleOpacity(selectedLine)
+        instance.setPaintProperty('vehicles-circle', 'circle-opacity', opacity)
+        instance.setPaintProperty('vehicles-circle', 'circle-stroke-opacity', opacity)
+        instance.setPaintProperty('vehicles-label', 'text-opacity', opacity)
     }
 }
 
@@ -235,6 +376,29 @@ export const MapView = () => {
     const scenario = useStore(appStore, (state) => state.scenario)
     const selectedLine = useStore(appStore, (state) => state.selectedLine)
     const [basemapId, setBasemapId] = useState(DEFAULT_BASEMAP_ID)
+
+    // Built once per scenario load, not per frame: `PatternGeometry`'s whole reason to exist is
+    // to make `vehiclesAt` cheap to call every animation frame, which it can't be if this walk
+    // over every pattern's polyline and every line's colour re-runs on each of those calls.
+    const vehicleContext = useMemo<VehicleGeometryContext | null>(() => {
+        if (!scenario) {
+            return null
+        }
+        const geometries = new Map(
+            scenario.geometry.features.map((feature) => [feature.properties.patternId, buildPatternGeometry(feature)]),
+        )
+        const colorsByLine = new Map<string, LineDisplayColors>()
+        for (const feature of scenario.geometry.features) {
+            if (!colorsByLine.has(feature.properties.lineId)) {
+                const line = scenario.index.lines.get(feature.properties.lineId)
+                colorsByLine.set(feature.properties.lineId, {
+                    color: feature.properties.color,
+                    textColor: line?.textColor ?? '#ffffff',
+                })
+            }
+        }
+        return { geometries, colorsByLine }
+    }, [scenario])
 
     useEffect(() => {
         if (map.current || !container.current) {
@@ -307,6 +471,29 @@ export const MapView = () => {
         }
         applySelection(instance, scenario, selectedLine)
     }, [scenario, selectedLine])
+
+    // The one clock subscription for the whole map: called once per animation frame while
+    // playing, so this must stay a direct, imperative `setData` — never `setState`, which would
+    // re-render the whole component tree sixty times a second to move some dots. Re-subscribes
+    // only when the scenario (and so `vehicleContext`) changes, not on every render. Guarding on
+    // `getSource('vehicles')` is what makes a basemap switch mid-playback harmless: `setStyle`
+    // discards the source until `installLayers` re-adds it, and frames that land in that gap are
+    // simply skipped rather than throwing — the very next frame after `installLayers` reruns
+    // finds the source again and vehicles resume moving.
+    useEffect(() => {
+        const instance = map.current
+        if (!instance || !scenario || !vehicleContext) {
+            return
+        }
+        return clock.subscribe((clockState: ClockState) => {
+            const source = instance.getSource('vehicles')
+            if (!source) {
+                return
+            }
+            const data = vehicleFeatureCollection(scenario, vehicleContext, clockState.date, clockState.minutes)
+            ;(source as GeoJSONSource).setData(data)
+        })
+    }, [scenario, vehicleContext])
 
     const handleBasemapChange = (id: string) => {
         const option = BASEMAPS.find((basemap) => basemap.id === id)

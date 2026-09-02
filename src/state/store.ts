@@ -38,6 +38,10 @@ export const appStore = new Store<AppState>({
     ...nowInPrague(),
 })
 
+export function setScenarioId(scenarioId: string): void {
+    appStore.setState((state) => ({ ...state, scenarioId }))
+}
+
 export function setScenario(scenario: Scenario): void {
     appStore.setState((state) => ({ ...state, scenario, error: null }))
 }

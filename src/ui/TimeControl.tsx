@@ -1,21 +1,6 @@
 import { useStore } from '@tanstack/react-store'
-import { formatMinutes } from '../domain/formatMinutes'
+import { formatMinutes, parseMinutes } from '../domain/formatMinutes'
 import { appStore, nowInPrague, setMoment } from '../state/store'
-
-const TIME_PATTERN = /^(\d{2}):(\d{2})$/
-
-function parseTime(value: string): number | null {
-    const match = TIME_PATTERN.exec(value)
-    if (!match) {
-        return null
-    }
-    const hours = Number(match[1])
-    const mins = Number(match[2])
-    if (Number.isNaN(hours) || Number.isNaN(mins)) {
-        return null
-    }
-    return hours * 60 + mins
-}
 
 export const TimeControl = () => {
     const date = useStore(appStore, (state) => state.date)
@@ -44,7 +29,7 @@ export const TimeControl = () => {
                     type="time"
                     value={formatMinutes(minutes)}
                     onChange={(event) => {
-                        const parsed = parseTime(event.target.value)
+                        const parsed = parseMinutes(event.target.value)
                         if (parsed !== null) {
                             setMoment(date, parsed)
                         }

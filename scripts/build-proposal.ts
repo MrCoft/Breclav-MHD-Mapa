@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { validateNetwork } from '../src/data/validate'
 import { buildPatternsAndTrips } from './gtfs/convert'
 import { loadScope } from './gtfs/read'
-import { assertGeometrySane, sortNetwork } from './build-network'
+import { assertGeometrySane, assertStructurallySane, sortNetwork } from './build-network'
 import { matchPatternGeometry, remeasureSimplified, straightLine } from './osm/match'
 import { fetchRoutes } from './osm/overpass'
 import { routePattern } from './osm/routePattern'
@@ -18,7 +18,7 @@ import type { GeometrySource, PatternRouter, RelationLine } from './osm/match'
 import type { OsmNode, OsmRelation, OsmWay } from './osm/overpass'
 import type { Section } from './proposal/sheet'
 import type { StopCandidate } from './proposal/stopMatch'
-import type { Line, Meta, Network, Pattern, Service, Stop, Trip } from '../src/types/network'
+import type { DayMask, Line, Meta, Network, Pattern, Service, Stop, Trip } from '../src/types/network'
 
 /** The shape committed to `geometry.geojson` — see `GeometryFeature` in build-network.ts. */
 interface GeometryFile {
@@ -192,6 +192,32 @@ interface Inherited {
     geometry: GeometryFeature[]
 }
 
+const WEEKDAY_MASK: DayMask = [1, 1, 1, 1, 1, 0, 0]
+
+function isWeekdayMask(days: DayMask): boolean {
+    return WEEKDAY_MASK.every((flag, i) => flag === days[i])
+}
+
+/**
+ * The current scenario's own core Monday–Friday service — the weekday-masked service with the
+ * widest `from`..`to` span, rather than a specific id assumed stable across a feed rebuild
+ * (`build-network.ts` numbers GTFS `service_id`s straight from the feed, which owes this project
+ * nothing). The workbook gives only a day mask ("Všední den neprázdninový"), not a date range or
+ * a holiday calendar, so this is the closest honest source for both: whatever the current feed
+ * itself already treats as its core school-term weekday (findings I8 and I10).
+ */
+export function coreWeekdayService(services: Service[]): Service {
+    const candidates = services.filter((s) => isWeekdayMask(s.days))
+    if (candidates.length === 0) {
+        throw new Error(
+            'coreWeekdayService: the current scenario has no Monday-Friday service to derive the proposal’s ' +
+                'own service window (and holiday calendar) from.',
+        )
+    }
+    const spanDays = (s: Service) => Date.parse(s.to) - Date.parse(s.from)
+    return candidates.reduce((widest, s) => (spanDays(s) > spanDays(widest) ? s : widest))
+}
+
 /** Lines 571 and 574 carried over from the current scenario exactly as they are — see the task
  *  brief: the proposal changes both (cancels 564 in favour of 574, has 571 call at every
  *  intermediate stop) but supplies no timetable for either, so synthesising one would be
@@ -220,6 +246,7 @@ async function main(): Promise<void> {
     const scope = loadScope()
 
     const current = JSON.parse(readFileSync(join(CURRENT_DIR, 'network.json'), 'utf8')) as Network
+    const currentMeta = JSON.parse(readFileSync(join(CURRENT_DIR, 'meta.json'), 'utf8')) as Meta
     const currentGeometry = JSON.parse(readFileSync(join(CURRENT_DIR, 'geometry.geojson'), 'utf8')) as GeometryFile
     const overrides = JSON.parse(readFileSync(OVERRIDES_PATH, 'utf8')) as StopOverride[]
     const overrideIds = new Set(overrides.map((o) => o.id))
@@ -290,14 +317,17 @@ async function main(): Promise<void> {
     const lineIds = new Map(CITY_LINES.map((id) => [id, id]))
     const { patterns: cityPatterns, trips: cityTrips } = buildPatternsAndTrips(allShapes, lineIds)
 
+    const currentCoreWeekday = coreWeekdayService(current.services)
     const service: Service = {
         id: SERVICE_ID,
-        days: [1, 1, 1, 1, 1, 0, 0],
-        // Same validity window as the current scenario's own core weekday service (id "1") —
-        // the workbook gives only a day mask ("Všední den neprázdninový"), not a date range, and
-        // this is the closest real analogue.
-        from: '2026-08-28',
-        to: '2026-12-11',
+        days: WEEKDAY_MASK,
+        // Same validity window, and the same `removed` dates (Czech public holidays that the
+        // core service excludes even though they fall on a weekday), as the current scenario's
+        // own core weekday service — see `coreWeekdayService`'s doc comment for why this is the
+        // closest honest source for both (findings I8 and I10).
+        from: currentCoreWeekday.from,
+        to: currentCoreWeekday.to,
+        removed: currentCoreWeekday.removed,
     }
 
     const inherited = buildInherited(current, currentGeometry)
@@ -313,6 +343,11 @@ async function main(): Promise<void> {
     })
 
     validateNetwork(network)
+    // Not `assertSane`: its route-count band is sized for the full GTFS-derived network
+    // (`config/scope.json`) and would reject this proposal's 10 lines outright. The structural
+    // checks — no trips, a pattern with fewer than 2 stops, a stop no pattern serves — apply
+    // just as much to this hand-and-spreadsheet-derived network, though, so they still run.
+    assertStructurallySane(network)
 
     console.log('Fetching OSM relations…')
     const osm = await fetchRoutes(scope, { refresh: false })
@@ -388,7 +423,7 @@ async function main(): Promise<void> {
     }
     const allFeatures = [...features, ...inherited.geometry]
 
-    assertGeometrySane(allFeatures, diagnostics)
+    assertGeometrySane(allFeatures, diagnostics, network.patterns)
 
     const patternIdsWithGeometry = new Set(allFeatures.map((f) => f.properties.patternId))
     const patternsWithoutGeometry = network.patterns.filter((p) => !patternIdsWithGeometry.has(p.id))
@@ -397,10 +432,18 @@ async function main(): Promise<void> {
     }
 
     const meta: Meta = {
-        feedDate: '2026-08-28',
+        // The proposal has no feed of its own — its stops and its two inherited lines come from
+        // the current scenario's already-baked network, so that scenario's own feed date is the
+        // honest answer here too, rather than a value that silently stops tracking it (I8).
+        feedDate: currentMeta.feedDate,
         generatedAt: new Date().toISOString(),
         converterVersion: CONVERTER_VERSION,
         geometrySources: counts,
+        // Records which `current` build this proposal was derived from, so a stale derivation —
+        // this scenario built against a `current` that has since been regenerated with a
+        // different feed — can be spotted by diffing against `current`'s own meta.json, instead
+        // of assuming the two always match (I8).
+        derivedFrom: { scenarioId: 'current', feedDate: currentMeta.feedDate, generatedAt: currentMeta.generatedAt },
         inheritedLines: {
             lines: INHERITED_LINES,
             note:

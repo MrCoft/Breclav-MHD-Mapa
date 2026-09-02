@@ -21,7 +21,7 @@ import type {
 } from './gtfs/scope'
 import type { ScopeConfig } from './gtfs/read'
 import type { TripShape } from './gtfs/convert'
-import type { Meta, Network, Stop } from '../src/types/network'
+import type { Meta, Network, Pattern, Stop } from '../src/types/network'
 import type { OsmNode, OsmRelation, OsmWay } from './osm/overpass'
 import type { RailGraph } from './osm/railGraph'
 
@@ -61,22 +61,37 @@ export interface GeometryDiagnostics {
 // metres at minimum, so 20m keeps a wide margin on both sides.
 const GEOMETRY_LENGTH_TOLERANCE_METRES = 20
 
-// How far a stop's projection onto the simplified line may sit from the stop itself.
+// How far a stop's projection onto the simplified line may sit from the stop itself — gated per
+// mode, not by one shared number, because the two modes' legitimate spreads differ by an order of
+// magnitude and a single tolerance wide enough for rail is not a meaningful gate for bus (see
+// finding I7 in this task's brief).
 //
-// Bus stops sit close to their route (a handful of metres at most, on this dataset), but rail
-// stops do not: routeOnRailGraph (railGraph.ts) already snaps a stop to the nearest track node
-// at up to 500m — its own maxSnapMetres — because a station's GTFS coordinate is often the
-// platform or entrance, not track centreline, and because a rail pattern's own endpoint can be a
-// non-rail stop entirely (S8-0-1 ends at "Břeclav, autobusové nádraží", the bus station, routed
-// via the rail graph regardless). Measured on this dataset's actual 252 patterns, the worst is
-// 220.8m (several S8/S9/R13 patterns) — legitimate, present in the tier's own match before this
-// task's simplification ever runs, not something simplification introduced. So this gate has to
-// clear the most permissive tier's own ceiling, not "a few metres": 500m (railGraph's
-// maxSnapMetres) + 2m (the simplification tolerance itself, config/scope.json) + 18m margin for
-// the window search's own approximation = 520m. Still an order of magnitude below the
-// hundreds-of-metres to kilometres a window that matched an unrelated part of a long route would
-// produce, so it stays a meaningful gate rather than a rubber stamp.
-const MAX_OFF_TOLERANCE_METRES = 520
+// Rail: routeOnRailGraph (railGraph.ts) already snaps a stop to the nearest track node at up to
+// 500m — its own maxSnapMetres — because a station's GTFS coordinate is often the platform or
+// entrance, not track centreline, and because a rail pattern's own endpoint can be a non-rail stop
+// entirely (S8-0-1 ends at "Břeclav, autobusové nádraží", the bus station, routed via the rail
+// graph regardless). Measured on this dataset's actual 60 rail patterns, the worst is 220.8m
+// (several S8/S9/R13 patterns) — legitimate, present in the tier's own match before this task's
+// simplification ever runs, not something simplification introduced. So this gate has to clear
+// the most permissive tier's own ceiling, not "a few metres": 500m (railGraph's maxSnapMetres) +
+// 2m (the simplification tolerance itself, config/scope.json) + 18m margin for the window
+// search's own approximation = 520m.
+//
+// Bus: measured across all 192 "current" and 48 "proposed" bus patterns (via `measureAlong`
+// against the committed geometry and stops — see finding I7), the median is ~12m and the mean
+// 28-34m, matching the "a handful of metres" this file's own comment used to claim — but the
+// worst is 208.2m (571-0-3 and its reverse 571-1-3; the next worst are 564-0-3 at 188m and a
+// handful of 562/572 patterns around 154m), which that old claim did not account for and which
+// this gate has to clear too (logged as a known bug — docs/known-bugs.md — rather than silently
+// tightened past currently-valid data or investigated further, which is outside this task's
+// scope). 250m clears that worst case with margin while staying an order of magnitude tighter
+// than rail's 520m, so it stays a meaningful gate rather than a rubber stamp — and it reuses
+// `matchPatternGeometry`'s own `maxSnapMetres` default (osm/match.ts), the same distance already
+// trusted to decide whether an OSM relation fits a bus pattern at all.
+const MAX_OFF_TOLERANCE_METRES_BY_MODE: Record<string, number> = {
+    bus: 250,
+    rail: 520,
+}
 
 // How much `remeasureSimplified`'s non-decreasing floor may ever have had to correct. A correct
 // window search never needs the floor — it is pure IEEE-754 slack (haversine round-trip error
@@ -103,9 +118,21 @@ const MAX_CLAMP_TOLERANCE_METRES = 0.01
  * absorb into a merely-flat pair of values instead of a visible failure. The latter is the offset
  * between a stop and where it landed on the line, which a mismatched search window inflates by
  * orders of magnitude over a correct one.
+ *
+ * Also takes `patterns`, so it can catch a mismatch between a pattern's own `offsets` and this
+ * feature's `stopDistances` (finding I6): `vehiclesAt` (src/domain/vehicles.ts) silently skips
+ * every trip on such a pattern, logging only behind `import.meta.env.DEV` — benign to a
+ * production visitor's console, but the vehicle then simply never renders with nothing to point
+ * at why. Asserted here too, at build time, where a failure is loud instead.
  */
-export function assertGeometrySane(features: GeometryFeature[], diagnostics: GeometryDiagnostics[]): void {
+export function assertGeometrySane(
+    features: GeometryFeature[],
+    diagnostics: GeometryDiagnostics[],
+    patterns: Pattern[],
+): void {
     const problems: string[] = []
+    const patternById = new Map(patterns.map((p) => [p.id, p]))
+    const modeByPattern = new Map(features.map((f) => [f.properties.patternId, f.properties.mode]))
 
     for (const feature of features) {
         const { patternId, stopDistances } = feature.properties
@@ -128,6 +155,14 @@ export function assertGeometrySane(features: GeometryFeature[], diagnostics: Geo
                 `${patternId}: final stopDistance ${last.toFixed(1)}m is ${Math.abs(last - lineLength).toFixed(1)}m from the line's own length ${lineLength.toFixed(1)}m`,
             )
         }
+
+        const pattern = patternById.get(patternId)
+        if (pattern && pattern.offsets.length !== stopDistances.length) {
+            problems.push(
+                `${patternId}: pattern has ${pattern.offsets.length} offsets but this geometry has ` +
+                    `${stopDistances.length} stopDistances — vehiclesAt would silently skip every trip on this pattern`,
+            )
+        }
     }
 
     for (const { patternId, maxOffMetres, maxClampMetres } of diagnostics) {
@@ -138,10 +173,13 @@ export function assertGeometrySane(features: GeometryFeature[], diagnostics: Geo
                     `bug this task fixed, silently absorbed instead of surfaced`,
             )
         }
-        if (maxOffMetres > MAX_OFF_TOLERANCE_METRES) {
+        const mode = modeByPattern.get(patternId)
+        const offTolerance = (mode !== undefined ? MAX_OFF_TOLERANCE_METRES_BY_MODE[mode] : undefined) ?? 520
+        if (maxOffMetres > offTolerance) {
             problems.push(
                 `${patternId}: a stop sits ${maxOffMetres.toFixed(1)}m from its projected point on the simplified ` +
-                    `line — likely a search window that matched the wrong part of a self-proximate route`,
+                    `line (mode "${mode ?? 'unknown'}", tolerance ${offTolerance}m) — likely a search window that ` +
+                    `matched the wrong part of a self-proximate route`,
             )
         }
     }
@@ -151,14 +189,10 @@ export function assertGeometrySane(features: GeometryFeature[], diagnostics: Geo
     }
 }
 
-export function assertSane(net: Network, scope: ScopeConfig): void {
+/** The checks in `assertSane` that apply to any network, hand-authored or GTFS-derived. */
+function structuralProblems(net: Network): string[] {
     const problems: string[] = []
 
-    if (net.lines.length < scope.expectedRoutes.min || net.lines.length > scope.expectedRoutes.max) {
-        problems.push(
-            `lines: ${net.lines.length} outside expected ${scope.expectedRoutes.min}..${scope.expectedRoutes.max}`,
-        )
-    }
     if (net.trips.length === 0) {
         problems.push('trips: none produced')
     }
@@ -171,6 +205,32 @@ export function assertSane(net: Network, scope: ScopeConfig): void {
         if (!served.has(stop.id)) {
             problems.push(`stop ${stop.id} is served by no pattern`)
         }
+    }
+
+    return problems
+}
+
+/**
+ * The three structural checks (no trips, a pattern with fewer than two stops, a stop no pattern
+ * serves) that hold for any network regardless of source — split out from `assertSane` so
+ * `build-proposal.ts` can run them without the route-count band below, which the proposal's 10
+ * lines would always fail: `scope.expectedRoutes` is sized for the full GTFS-derived network
+ * (`config/scope.json`), not a hand-authored subset covering only the city lines.
+ */
+export function assertStructurallySane(net: Network): void {
+    const problems = structuralProblems(net)
+    if (problems.length > 0) {
+        throw new Error(`Sanity check failed:\n${problems.join('\n')}`)
+    }
+}
+
+export function assertSane(net: Network, scope: ScopeConfig): void {
+    const problems = structuralProblems(net)
+
+    if (net.lines.length < scope.expectedRoutes.min || net.lines.length > scope.expectedRoutes.max) {
+        problems.push(
+            `lines: ${net.lines.length} outside expected ${scope.expectedRoutes.min}..${scope.expectedRoutes.max}`,
+        )
     }
 
     if (problems.length > 0) {
@@ -434,7 +494,7 @@ async function main(): Promise<void> {
         })
     }
 
-    assertGeometrySane(features, geometryDiagnostics)
+    assertGeometrySane(features, geometryDiagnostics, network.patterns)
 
     const meta: Meta = {
         feedDate,

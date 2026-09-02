@@ -72,18 +72,31 @@ export interface Network {
     frequencies?: FrequencyBlock[]
 }
 
+/**
+ * Lines carried over from another scenario unchanged rather than built from this scenario's own
+ * source — e.g. the proposed network's regional lines 571 and 574, which the proposal describes
+ * changing but supplies no timetable for. `note` explains why, in terms specific enough to matter
+ * (see `build-proposal.ts`) — `LineBrowser` surfaces it verbatim rather than restating it.
+ */
+export interface InheritedLines {
+    lines: string[]
+    note: string
+}
+
 export interface Meta {
     /** Last-Modified date of the source gtfs.zip, YYYY-MM-DD. */
     feedDate: string
     generatedAt: string
     converterVersion: string
     geometrySources: { osm: number; routed: number; straight: number; override: number }
+    inheritedLines?: InheritedLines
     /**
-     * Lines carried over from another scenario unchanged rather than built from this
-     * scenario's own source — e.g. the proposed network's regional lines 571 and 574, which
-     * the proposal describes changing but supplies no timetable for.
+     * Which `current` scenario build this scenario was derived from — set only by converters
+     * that read another scenario's committed output rather than an independent source (e.g.
+     * the proposal reading `public/data/current/`). Lets a stale derivation be spotted by
+     * comparing against `current`'s own `meta.json`, rather than assuming the two always match.
      */
-    inheritedLines?: { lines: string[]; note: string }
+    derivedFrom?: { scenarioId: string; feedDate: string; generatedAt: string }
 }
 
 export interface ScenarioRef {

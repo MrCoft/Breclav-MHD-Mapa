@@ -1,7 +1,7 @@
 import { useStore } from '@tanstack/react-store'
 import { appStore, selectLine } from '../state/store'
 import { LineBadge } from './LineBadge'
-import type { Line, Mode } from '../types/network'
+import type { InheritedLines, Line, Mode } from '../types/network'
 
 const GROUPS: { mode: Mode; label: string }[] = [
     { mode: 'bus', label: 'Autobusy' },
@@ -12,7 +12,17 @@ function sortedByName(lines: Line[]): Line[] {
     return [...lines].sort((a, b) => a.name.localeCompare(b.name, 'cs', { numeric: true }))
 }
 
-const LineGroup = ({ label, lines, selectedLine }: { label: string; lines: Line[]; selectedLine: string | null }) => {
+const LineGroup = ({
+    label,
+    lines,
+    selectedLine,
+    inheritedLines,
+}: {
+    label: string
+    lines: Line[]
+    selectedLine: string | null
+    inheritedLines?: InheritedLines
+}) => {
     if (lines.length === 0) {
         return null
     }
@@ -23,20 +33,27 @@ const LineGroup = ({ label, lines, selectedLine }: { label: string; lines: Line[
             <ul className="flex flex-col gap-1">
                 {lines.map((line) => {
                     const isSelected = line.id === selectedLine
+                    const isInherited = inheritedLines?.lines.includes(line.id) ?? false
                     return (
                         <li key={line.id}>
                             <button
                                 type="button"
                                 aria-pressed={isSelected}
                                 onClick={() => selectLine(isSelected ? null : line.id)}
+                                title={isInherited ? inheritedLines?.note : undefined}
                                 className={`flex w-full items-center gap-2 rounded border-l-2 px-2 py-1 text-left text-sm ${
                                     isSelected
                                         ? 'border-primary bg-accent font-semibold text-accent-foreground'
                                         : 'border-transparent hover:bg-slate-100'
-                                }`}
+                                } ${isInherited ? 'opacity-70' : ''}`}
                             >
                                 <LineBadge line={line} />
                                 <span className="truncate">{line.longName}</span>
+                                {isInherited && (
+                                    <span className="ml-auto shrink-0 rounded bg-slate-200 px-1 py-0.5 text-[10px] font-semibold tracking-wide text-slate-600 uppercase">
+                                        Beze změny
+                                    </span>
+                                )}
                             </button>
                         </li>
                     )
@@ -55,6 +72,7 @@ export const LineBrowser = () => {
     }
 
     const { lines, stops } = scenario.index.network
+    const inheritedLines = scenario.meta.inheritedLines
 
     return (
         <div>
@@ -77,8 +95,17 @@ export const LineBrowser = () => {
                     label={group.label}
                     lines={sortedByName(lines.filter((line) => line.mode === group.mode))}
                     selectedLine={selectedLine}
+                    inheritedLines={inheritedLines}
                 />
             ))}
+            {/* Surfaces the same note the badge's title attribute carries, for anyone who won't
+                hover a touch target — see the task brief's finding C3 and `Meta.inheritedLines`'s
+                own doc comment in `types/network.ts`. */}
+            {inheritedLines && (
+                <p className="mt-3 text-xs text-slate-500">
+                    Linky <strong>{inheritedLines.lines.join(', ')}</strong> („Beze změny“): {inheritedLines.note}
+                </p>
+            )}
         </div>
     )
 }

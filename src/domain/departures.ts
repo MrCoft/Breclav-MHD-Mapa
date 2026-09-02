@@ -32,8 +32,6 @@ export function departuresAt(
         return []
     }
 
-    const todayActive = servicesOnDate(index.services, date)
-
     const days: { serviceDate: string; shift: number }[] = [
         { serviceDate: previousDate(date), shift: 1440 },
         { serviceDate: date, shift: 0 },
@@ -41,17 +39,9 @@ export function departuresAt(
 
     const found: Departure[] = []
     for (const { serviceDate, shift } of days) {
-        let active = servicesOnDate(index.services, serviceDate)
+        const active = servicesOnDate(index.services, serviceDate)
         if (active.size === 0) {
             continue
-        }
-
-        // Only include previous day services that don't also run today
-        if (serviceDate !== date) {
-            active = new Set([...active].filter((s) => !todayActive.has(s)))
-            if (active.size === 0) {
-                continue
-            }
         }
 
         for (const { pattern, index: stopIndex } of positions) {

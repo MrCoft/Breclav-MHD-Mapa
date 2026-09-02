@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["stops", "lines", "patterns", "services", "trips"],
+  "additionalProperties": false,
+  "properties": {
+    "stops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "lat", "lon"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+          "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+          "zone": { "type": "string" },
+          "wheelchair": { "type": "boolean" },
+          "sourceId": { "type": "string" }
+        }
+      }
+    },
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "longName", "mode", "color", "textColor"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "longName": { "type": "string" },
+          "mode": { "enum": ["bus", "rail"] },
+          "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+          "textColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+        }
+      }
+    },
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "line", "direction", "headsign", "stops", "offsets"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "line": { "type": "string", "minLength": 1 },
+          "direction": { "enum": [0, 1] },
+          "headsign": { "type": "string" },
+          "stops": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+          "offsets": { "type": "array", "minItems": 2, "items": { "type": "integer", "minimum": 0 } }
+        }
+      }
+    },
+    "services": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "days", "from", "to"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "days": { "type": "array", "minItems": 7, "maxItems": 7, "items": { "enum": [0, 1] } },
+          "from": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "to": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "added": { "type": "array", "items": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" } },
+          "removed": { "type": "array", "items": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" } }
+        }
+      }
+    },
+    "trips": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pattern", "service", "start"],
+        "additionalProperties": false,
+        "properties": {
+          "pattern": { "type": "string" },
+          "service": { "type": "string" },
+          "start": { "type": "integer", "minimum": 0 },
+          "offsets": { "type": "array", "minItems": 2, "items": { "type": "integer", "minimum": 0 } }
+        }
+      }
+    },
+    "frequencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pattern", "service", "from", "to", "headway"],
+        "additionalProperties": false,
+        "properties": {
+          "pattern": { "type": "string" },
+          "service": { "type": "string" },
+          "from": { "type": "integer", "minimum": 0 },
+          "to": { "type": "integer", "minimum": 0 },
+          "headway": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}

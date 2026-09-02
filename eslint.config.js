@@ -69,6 +69,7 @@ export default [
                     gen: 'always',
                     config: 'always',
                     schema: 'always',
+                    mjs: 'always',
                 },
             ],
         },

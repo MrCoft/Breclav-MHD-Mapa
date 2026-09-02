@@ -51,11 +51,12 @@ The design spec quotes measured figures from the real feed (routes, trips, `stop
 
 Partially resolved: the converter asserts the route count against a configured band, and `npm run build:network` prints all of the figures, so the spec now names that command. **Still open:** whether the remaining hard-coded numbers in the spec should be replaced by that command reference entirely, at the cost of losing the evidence that justified several design decisions.
 
-## 6. Which variant is in the spreadsheet, and does Návrat need importing too?
+## 6. Which variant is in the spreadsheet? — RESOLVED 2026-09-02
 
-The summary sheet names two variants, Návrat and Prinz, but only one set of per-line sheets
-exists. The 564 evidence points to those sheets being Prinz. If Návrat is also a live option,
-it has no timetable in this file and would need its own source before it could be shown.
+`data/jizdni_rady_2026.pdf` settles it: the document is titled "Prinz návrh jízdních řádů
+2026" and is an attachment to a petition. The eight sheets are Prinz's proposal. Návrat is the
+alternative it is costed against and has no timetables anywhere in the supplied files. See
+decision 18.
 
 ## 7. Should the comparison be restricted to city lines?
 
@@ -64,14 +65,22 @@ trains out to Brno, Znojmo and Staré Město. The proposal covers only city line
 Toggling between them as they stand would compare a regional network against a city one, and
 every regional line would appear "deleted" in the proposal.
 
-The likely answer is that the comparison view filters to city lines while the standalone map
-keeps everything, but that is a product decision, not a technical one.
+**Answered:** comparison mode filters to city lines 561–569; the standalone map keeps
+everything. See decision 19.
 
-## 8. Is a school-term-weekday-only comparison acceptable?
+**But a wrinkle remains open.** The proposal's own description changes two regional lines:
+"564 zrušena a nahrazena 574" (564 cancelled, replaced by regional line 574) and "571
+zastavuje na všech nácestných zastávkách" (571 to stop at all intermediate stops). A strict
+561–569 filter hides both, so the comparison would show line 564 simply vanishing with no
+indication that 574 is meant to absorb it — which misrepresents the proposal.
 
-The proposal is weekday-only. The current network has weekday, Saturday and Sunday service.
-Either the comparison is restricted to school-term weekdays, or the proposed scenario needs
-weekend timetables that do not currently exist.
+**Decide:** admit 571 and 574 into comparison mode as a named exception, annotate 564's
+removal with a pointer to 574, or accept the omission and explain it in the UI.
+
+## 8. Is a school-term-weekday-only comparison acceptable? — RESOLVED 2026-09-02
+
+Yes. Comparison mode locks to a school-term weekday; the standalone map keeps all day types.
+See decision 19.
 
 ## 9. Extracting timetables from the PDFs
 
@@ -85,3 +94,13 @@ They are still worth keeping, for two reasons: they are the authoritative publis
 so they can cross-check the GTFS-derived departure boards for lines 561–569; and they use the
 same line and stop naming as the proposal spreadsheet, which helps when mapping proposed stop
 names onto GTFS parent stations. **Decide** whether a cross-check task is worth writing.
+
+## 10. Which proposed stops do not exist yet?
+
+The proposal asks for stops that are not in the current network: a bidirectional stop on Na
+Zahradách, a Mánesova stop in the opposite direction, and an alighting stop on J. Skácela. It
+also moves Průmyslová škola and proposes cutting Domov důchodců.
+
+The importer must therefore create stops that have no GTFS parent station and no coordinates,
+and the map has to place them. **Decide:** hand-place them in a small overrides file, or omit
+them and accept that those patterns will be geometrically wrong.

@@ -105,3 +105,42 @@ Each entry records what was decided, what was rejected, and why.
 **Decided:** `CLAUDE.md` at the repo root, composed from `Ai-Config/Templates/_shared` plus `Templates/React-Web-App`, with the `ai-config:template` markers preserved so the user's sync tooling can update it.
 **Rejected:** Copying the older rendered `CLAUDE.md` from `Hearthstone-Clone/…/Editor Frontend`, which is a stale five-line version that contradicts the current template on committing and code generation.
 **Why:** The user asked for the guidelines to be adopted. Copying from the template source rather than a rendered downstream copy means this file matches what their tooling would generate. This project is a React web app, so `React-Web-App` is the right stack template.
+
+## 18. The proposal is Prinz's petition attachment; Návrat is the rival it is costed against
+
+**Decided:** The eight per-line sheets in `data/navrh_2026_new2.xlsx`, and the timetables in
+`data/jizdni_rady_2026.pdf`, are one proposal — titled "Prinz návrh jízdních řádů 2026",
+described in the PDF as *Příloha k petici* (an attachment to a petition). "Návrat" is the
+alternative it is costed against in the summary sheet; only its kilometres exist, not its
+timetables.
+**Rejected:** Treating the two summary columns as two importable networks.
+**Why:** The PDF's own title page settles what the spreadsheet only implied. The proposal
+states it is built on the same total kilometres as the alternative, which is why the two
+totals nearly match (2271 vs 2267.7). Návrat cannot be mapped without timetables that do not
+exist in any supplied file.
+
+## 19. The comparison filters to city lines and to a school-term weekday
+
+**Decided:** In comparison mode both scenarios are restricted to city lines 561–569, and the
+date is locked to a school-term weekday. The standalone map still shows all 20 routes and all
+day types.
+**Rejected:** Comparing full networks, which would render every regional line and train as
+"deleted"; carrying the current weekend timetable into the proposed scenario, which would
+invent service the proposal never states.
+**Why:** The user's call on both. The proposal covers only city lines and only weekdays
+("Uvedený návrh je určen pro všední dny"), so anything wider is comparing unlike things.
+
+**Known wrinkle, not yet resolved:** the proposal does change two regional lines — it cancels
+564 and replaces it with 574, and has 571 stop at all intermediate stops. A strict city-lines
+filter hides both changes. See `docs/open-questions.md`.
+
+## 20. The spreadsheet is the import source; the PDF is narrative and cross-check
+
+**Decided:** The proposed-scenario importer reads `data/navrh_2026_new2.xlsx`.
+`data/jizdni_rady_2026.pdf` supplies the rationale, the direction labels ("opačný směr") and a
+validation cross-check.
+**Rejected:** Importing from the PDF as the primary source.
+**Why:** The spreadsheet is cell-addressed structured data; the PDF is text whose columns are
+recovered by whitespace alignment, which is fragile. The PDF is better for the things the
+spreadsheet lacks: which sheet is which direction, per-trip kilometres, and the prose
+description of what is being changed and why.

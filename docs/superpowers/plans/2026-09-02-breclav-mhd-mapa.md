@@ -1372,9 +1372,19 @@ export function extractEntries(zipPath: string, destDir: string, names: string[]
   });
 }
 
-/** Streams a CSV file row by row. Never holds the whole file in memory. */
+/**
+ * Streams a CSV file row by row. Never holds the whole file in memory.
+ *
+ * The source's errors are forwarded into the parser deliberately: a bare
+ * `.pipe()` does not propagate them, so a missing file would raise an
+ * unhandled 'error' event and take the process down instead of rejecting here.
+ */
 export async function streamCsv<T>(path: string, onRow: (row: T) => void): Promise<void> {
-  const parser = createReadStream(path).pipe(parse({ columns: true, bom: true, skip_empty_lines: true }));
+  const source = createReadStream(path);
+  const parser = parse({ columns: true, bom: true, skip_empty_lines: true });
+  source.on('error', (err) => parser.destroy(err));
+  source.pipe(parser);
+
   for await (const row of parser) {
     onRow(row as T);
   }

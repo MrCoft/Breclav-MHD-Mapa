@@ -33,9 +33,16 @@ export interface OsmResponse {
 export function buildQuery(scope: ScopeConfig): string {
     const { minLat, minLon, maxLat, maxLon } = scope.bbox
     const bbox = `${minLat},${minLon},${maxLat},${maxLon}`
+    // Real IDS JMK relations are tagged inconsistently: some carry the network's
+    // abbreviation on `network` itself, others only on `network:short`, with `network`
+    // holding the full Czech name instead. Matching either tag is what actually finds
+    // Břeclav's own routes; matching `network` alone misses nearly all of them.
     return [
         '[out:json][timeout:300];',
-        `relation["type"="route"]["network"~"${scope.osmNetwork}"](${bbox});`,
+        '(',
+        `  relation["type"="route"]["network"~"${scope.osmNetwork}"](${bbox});`,
+        `  relation["type"="route"]["network:short"~"${scope.osmNetwork}"](${bbox});`,
+        ');',
         'out body;',
         '>;',
         'out skel qt;',
@@ -60,7 +67,12 @@ export async function fetchRoutes(
 
     const res = await fetch(scope.overpassUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        // overpass-api.de rejects requests with no User-Agent header with 406, per its usage policy
+        // (https://wiki.openstreetmap.org/wiki/Overpass_API#Introduction). Node's fetch sends none by default.
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Breclav-MHD-Mapa/1.0 (+https://github.com/MrCoft/Breclav-MHD-Mapa)',
+        },
         body: new URLSearchParams({ data: buildQuery(scope) }),
     })
     if (!res.ok) {

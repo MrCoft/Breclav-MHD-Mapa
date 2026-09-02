@@ -10,8 +10,8 @@ import { SKIPPED_MARKER, cellToMinutes } from './time'
  * quirks, not this structure) only ever looks for the first one. The first section is always the
  * line's outbound direction (0); the second is always its return (1) — confirmed by row order
  * (every stop sequence reverses between the two), and, where present, by the label row's own
- * "opačný směr" ("opposite direction") text. See the task report for the full structural survey
- * this was built from.
+ * "opačný směr" ("opposite direction") text. See `docs/proposal-import.md` for the full
+ * structural survey this was built from.
  */
 
 /** A sheet's cells as `"<row>:<column letters>"` -> raw text — see `proposal/xlsx.ts`. */

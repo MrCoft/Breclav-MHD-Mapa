@@ -7,7 +7,7 @@ export const SKIPPED_MARKER = '~'
 // have the literal text "562" (very likely a stray line-number reference) in place of an arrival
 // time; `Number('562')` is not `NaN`, so without this bound it would be accepted as 809,280
 // minutes past midnight. Treated as not served, the same as a blank cell, rather than guessed —
-// see the task report.
+// see `docs/proposal-import.md`.
 const MAX_PLAUSIBLE_MINUTES = 48 * 60
 
 /**

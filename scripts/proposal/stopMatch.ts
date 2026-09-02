@@ -5,8 +5,8 @@ import type { Stop } from '../../src/types/network'
  * Matches a proposal stop name (e.g. `"nám.TGM kostel"`) to an existing stop
  * (`"Břeclav, náměstí TGM, kostel"`). The proposal never carries a municipality prefix and
  * routinely abbreviates or drops the local-area name ("Poštorná,", "Stará Břeclav,"), so this
- * cannot be an exact-string lookup — see the task report for the catalogue of real spreadsheet
- * spellings this was built and checked against.
+ * cannot be an exact-string lookup — see `docs/proposal-import.md` for the catalogue of real
+ * spreadsheet spellings this was built and checked against.
  */
 
 // JavaScript's `\b` only ever treats ASCII letters as "word" characters, so it fails silently
@@ -19,7 +19,7 @@ function wholeWordPattern(word: string): RegExp {
 
 /**
  * Typos in the source workbook, found by hand while cataloguing every distinct stop name it
- * uses (see the task report), plus one genuine abbreviation ("DK" for "kulturní dům", used only
+ * uses (see `docs/proposal-import.md`), plus one genuine abbreviation ("DK" for "kulturní dům", used only
  * for the Stará Břeclav stop of that name). Each pattern is specific enough that it cannot touch
  * an unrelated name.
  */

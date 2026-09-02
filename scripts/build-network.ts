@@ -41,6 +41,19 @@ export interface GeometryFeature {
     geometry: { type: 'LineString'; coordinates: Position[] }
 }
 
+/**
+ * Per-pattern signals from `remeasureSimplified` that never reach the shipped GeoJSON — kept
+ * out of `GeometryFeature.properties` because they are a build-time correctness signal, not
+ * data the client has any use for. Threaded separately into `assertGeometrySane` instead.
+ */
+export interface GeometryDiagnostics {
+    patternId: string
+    /** Worst perpendicular distance between a stop and its projected point on the simplified line. */
+    maxOffMetres: number
+    /** Worst amount `remeasureSimplified`'s monotonicity floor had to correct — see its own doc comment. */
+    maxClampMetres: number
+}
+
 // How far a pattern's final stopDistance may sit from its simplified line's own length.
 // Simplification legitimately shortens a line by cutting corners — observed up to ~11m even on
 // this dataset's longest route (115km of rail) — so this must clear that, but a genuine bug
@@ -48,14 +61,50 @@ export interface GeometryFeature {
 // metres at minimum, so 20m keeps a wide margin on both sides.
 const GEOMETRY_LENGTH_TOLERANCE_METRES = 20
 
+// How far a stop's projection onto the simplified line may sit from the stop itself.
+//
+// Bus stops sit close to their route (a handful of metres at most, on this dataset), but rail
+// stops do not: routeOnRailGraph (railGraph.ts) already snaps a stop to the nearest track node
+// at up to 500m — its own maxSnapMetres — because a station's GTFS coordinate is often the
+// platform or entrance, not track centreline, and because a rail pattern's own endpoint can be a
+// non-rail stop entirely (S8-0-1 ends at "Břeclav, autobusové nádraží", the bus station, routed
+// via the rail graph regardless). Measured on this dataset's actual 252 patterns, the worst is
+// 220.8m (several S8/S9/R13 patterns) — legitimate, present in the tier's own match before this
+// task's simplification ever runs, not something simplification introduced. So this gate has to
+// clear the most permissive tier's own ceiling, not "a few metres": 500m (railGraph's
+// maxSnapMetres) + 2m (the simplification tolerance itself, config/scope.json) + 18m margin for
+// the window search's own approximation = 520m. Still an order of magnitude below the
+// hundreds-of-metres to kilometres a window that matched an unrelated part of a long route would
+// produce, so it stays a meaningful gate rather than a rubber stamp.
+const MAX_OFF_TOLERANCE_METRES = 520
+
+// How much `remeasureSimplified`'s non-decreasing floor may ever have had to correct. A correct
+// window search never needs the floor — it is pure IEEE-754 slack (haversine round-trip error
+// on repeated additions), which never approaches a whole metre. Any real backward jump, the bug
+// this task fixed, is a metre-plus at minimum, so 1cm cleanly separates "floating point" from
+// "the floor did real work."
+const MAX_CLAMP_TOLERANCE_METRES = 0.01
+
 /**
  * Confirms `stopDistances` was actually recomputed against the geometry that ships, not left
- * over from before simplification: every pattern must start at 0, increase monotonically (a
- * later stop is never closer to the start than an earlier one), and its last stop must land
- * within a few metres of the polyline's own total length — the line was built to end at that
- * stop, so a bigger gap means the stop projected onto the wrong part of a simplified line.
+ * over from before simplification, and — the part that actually exercises `remeasureSimplified`'s
+ * own logic rather than the arithmetic `build-network.ts` wraps around it — that the projection
+ * search it performed was trustworthy stop by stop, not just at the ends.
+ *
+ * `stopDistances[0] === 0` and "each stop is no closer to the start than the one before it" are
+ * checked below, but by the time a `GeometryFeature` reaches this function both are guaranteed by
+ * construction: `stopDistances[0]` is always `along[0] - along[0]`, and `remeasureSimplified`
+ * itself floors every value at the previous one before returning. Kept as basic structural
+ * documentation of the shipped contract, but neither can actually fail here, so they cannot be
+ * the whole check. `maxClampMetres` and `maxOffMetres` are: the former is the *pre-clamp* signal
+ * — how far a raw, unfloored projection would have fallen behind the previous stop, which is
+ * exactly the interior backward jump this task's original bug produced (a mid-route stop
+ * re-projected onto the wrong pass of a self-proximate line) and which the floor would otherwise
+ * absorb into a merely-flat pair of values instead of a visible failure. The latter is the offset
+ * between a stop and where it landed on the line, which a mismatched search window inflates by
+ * orders of magnitude over a correct one.
  */
-export function assertGeometrySane(features: GeometryFeature[]): void {
+export function assertGeometrySane(features: GeometryFeature[], diagnostics: GeometryDiagnostics[]): void {
     const problems: string[] = []
 
     for (const feature of features) {
@@ -77,6 +126,22 @@ export function assertGeometrySane(features: GeometryFeature[]): void {
         if (last !== undefined && Math.abs(last - lineLength) > GEOMETRY_LENGTH_TOLERANCE_METRES) {
             problems.push(
                 `${patternId}: final stopDistance ${last.toFixed(1)}m is ${Math.abs(last - lineLength).toFixed(1)}m from the line's own length ${lineLength.toFixed(1)}m`,
+            )
+        }
+    }
+
+    for (const { patternId, maxOffMetres, maxClampMetres } of diagnostics) {
+        if (maxClampMetres > MAX_CLAMP_TOLERANCE_METRES) {
+            problems.push(
+                `${patternId}: remeasureSimplified's monotonicity floor corrected ${maxClampMetres.toFixed(2)}m — ` +
+                    `a stop's raw (pre-clamp) projection fell behind the previous stop's, the interior-backward-jump ` +
+                    `bug this task fixed, silently absorbed instead of surfaced`,
+            )
+        }
+        if (maxOffMetres > MAX_OFF_TOLERANCE_METRES) {
+            problems.push(
+                `${patternId}: a stop sits ${maxOffMetres.toFixed(1)}m from its projected point on the simplified ` +
+                    `line — likely a search window that matched the wrong part of a self-proximate route`,
             )
         }
     }
@@ -306,6 +371,7 @@ async function main(): Promise<void> {
     const stopById = new Map(network.stops.map((s) => [s.id, s]))
     const counts = { osm: 0, routed: 0, straight: 0, override: 0 }
     const features: GeometryFeature[] = []
+    const geometryDiagnostics: GeometryDiagnostics[] = []
     for (const pattern of network.patterns) {
         const overridePath = join('data/geometry-overrides', `${pattern.id}.geojson`)
         let override: Position[] | undefined
@@ -341,13 +407,14 @@ async function main(): Promise<void> {
         const keptIndices = simplifyIndices(coordinates, scope.geometrySimplifyMetres)
         const simplified = keptIndices.map((i) => coordinates[i]!)
         const stopCoords = straightLine(pattern, stopById)
-        const { along } = remeasureSimplified({
+        const { along, maxOffMetres, maxClampMetres } = remeasureSimplified({
             originalCoordinates: coordinates,
             originalStopDistances,
             simplifiedCoordinates: simplified,
             keptIndices,
             stopCoords,
         })
+        geometryDiagnostics.push({ patternId: pattern.id, maxOffMetres, maxClampMetres })
         const origin = along[0] ?? 0
         const stopDistances = along.map((a) => Math.max(0, a - origin))
 
@@ -366,7 +433,7 @@ async function main(): Promise<void> {
         })
     }
 
-    assertGeometrySane(features)
+    assertGeometrySane(features, geometryDiagnostics)
 
     const meta: Meta = {
         feedDate,

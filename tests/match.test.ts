@@ -337,4 +337,38 @@ describe('remeasureSimplified', () => {
         })
         expect(along[1]!).toBeGreaterThanOrEqual(along[0]!)
     })
+
+    it('floors — and reports — a non-monotonic anchor sequence, rather than crashing or hiding it', () => {
+        // Every tier except 'override' guarantees originalStopDistances is non-decreasing before
+        // it ever reaches this function (straight and routed by construction; osm because
+        // trimToStops rejects a non-monotonic relation outright). An override is hand-authored
+        // and nothing validates its distances, so it is the one input shape that can arrive here
+        // out of order — this is what that looks like: stop2's anchor (445m) is far behind
+        // stop1's (~12016m, the line's own length).
+        const fullLength = cumulativeDistances(originalCoordinates).at(-1)!
+        const backwardsAnchor = cumulativeDistances(originalCoordinates)[4]! // idx4's position, ~445m
+        const originalStopDistances = [0, fullLength, backwardsAnchor]
+        const threeStopCoords: [number, number][] = [
+            [16.8, 48.70005],
+            [16.8, 48.8],
+            [16.8, 48.704], // sits exactly at idx4 — where the (ignored) backwards anchor points
+        ]
+
+        const { along, maxClampMetres } = remeasureSimplified({
+            originalCoordinates,
+            originalStopDistances,
+            simplifiedCoordinates,
+            keptIndices,
+            stopCoords: threeStopCoords,
+        })
+
+        // Degrades safely: the output itself never reads as moving backwards...
+        expect(along[2]!).toBeGreaterThanOrEqual(along[1]!)
+        // ...but that safety comes from flooring stop2 to stop1's own value, discarding
+        // stop2's real (and, here, entirely valid) position — and Finding 1's fix is that this
+        // is no longer silent: maxClampMetres reports the ~11,570m the floor had to correct,
+        // which build-network.ts's MAX_CLAMP_TOLERANCE_METRES (0.01m) would fail on.
+        expect(along[2]!).toBeCloseTo(along[1]!, 0)
+        expect(maxClampMetres).toBeGreaterThan(1000)
+    })
 })

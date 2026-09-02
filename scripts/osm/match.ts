@@ -85,7 +85,7 @@ export function remeasureSimplified(args: {
     simplifiedCoordinates: Position[]
     keptIndices: number[]
     stopCoords: Position[]
-}): { along: number[]; maxOffMetres: number } {
+}): { along: number[]; maxOffMetres: number; maxClampMetres: number } {
     const { originalCoordinates, originalStopDistances, simplifiedCoordinates, keptIndices, stopCoords } = args
     const origCumulative = cumulativeDistances(originalCoordinates)
     const keptCumulative = keptIndices.map((i) => origCumulative[i]!)
@@ -94,6 +94,11 @@ export function remeasureSimplified(args: {
 
     const along: number[] = []
     let maxOffMetres = 0
+    // How far the *unclamped* projection ever fell below the running previous stop — see the
+    // clamp comment below. A correct window search should never need this; a non-trivial value
+    // means the clamp silently absorbed a real backward jump, and the caller must treat that as
+    // a failure rather than accept the floored result quietly.
+    let maxClampMetres = 0
     let previous = 0
     let lo = 0
 
@@ -124,14 +129,17 @@ export function remeasureSimplified(args: {
         }
 
         // A safety floor, not a correction: two stops can legitimately share a short window,
-        // where the raw projections could otherwise tie or drift a hair backwards.
+        // where the raw projections could otherwise tie or drift a hair backwards. Recorded
+        // *before* flooring, not discarded, so a genuine backward jump — the exact bug this
+        // function exists to prevent — is visible to the caller instead of silently absorbed.
+        maxClampMetres = Math.max(maxClampMetres, previous - atMetres)
         const clamped = Math.max(atMetres, previous)
         along.push(clamped)
         previous = clamped
         maxOffMetres = Math.max(maxOffMetres, offMetres)
     }
 
-    return { along, maxOffMetres }
+    return { along, maxOffMetres, maxClampMetres }
 }
 
 /**

@@ -212,4 +212,40 @@ The two candidate shapes:
   parameter unnecessary for stops that have a real one. Costs a schema change, a second number per
   stop in every `network.json`, and a migration of both importers plus the geometry sanity check.
 
+### Why not just skip the segments that look wrong?
+
+Asked 2026-09-03. Rejected as the primary fix, because nothing here is missing or corrupt — the
+correct number is in the feed, unread. Skipping would guess where the truth is already available,
+and it needs a threshold nobody can justify: after the fix 45 segments still run under 10 km/h and
+every one of them is real schedule padding, so any cutoff wide enough to catch the 338-minute leg
+also has to not catch those. It also has no good outcome at render time. Hiding the vehicle removes
+42% of the on-screen buses at 10:00; teleporting it across the leg makes it jump; inventing a speed
+puts it at the next stop at the wrong time, which is the same error moved one stop along. The one
+place a "this cannot be right" fallback does belong is already there and is about segments too
+*fast*, not too slow: `trapezoidDistance`'s negative-discriminant branch
+(`src/domain/vehicles.ts`), for when a routed distance cannot be covered in a minute-rounded time.
+
+### Measured, against the committed geometry (7780 per-trip segments)
+
+| model | < 5 km/h | < 10 km/h | worst segment |
+| --- | --- | --- | --- |
+| shipped, `dep[i] -> dep[i+1]` | 133 | 232 | 585 min |
+| minimal, departures but last stop uses arrival | 1 | 46 | 35 min |
+| arrivals, `arr[i] -> arr[i+1]` | 1 | 48 | 37 min |
+| both, `dep[i] -> arr[i+1]` | 1 | 45 | 31 min |
+
+Reproduce by re-deriving offsets from `data/cache/gtfs/stop_times.txt` under each rule and joining
+to `public/data/current/geometry.geojson`'s `stopDistances`.
+
+So all three candidates kill the reported symptom outright, and the choice between them is *not*
+about vehicle speed. It is about the 4953 minutes of mid-route dwell (2737 stops, worst 21 min):
+the two one-number models fold that into the approach leg, so a bus with a real 6-minute wait
+crawls into the stop instead of arriving on time and sitting there. Carrying both is also what
+makes the workbook's `příj.`/`odj.` pair (known bug 7) collapse into one stop rather than two, and
+what would let `DEFAULT_VEHICLE_MOTION_OPTIONS.dwellSeconds` stop being invented for the stops that
+have a real figure (question 11).
+
+If both are carried, note that 83.8% of stop rows have no dwell at all, so a sparse "dwell at these
+indices" map costs far less in `network.json` than a second full-length vector.
+
 **Decide before fixing either bug**, since the two must land together.

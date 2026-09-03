@@ -94,3 +94,54 @@ wrong window match lands, which was sized against a 115 km rail line; a genuinel
 a short urban route might land inside the 200–300 m band and pass. Worth investigating **why** those
 particular patterns sit so far out — that is the question nobody has asked yet — rather than
 adjusting the threshold if it ever trips.
+
+## 6. The GTFS converter reads only `departure_time`, so every layover becomes travel time
+
+**Found:** 2026-09-03, sanity-checking vehicle speeds after the user reported buses moving
+incredibly slowly on the map.
+**Where:** `scripts/build-network.ts:292` — `parseGtfsTime(r.departure_time)` is the only time
+read out of `stop_times.txt`. `GtfsStopTimeRow` declares `arrival_time` (`scripts/gtfs/scope.ts:34`)
+but nothing reads it, and `TripShape.times` (`scripts/gtfs/convert.ts:12-13`) is documented as
+departure minutes, so `buildPatternsAndTrips` turns departure-to-departure into the offsets the
+client interpolates across.
+**Problem:** a segment's scheduled run time is `arrival[i+1] - departure[i]`, not
+`departure[i+1] - departure[i]`. The difference is the dwell at the arriving stop, which this feed
+carries in bulk: of 23273 in-scope `stop_times` rows, **3761 (16.2%) have
+`departure_time > arrival_time`, totalling 43049 minutes**. 1024 of those sit at a trip's *last*
+stop, where the value is a terminus layover, not a wait — trip 6387 on line 572 arrives at Hodonín
+bus station at 7:42 and its `departure_time` there is 13:18, so the shipped offsets stretch the
+final 1074 m leg to 338 minutes. The worst single case in the feed is 792 minutes.
+`src/domain/vehicles.ts` then does exactly what it is told: subtracts a 25-second dwell and spreads
+the remaining hours evenly across a kilometre of polyline.
+**Impact:** the visible symptom the user reported. Measured against the committed
+`public/data/current`, per-trip segments joined to their shipped `stopDistances`: **133 segments run
+under 5 km/h as shipped, 1 under the arrival-corrected model; 232 under 10 km/h as shipped, 45
+corrected.** On a Thursday, the share of on-screen vehicles crawling below 5 km/h is 18% at 06:00,
+42% at 10:00, 20% at 13:00 and 29% at 20:00, with a worst live segment of 812 minutes. A second
+consequence is in `departuresAt`: the last stop of such a trip advertises the layover departure
+(13:18) rather than the arrival (7:42) as a departure time. The proposed scenario inherits lines
+571 and 574 straight from this build, so its own slowest segments (574-1-5 at 0.7 km/h, 571-0-3 at
+0.8 km/h) come from here too, not from the workbook. The fix needs a decision this entry does not
+make: whether `Trip`/`Pattern` grow a second offsets vector (arrival alongside departure, so the
+vehicle arrives on time and then visibly waits), or whether the converter simply uses
+`arrival_time` for every stop after the first and drops the dwell.
+
+## 7. The proposal importer ignores the workbook's `příj.`/`odj.` markers, so the bus station is imported twice
+
+**Found:** 2026-09-03, during the same speed sanity check — this is what produces the
+proposed scenario's 0 m segments.
+**Where:** `scripts/proposal/sheet.ts:23,133` parses column C into `StopRow.marker`; nothing in
+`scripts/build-proposal.ts` reads it, and `buildShapesForSection` (`:149`) pushes every stop row as
+its own visit.
+**Problem:** the workbook writes a mid-route timing point as two rows — `příj.` (arrival) and
+`odj.` (departure) — for the same physical stop. Six of the eight city lines do this at
+"Autobusové nádraží" in both directions (561, 566, 567, 568, 569 have a consecutive duplicate
+pair; run `parseSections` over the workbook to see them). Imported as two stops, the pair becomes a
+0-metre segment spanning the 1-4 minute layover.
+**Impact:** milder than entry 6 and arguably right on the map — the vehicle parks at the station
+for the layover, which is what actually happens. But `pattern.stops` carries the station twice, so
+`index.patternsByStop` yields two positions for it and `departuresAt` lists both the arrival and
+the departure of the same trip as two separate departures on that stop's panel. It also makes the
+proposed scenario's stop counts per pattern one higher than the route really has. The two entries
+share a fix shape: whatever represents "arrive, wait, depart" for the GTFS side should represent it
+here too, rather than each importer inventing its own.

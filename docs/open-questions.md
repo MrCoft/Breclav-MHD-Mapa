@@ -191,3 +191,25 @@ Na Zahradách, a Mánesova stop in the opposite direction, and an alighting stop
 These have no GTFS parent station and no coordinates. They will be hand-placed from the PDF's
 descriptions against OpenStreetMap, recorded in a small overrides file so each placement is
 auditable rather than silently guessed.
+
+## 16. How should "arrive, wait, depart" be represented?
+
+Raised 2026-09-03 by the vehicle-speed sanity check; the evidence is in `docs/known-bugs.md`
+entries 6 and 7. Both importers currently collapse a stop visit to a single time — the GTFS one to
+`departure_time`, the workbook one to two separate stop rows — and neither is right. A layover then
+becomes travel time (buses crawl) or a duplicate stop (departure boards double up).
+
+The two candidate shapes:
+
+- **Keep one time per stop, use the right one.** Take `arrival_time` for every stop after the
+  first, so travel time is correct and dwell disappears from the model entirely. Smallest change;
+  `Pattern`, `Trip` and `vehiclesAt` are untouched. Costs the real dwell, which the motion model
+  currently invents anyway (`DEFAULT_VEHICLE_MOTION_OPTIONS.dwellSeconds`, question 11), and leaves
+  `departuresAt` showing arrivals rather than departures at every intermediate stop.
+- **Carry both.** `Pattern`/`Trip` grow an arrival vector alongside the existing departure one, and
+  `vehicleForTrip` holds the vehicle at the stop between the two. Honest to the data, makes the
+  workbook's `příj.`/`odj.` pair collapse into one stop naturally, and makes question 11's dwell
+  parameter unnecessary for stops that have a real one. Costs a schema change, a second number per
+  stop in every `network.json`, and a migration of both importers plus the geometry sanity check.
+
+**Decide before fixing either bug**, since the two must land together.

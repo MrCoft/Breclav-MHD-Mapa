@@ -145,3 +145,21 @@ the departure of the same trip as two separate departures on that stop's panel. 
 proposed scenario's stop counts per pattern one higher than the route really has. The two entries
 share a fix shape: whatever represents "arrive, wait, depart" for the GTFS side should represent it
 here too, rather than each importer inventing its own.
+
+## 8. Pattern 572-0-14's OSM-matched geometry puts BORS and Gumotex 27 m apart
+
+**Found:** 2026-09-03, in the same speed sanity check — this is the single segment that still runs
+under 5 km/h once entry 6's arrival/departure error is corrected for.
+**Where:** `public/data/current/geometry.geojson`, feature `572-0-14` (`source: "osm"`), against
+`breclav-bors` and `breclav-gumotex` in `public/data/current/network.json`.
+**Problem:** `stopDistances` puts 27 m between the two stops. Their coordinates are 165 m apart as
+the crow flies, so no routed distance can be below that, and every other pattern carrying the pair
+— 572-0-1, 572-0-2, 572-0-3, all `source: "routed"` — measures 903 m. Only the one OSM-relation
+match disagrees, which points at the relation-stitching or projection path in
+`scripts/osm/match.ts` rather than at the stop data.
+**Impact:** small and localised. 572-0-14's vehicles cover that leg at 0.5 km/h over the scheduled
+3 minutes and then jump the missing 876 m at the next stop. `assertGeometrySane` does not catch it:
+its checks are monotonicity, the final `stopDistance` against the line's own length, and
+`maxOffMetres` per stop — none of which compares a stop *gap* against the straight-line distance
+between the two stops, which is the cheap invariant that would have caught this (a routed gap can
+never be shorter than the crow-flies gap).

@@ -1,17 +1,17 @@
 {
-  "feedDate": "2026-08-28",
-  "generatedAt": "2026-09-02T19:19:43.321Z",
+  "feedDate": "2026-09-04",
+  "generatedAt": "2026-09-04T11:23:00.358Z",
   "converterVersion": "1.0.0",
   "geometrySources": {
     "osm": 19,
-    "routed": 29,
+    "routed": 28,
     "straight": 0,
     "override": 0
   },
   "derivedFrom": {
     "scenarioId": "current",
-    "feedDate": "2026-08-28",
-    "generatedAt": "2026-09-02T16:13:21.885Z"
+    "feedDate": "2026-09-04",
+    "generatedAt": "2026-09-04T11:22:27.348Z"
   },
   "inheritedLines": {
     "lines": [

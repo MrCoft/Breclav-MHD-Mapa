@@ -283,3 +283,50 @@ services the way `pausedDeepLink.spec.ts` does — and it wants its own commit r
 along with a data regeneration. Note this affects any bookmarked deep link too: a shared
 `?d=2026-09-02` link now opens on an empty network, which is correct behaviour for a feed that does
 not cover that date, but worth knowing before someone reports it as a bug.
+
+## 12. `public/data/proposed/network.json` ships every shared stop twice
+
+**Found:** 2026-09-04, while moving the proposal's inputs into `config/proposal.json`. Pre-existing;
+nothing in that change caused it.
+**Where:** `scripts/build-proposal.ts`, where the shipped stop list is assembled as
+`[...usedStopIds, ...inherited.stopIds]`.
+**Problem:** two `Set`s are spread into one array with no dedupe *across* them, so every stop
+served both by a proposed city line and by an inherited 571/574 pattern is emitted twice. The
+shipped file has **66 stop entries for 52 unique ids** — 14 duplicates, among them Autobusové
+nádraží, BORS, Cukrovar, Gumotex, both náměstí TGM poles, Pohansko rozcestí, Poliklinika and four
+Poštorná stops. Verify with:
+
+```
+node -e "const s=require('./public/data/proposed/network.json').stops.map(x=>x.id);console.log(s.length,new Set(s).size)"
+```
+
+`public/data/current/network.json` is clean (163 for 163), because it has no inherited lines.
+
+`validateNetwork` cannot catch this: it builds a `Set` of stop ids before checking anything, so a
+duplicate is silently absorbed. `buildIndex` likewise builds a `Map`, so the app renders correctly
+and nothing downstream misbehaves — which is why it went unnoticed.
+**Impact:** no visible defect today; the app dedupes by construction everywhere it matters. It is
+a correctness smell in committed data and it inflates the shipped file. The fix is one `new Set(…)`
+around the spread, plus the check `validateNetwork` is missing — a duplicate stop id is exactly the
+kind of thing a boundary validator should reject rather than tolerate.
+
+## 13. `breclav-na-zahradach` is required to exist and then never used
+
+**Found:** 2026-09-04, in the same pass as entry 12.
+**Where:** `config/proposal.json`'s `requiredStopOverrides` (previously the `NA_ZAHRADACH_ID`
+constant in `scripts/build-proposal.ts`), against `data/proposed-stops.json`.
+**Problem:** the build refuses to start unless `data/proposed-stops.json` defines
+`breclav-na-zahradach`, but no workbook row ever resolves to it, so it never enters the shipped
+network:
+
+```
+node -e "const n=require('./public/data/proposed/network.json');console.log(n.stops.some(s=>s.id==='breclav-na-zahradach'), n.patterns.some(p=>p.stops.includes('breclav-na-zahradach')))"
+```
+
+prints `false false`. The assertion reads as "this proposed stop is on the map"; it only checks
+that a JSON entry exists.
+**Impact:** the guard gives false confidence about the one thing it looks like it guarantees.
+Open question 10 records that the proposal asks for a bidirectional stop on Na Zahradách, so the
+stop is genuinely wanted — the honest reading is that the workbook does not (yet) call at it, and
+the check should either assert it is *served* or be dropped and the expectation recorded in
+`docs/open-questions.md` instead.

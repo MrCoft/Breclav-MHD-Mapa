@@ -27,12 +27,8 @@ export function validateNetwork(value: unknown): asserts value is Network {
     }
     if (!lineIds.has(p.line)) problems.push(`pattern ${p.id}: unknown line ${p.line}`);
     for (const s of p.stops) if (!stopIds.has(s)) problems.push(`pattern ${p.id}: unknown stop ${s}`);
-    for (let i = 1; i < p.offsets.length; i += 1) {
-      if (p.offsets[i]! < p.offsets[i - 1]!) problems.push(`pattern ${p.id}: offsets decrease at index ${i}`);
-    }
-    const late = lateDepartureIndex(p.offsets, p.dwells);
-    if (late !== undefined) {
-      problems.push(`pattern ${p.id}: departure at index ${late} falls after the arrival at index ${late + 1}`);
+    for (const problem of timingProblems(p.offsets, p.dwells)) {
+      problems.push(`pattern ${p.id}: ${problem}`);
     }
   }
 
@@ -50,9 +46,8 @@ export function validateNetwork(value: unknown): asserts value is Network {
       problems.push(`trip on ${t.pattern}: override dwells without override offsets`);
     }
     if (t.offsets) {
-      const late = lateDepartureIndex(t.offsets, t.dwells);
-      if (late !== undefined) {
-        problems.push(`trip on ${t.pattern}: departure at index ${late} falls after the arrival at index ${late + 1}`);
+      for (const problem of timingProblems(t.offsets, t.dwells)) {
+        problems.push(`trip on ${t.pattern}: ${problem}`);
       }
     }
   }
@@ -66,12 +61,37 @@ export function validateNetwork(value: unknown): asserts value is Network {
   if (problems.length > 0) throw new Error(`Neplatná síť (reference):\n${problems.join('\n')}`);
 }
 
-/** First `i` where `offsets[i] + dwells[i]` runs past `offsets[i + 1]`, or undefined if none does. */
-function lateDepartureIndex(offsets: number[], dwells: number[] | undefined): number | undefined {
+/**
+ * Every way one stop visit's times can contradict the next one's. Shared by patterns and by trip
+ * overrides, which carry the same two vectors and so admit exactly the same faults.
+ *
+ * The departure check subsumes a plain decreasing-`offsets` fault, since a dwell is never
+ * negative, which is why there is no separate monotonicity loop.
+ *
+ * The two zero-dwell rules are what actually enforce decision 32's "operator movements are never
+ * drawn": a vehicle standing at its origin has not started, and the layover at its terminus
+ * belongs to whatever it does next. Both are importer rules, and an importer that regressed on
+ * either would silently put a parked vehicle back on the map with nothing to point at why.
+ */
+function timingProblems(offsets: number[], dwells: number[] | undefined): string[] {
+  const problems: string[] = [];
+
   for (let i = 0; i + 1 < offsets.length; i += 1) {
-    if (offsets[i]! + (dwells?.[i] ?? 0) > offsets[i + 1]!) {
-      return i;
+    const departure = offsets[i]! + (dwells?.[i] ?? 0);
+    if (departure > offsets[i + 1]!) {
+      problems.push(`stop ${i} departs at ${departure} but stop ${i + 1} arrives at ${offsets[i + 1]}`);
     }
   }
-  return undefined;
+
+  if (dwells) {
+    const last = dwells.length - 1;
+    if (dwells[0] !== 0) {
+      problems.push(`dwells[0] is ${dwells[0]}, not 0 — a vehicle waiting at its origin is not running yet`);
+    }
+    if (last > 0 && dwells[last] !== 0) {
+      problems.push(`dwells[${last}] is ${dwells[last]}, not 0 — a terminus layover belongs to the next trip`);
+    }
+  }
+
+  return problems;
 }

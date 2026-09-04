@@ -68,9 +68,37 @@ describe('validateNetwork: dwells', () => {
         const bad = structuredClone(tinyNetwork)
         expect(bad.patterns[0]!.offsets).toEqual([0, 4, 9])
         bad.patterns[0]!.dwells = [0, 6, 0]
-        expect(() => validateNetwork(bad)).toThrow(
-            /pattern 563-0-1: departure at index 1 falls after the arrival at index 2/,
-        )
+        expect(() => validateNetwork(bad)).toThrow(/pattern 563-0-1: stop 1 departs at 10 but stop 2 arrives at 9/)
+    })
+
+    // The same inequality with no dwells at all is a plain decreasing-offsets fault, which used to
+    // have its own check. Kept as a case so removing the separate loop cannot go unnoticed.
+    it('rejects a pattern whose arrivals go backwards, with no dwells present', () => {
+        const bad = structuredClone(tinyNetwork)
+        expect(bad.patterns[0]!.dwells).toBeUndefined()
+        bad.patterns[0]!.offsets = [0, 9, 4]
+        expect(() => validateNetwork(bad)).toThrow(/pattern 563-0-1: stop 1 departs at 9 but stop 2 arrives at 4/)
+    })
+
+    it('rejects a non-zero dwell at the first stop, where the vehicle is not running yet', () => {
+        const bad = structuredClone(tinyNetwork)
+        expect(bad.patterns[0]!.offsets).toEqual([0, 4, 9])
+        bad.patterns[0]!.dwells = [3, 0, 0]
+        expect(() => validateNetwork(bad)).toThrow(/pattern 563-0-1: dwells\[0\] is 3, not 0/)
+    })
+
+    it('rejects a non-zero dwell at the last stop, which is the operator layover', () => {
+        const bad = structuredClone(tinyNetwork)
+        expect(bad.patterns[0]!.stops).toHaveLength(3)
+        bad.patterns[0]!.dwells = [0, 0, 338]
+        expect(() => validateNetwork(bad)).toThrow(/pattern 563-0-1: dwells\[2\] is 338, not 0/)
+    })
+
+    it('rejects a terminus layover on a trip override too', () => {
+        const bad = structuredClone(tinyNetwork)
+        expect(bad.trips[1]!.offsets).toEqual([0, 3, 7])
+        bad.trips[1]!.dwells = [0, 0, 92]
+        expect(() => validateNetwork(bad)).toThrow(/trip on 563-0-1: dwells\[2\] is 92, not 0/)
     })
 
     it('accepts a dwell that ends exactly on the next arrival', () => {
@@ -84,8 +112,6 @@ describe('validateNetwork: dwells', () => {
         const bad = structuredClone(tinyNetwork)
         expect(bad.trips[1]!.offsets).toEqual([0, 3, 7])
         bad.trips[1]!.dwells = [0, 5, 0]
-        expect(() => validateNetwork(bad)).toThrow(
-            /trip on 563-0-1: departure at index 1 falls after the arrival at index 2/,
-        )
+        expect(() => validateNetwork(bad)).toThrow(/trip on 563-0-1: stop 1 departs at 8 but stop 2 arrives at 7/)
     })
 })

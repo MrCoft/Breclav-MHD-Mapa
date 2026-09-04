@@ -84,6 +84,15 @@ function trapezoidDistance(seconds: number, duration: number, distance: number, 
     return (cruise * cruise) / (2 * accel) + cruise * (seconds - accelTime)
 }
 
+/**
+ * `offsets` are arrivals and `dwells` the scheduled wait at each stop, taken from one source in a
+ * single expression: a trip that overrides `offsets` overrides `dwells` with it, and a trip's
+ * `offsets` must never be read against the pattern's `dwells`.
+ *
+ * The vehicle is held at a stop for the longer of that scheduled dwell and the synthetic
+ * `dwellSeconds`/`dwellFraction` pause, so a real dwell wins wherever the feed gives one and the
+ * motion is exactly what it was before wherever it does not.
+ */
 function vehicleForTrip(
     trip: Trip,
     pattern: Pattern,
@@ -92,18 +101,19 @@ function vehicleForTrip(
     clockMinutes: number,
     options: VehicleMotionOptions,
 ): Vehicle | null {
-    const offsets = trip.offsets ?? pattern.offsets
+    const { offsets, dwells } = trip.offsets ? { offsets: trip.offsets, dwells: trip.dwells } : pattern
     const first = offsets[0]
     const last = offsets[offsets.length - 1]
-    if (offsets.length !== geometry.stopDistances.length) {
+    if (offsets.length !== geometry.stopDistances.length || (dwells && dwells.length !== offsets.length)) {
         // Benign to the map (the vehicle just doesn't render), but silent otherwise — this
         // project has twice been bitten by a converter or geometry mismatch that only ever
         // showed up as "something doesn't render," with nothing to point at why. Dev-only: this
         // is a data-pipeline signal, not something a production visitor's console needs to carry.
         if (import.meta.env.DEV) {
             console.warn(
-                `vehiclesAt: pattern "${pattern.id}" has ${offsets.length} offsets but geometry with ` +
-                    `${geometry.stopDistances.length} stop distances — skipping its vehicles`,
+                `vehiclesAt: pattern "${pattern.id}" has ${offsets.length} offsets` +
+                    (dwells ? ` and ${dwells.length} dwells` : '') +
+                    ` but geometry with ${geometry.stopDistances.length} stop distances — skipping its vehicles`,
             )
         }
         return null
@@ -139,14 +149,19 @@ function vehicleForTrip(
 
     const segmentSeconds = (segEndOffset - segStartOffset) * 60
     const elapsedSeconds = (relativeMinutes - segStartOffset) * 60
-    const dwell = Math.min(options.dwellSeconds, options.dwellFraction * segmentSeconds)
-    const atStop = elapsedSeconds < dwell
+    const scheduledDwellSeconds = (dwells?.[segIndex] ?? 0) * 60
+    const syntheticDwellSeconds = Math.min(
+        options.dwellSeconds,
+        options.dwellFraction * (segmentSeconds - scheduledDwellSeconds),
+    )
+    const holdSeconds = Math.max(scheduledDwellSeconds, syntheticDwellSeconds)
+    const atStop = elapsedSeconds < holdSeconds
 
     const distanceInSegment = atStop
         ? 0
         : trapezoidDistance(
-              elapsedSeconds - dwell,
-              segmentSeconds - dwell,
+              elapsedSeconds - holdSeconds,
+              segmentSeconds - holdSeconds,
               segEndDistance - segStartDistance,
               options.accelMetresPerSecond2,
           )

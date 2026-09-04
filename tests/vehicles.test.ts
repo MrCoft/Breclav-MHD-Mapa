@@ -386,3 +386,219 @@ describe('vehiclesAt: post-midnight', () => {
         expect(vehiclesAt(scenarioF.index, scenarioF.geometries, '2026-09-13', 5)).toEqual([])
     })
 })
+
+// ---------------------------------------------------------------------------------------------
+// Fixture H: a scheduled dwell. Stop 1 is arrived at 10 and left at 12, leaving 60 s for the
+// 416 m to stop 2 — which solves to a cruise speed of exactly 8 m/s (416 = 8*60 - 8^2), the same
+// algebra as fixture B, so every position below is exact. Fixture I is the same timetable with
+// no dwells, where those 416 m instead have the whole 155 s of a 3-minute segment.
+// ---------------------------------------------------------------------------------------------
+
+const patternH: Pattern = {
+    id: 'P-H',
+    line: 'L',
+    direction: 0,
+    headsign: 'H',
+    stops: ['h0', 'h1', 'h2'],
+    offsets: [0, 10, 13],
+    dwells: [0, 2, 0],
+}
+const tripH: Trip = { pattern: 'P-H', service: 'daily', start: 0 }
+const scenarioH = buildScenario(
+    {
+        stops: testStops(['h0', 'h1', 'h2']),
+        lines: [testLine('L')],
+        patterns: [patternH],
+        services: [dailyService],
+        trips: [tripH],
+    },
+    [equatorLineFeature('P-H', [0, 5000, 5416])],
+)
+
+describe('vehiclesAt: scheduled dwell', () => {
+    it('stands on stop 1 for the whole two minutes it is scheduled to', () => {
+        expect(patternH.dwells).toEqual([0, 2, 0])
+        for (const minutes of [10, 10.5, 11.5, 12 - 1 / 60]) {
+            const [v] = vehiclesAt(scenarioH.index, scenarioH.geometries, '2026-06-15', minutes)
+            expect(v, `at ${minutes}`).toBeDefined()
+            expect(v!.atStop, `at ${minutes}`).toBe(true)
+            expect(v!.lon, `at ${minutes}`).toBeCloseTo(lonFor(5000), 9)
+        }
+    })
+
+    it('pulls out one second after the dwell ends', () => {
+        // 1 s into the acceleration phase: 0.5 * a * t^2 = 0.5 m, independent of the cruise speed.
+        const [v] = vehiclesAt(scenarioH.index, scenarioH.geometries, '2026-06-15', 12 + 1 / 60)
+        expect(v!.atStop).toBe(false)
+        expect(v!.lon).toBeCloseTo(lonFor(5000.5), 6)
+    })
+
+    it('then runs the leg at the 8 m/s the remaining 60 s leave, not the 2.7 m/s a folded-in dwell would', () => {
+        // Hand-solved against a 60 s, 416 m trapezoid: accelerate for 8 s to 8 m/s (32 m), cruise
+        // to 52 s (384 m), decelerate to a stop. Folding the dwell into the leg would leave 156 s
+        // for the same 416 m and put the vehicle at 338 m at the 30 s mark instead of 208 m.
+        const at = (seconds: number) =>
+            vehiclesAt(scenarioH.index, scenarioH.geometries, '2026-06-15', 12 + seconds / 60)[0]
+        expect(at(8)!.lon).toBeCloseTo(lonFor(5032), 6)
+        expect(at(30)!.lon).toBeCloseTo(lonFor(5208), 6)
+        expect(at(52)!.lon).toBeCloseTo(lonFor(5384), 6)
+    })
+
+    it('measures the synthetic pause against the travel time the dwell leaves, not the whole segment', () => {
+        // A nominal pause longer than the dwell, clamped to 0.7 of the segment. Against the whole
+        // 180 s segment that clamp is 126 s and would hold the vehicle past the 120 s it is
+        // scheduled to wait; against the 60 s of travel the dwell leaves it is 42 s and cannot.
+        const generousPause = { dwellSeconds: 200, dwellFraction: 0.7, accelMetresPerSecond2: 1 }
+        const [v] = vehiclesAt(scenarioH.index, scenarioH.geometries, '2026-06-15', 12 + 1 / 60, generousPause)
+        expect(v!.atStop).toBe(false)
+        expect(v!.lon).toBeCloseTo(lonFor(5000.5), 6)
+    })
+
+    it('leaves the screen at the final arrival, not two minutes of dwell later', () => {
+        // 1 s before arriving: deceleration phase, 416 - 0.5 * a * 1^2 = 415.5 m.
+        const [v] = vehiclesAt(scenarioH.index, scenarioH.geometries, '2026-06-15', 13 - 1 / 60)
+        expect(v!.lon).toBeCloseTo(lonFor(5415.5), 6)
+        expect(vehiclesAt(scenarioH.index, scenarioH.geometries, '2026-06-15', 13)).toEqual([])
+        expect(vehiclesAt(scenarioH.index, scenarioH.geometries, '2026-06-15', 15)).toEqual([])
+    })
+})
+
+// ---------------------------------------------------------------------------------------------
+// Fixture I: fixture H's timetable with `dwells` omitted — the control arm, and the guard that a
+// pattern without dwells still moves exactly as it did before they existed. The 155 s left by the
+// unclamped 25 s synthetic dwell cover 750 m at a cruise speed of exactly 5 m/s (750 = 5*155 - 25).
+// ---------------------------------------------------------------------------------------------
+
+const patternI: Pattern = {
+    id: 'P-I',
+    line: 'L',
+    direction: 0,
+    headsign: 'I',
+    stops: ['i0', 'i1', 'i2'],
+    offsets: [0, 10, 13],
+}
+const tripI: Trip = { pattern: 'P-I', service: 'daily', start: 0 }
+const scenarioI = buildScenario(
+    {
+        stops: testStops(['i0', 'i1', 'i2']),
+        lines: [testLine('L')],
+        patterns: [patternI],
+        services: [dailyService],
+        trips: [tripI],
+    },
+    [equatorLineFeature('P-I', [0, 5000, 5750])],
+)
+
+describe('vehiclesAt: a pattern with no dwells', () => {
+    it('holds for the synthetic 25 s and no longer', () => {
+        expect(patternI.dwells).toBeUndefined()
+        const at = (seconds: number) =>
+            vehiclesAt(scenarioI.index, scenarioI.geometries, '2026-06-15', 10 + seconds / 60)[0]
+        expect(at(24)!.atStop).toBe(true)
+        expect(at(24)!.lon).toBeCloseTo(lonFor(5000), 9)
+        expect(at(26)!.atStop).toBe(false)
+        expect(at(26)!.lon).toBeCloseTo(lonFor(5000.5), 6)
+    })
+
+    it('is 312.5 m down the leg at 90 s, where fixture H is still standing at the stop', () => {
+        // Hand-solved against a 155 s, 750 m trapezoid: accelerate for 5 s to 5 m/s (12.5 m), then
+        // cruise — at 65 s of motion, 12.5 + 5 * 60 = 312.5 m.
+        const [v] = vehiclesAt(scenarioI.index, scenarioI.geometries, '2026-06-15', 11.5)
+        expect(v!.atStop).toBe(false)
+        expect(v!.lon).toBeCloseTo(lonFor(5312.5), 6)
+    })
+})
+
+// ---------------------------------------------------------------------------------------------
+// Fixture J: `offsets` and `dwells` are read as a pair. The pattern says stop 1 is a 2-minute
+// wait; one trip overrides both vectors with a 5-minute wait, and another overrides `offsets`
+// alone and therefore has no wait at all. Pairing either trip's offsets with the pattern's dwells
+// puts the vehicle somewhere neither of them is.
+// ---------------------------------------------------------------------------------------------
+
+const patternJ: Pattern = {
+    id: 'P-J',
+    line: 'L',
+    direction: 0,
+    headsign: 'J',
+    stops: ['j0', 'j1', 'j2'],
+    offsets: [0, 10, 13],
+    dwells: [0, 2, 0],
+}
+const tripJPaired: Trip = { pattern: 'P-J', service: 'daily', start: 0, offsets: [0, 20, 26], dwells: [0, 5, 0] }
+const tripJOffsetsOnly: Trip = { pattern: 'P-J', service: 'daily', start: 100, offsets: [0, 20, 26] }
+const scenarioJ = buildScenario(
+    {
+        stops: testStops(['j0', 'j1', 'j2']),
+        lines: [testLine('L')],
+        patterns: [patternJ],
+        services: [dailyService],
+        trips: [tripJPaired, tripJOffsetsOnly],
+    },
+    [equatorLineFeature('P-J', [0, 5000, 5416])],
+)
+
+describe('vehiclesAt: trip.dwells override', () => {
+    it("uses the trip's own five-minute dwell, not the pattern's two", () => {
+        expect(patternJ.dwells).toEqual([0, 2, 0])
+        expect(tripJPaired.dwells).toEqual([0, 5, 0])
+        // 3 minutes after arriving: still standing. On the pattern's 2 minutes it would have left
+        // a minute ago and be 103 m along.
+        const [waiting] = vehiclesAt(scenarioJ.index, scenarioJ.geometries, '2026-06-15', 23)
+        expect(waiting!.atStop).toBe(true)
+        expect(waiting!.lon).toBeCloseTo(lonFor(5000), 9)
+
+        // Departure at 25 leaves 60 s for 416 m — the same 8 m/s trapezoid as fixture H, so 8 s
+        // out is the end of the acceleration phase at 32 m.
+        const [moving] = vehiclesAt(scenarioJ.index, scenarioJ.geometries, '2026-06-15', 25 + 8 / 60)
+        expect(moving!.atStop).toBe(false)
+        expect(moving!.lon).toBeCloseTo(lonFor(5032), 6)
+    })
+
+    it("never lends the pattern's dwells to a trip that overrides only its offsets", () => {
+        expect(tripJOffsetsOnly.dwells).toBeUndefined()
+        // 26 s after arriving: past the synthetic 25 s hold and 1 s into the acceleration phase,
+        // at 0.5 m. Borrowing the pattern's 2 minutes would leave it standing at the stop.
+        const [v] = vehiclesAt(scenarioJ.index, scenarioJ.geometries, '2026-06-15', 100 + 20 + 26 / 60)
+        expect(v!.tripKey).toBe('P-J:daily:100')
+        expect(v!.atStop).toBe(false)
+        expect(v!.lon).toBeCloseTo(lonFor(5000.5), 6)
+    })
+})
+
+// ---------------------------------------------------------------------------------------------
+// Fixture K: fixture G's mismatch, one vector along. The offsets line up with the geometry but
+// the dwells do not, which is the same class of pipeline fault and is caught the same way.
+// ---------------------------------------------------------------------------------------------
+
+const patternK: Pattern = {
+    id: 'P-K',
+    line: 'L',
+    direction: 0,
+    headsign: 'K',
+    stops: ['k0', 'k1', 'k2'],
+    offsets: [0, 10, 20],
+    dwells: [0, 2],
+}
+const tripK: Trip = { pattern: 'P-K', service: 'daily', start: 0 }
+const scenarioK = buildScenario(
+    {
+        stops: testStops(['k0', 'k1', 'k2']),
+        lines: [testLine('L')],
+        patterns: [patternK],
+        services: [dailyService],
+        trips: [tripK],
+    },
+    [equatorLineFeature('P-K', [0, 1000, 2500])],
+)
+
+describe('vehiclesAt: dwells/offsets mismatch', () => {
+    it('warns naming the pattern, and omits the vehicle rather than rendering it undwelled', () => {
+        expect(patternK.offsets.length).toBe(scenarioK.geometries.get('P-K')!.stopDistances.length)
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        expect(vehiclesAt(scenarioK.index, scenarioK.geometries, '2026-06-15', 5)).toEqual([])
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('P-K'))
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('2 dwells'))
+        warn.mockRestore()
+    })
+})

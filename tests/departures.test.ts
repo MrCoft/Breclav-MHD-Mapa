@@ -68,3 +68,72 @@ describe('departuresAt', () => {
         expect(found[1]!.serviceDate).toBe('2026-09-08')
     })
 })
+
+describe('departuresAt with dwells', () => {
+    it('advertises the departure minute, not the arrival, at a stop with a dwell', () => {
+        const dwelling = structuredClone(tinyNetwork)
+        dwelling.patterns[0]!.dwells = [0, 2, 0]
+
+        // Control arm: the same 374 trip without dwells still advertises its 378 arrival at 'b'.
+        expect(departuresAt(index, 'b', '2026-09-02', 300).map((d) => d.time)).toEqual([378])
+        expect(departuresAt(buildIndex(dwelling), 'b', '2026-09-02', 300).map((d) => d.time)).toEqual([380])
+    })
+
+    it('reports the arrival minute unchanged when the pattern carries no dwells', () => {
+        expect(tinyNetwork.patterns[0]!.dwells).toBeUndefined()
+        expect(departuresAt(index, 'a', '2026-09-02', 300).map((d) => d.time)).toEqual([374])
+        expect(departuresAt(index, 'b', '2026-09-02', 300).map((d) => d.time)).toEqual([378])
+        expect(departuresAt(index, 'c', '2026-09-02', 300).map((d) => d.time)).toEqual([383])
+    })
+
+    it("adds a trip override's own dwells, not the pattern's", () => {
+        const net = structuredClone(tinyNetwork)
+        net.patterns[0]!.dwells = [0, 2, 0]
+        net.trips[1]!.dwells = [0, 6, 0]
+        expect(net.trips[1]!.offsets).toEqual([0, 3, 7])
+
+        // Thursday runs no service of its own, so only Wednesday's 1450 trip can land here: it
+        // arrives at 'b' at 1453 and stands 6 minutes, leaving at 00:19. Reading the pattern's
+        // 2-minute dwell against the trip's own offsets would say 00:15.
+        expect(departuresAt(buildIndex(net), 'b', '2026-09-03', 0).map((d) => d.time)).toEqual([19])
+    })
+
+    it('adds no dwell at all when a trip overrides offsets and supplies none', () => {
+        const net = structuredClone(tinyNetwork)
+        net.patterns[0]!.dwells = [0, 2, 0]
+        expect(net.trips[1]!.offsets).toEqual([0, 3, 7])
+        expect(net.trips[1]!.dwells).toBeUndefined()
+
+        expect(departuresAt(buildIndex(net), 'b', '2026-09-03', 0).map((d) => d.time)).toEqual([13])
+    })
+
+    it('moves a departure pushed past midnight by its dwell onto the next day', () => {
+        const arriving = structuredClone(tinyNetwork)
+        arriving.trips = [{ pattern: '563-0-1', service: 'weekday', start: 1434 }]
+        expect(arriving.trips[0]!.start + arriving.patterns[0]!.offsets[1]!).toBe(1438) // 23:58 at 'b'
+
+        const dwelling = structuredClone(arriving)
+        dwelling.patterns[0]!.dwells = [0, 5, 0]
+        const dwellingIndex = buildIndex(dwelling)
+
+        // Control arm: without the dwell, 23:58 is the last departure Wednesday has.
+        expect(departuresAt(buildIndex(arriving), 'b', '2026-09-02', 1400).map((d) => d.time)).toEqual([1438])
+
+        expect(departuresAt(dwellingIndex, 'b', '2026-09-02', 1400)).toEqual([])
+        const next = departuresAt(dwellingIndex, 'b', '2026-09-03', 0)
+        expect(next.map((d) => d.time)).toEqual([3])
+        expect(next[0]!.serviceDate).toBe('2026-09-02')
+    })
+
+    it('counts a departure landing exactly on midnight as the next day, not this one', () => {
+        const net = structuredClone(tinyNetwork)
+        net.patterns[0]!.dwells = [0, 2, 0]
+        net.trips = [{ pattern: '563-0-1', service: 'weekday', start: 1434 }]
+        const boundary = buildIndex(net)
+
+        expect(departuresAt(boundary, 'b', '2026-09-02', 1400)).toEqual([])
+        const next = departuresAt(boundary, 'b', '2026-09-03', 0)
+        expect(next.map((d) => d.time)).toEqual([0])
+        expect(next[0]!.serviceDate).toBe('2026-09-02')
+    })
+})

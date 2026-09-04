@@ -15,6 +15,10 @@ export interface Departure {
 /**
  * Departures from `stopId` at or after `fromMinutes` on `date`.
  *
+ * `offsets` are arrivals, so a departure is the arrival plus the stop's dwell. The two arrays are
+ * taken from one source in a single expression: a trip that overrides `offsets` overrides `dwells`
+ * with it, and a trip's `offsets` must never be read against the pattern's `dwells`.
+ *
  * Two service days are considered. A trip on the previous service day with a
  * time of 1460 departs at 00:20 on `date`, so its time is shifted by -1440.
  * Trips on the previous day that ran before midnight land on negative times
@@ -55,12 +59,12 @@ export function departuresAt(
                 if (!active.has(trip.service)) {
                     continue
                 }
-                const offsets = trip.offsets ?? pattern.offsets
-                const offset = offsets[stopIndex]
-                if (offset === undefined) {
+                const { offsets, dwells } = trip.offsets ? { offsets: trip.offsets, dwells: trip.dwells } : pattern
+                const arrival = offsets[stopIndex]
+                if (arrival === undefined) {
                     continue
                 }
-                const time = trip.start + offset - shift
+                const time = trip.start + arrival + (dwells?.[stopIndex] ?? 0) - shift
                 if (time < fromMinutes || time >= 1440) {
                     continue
                 }

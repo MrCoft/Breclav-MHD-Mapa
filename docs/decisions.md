@@ -460,3 +460,42 @@ layouts, which are alternative routings the sheet stacks rather than loops a tri
 verifies stop counts, dwell lengths and orphan stops, but not that a pattern's `stops` never
 repeats consecutively — the one cheap assertion that would have caught known bug 7 in either
 importer.
+
+## 35. The proposal's inputs are config; the current network's source is not interchangeable with them
+
+**Decided:** everything `scripts/build-proposal.ts` reads about *which* proposal it builds — the
+workbook path, the sheets to import, their long names, the inherited lines, the service id and the
+required override stops — lives in `config/proposal.json`, loaded and validated once by
+`scripts/proposal/config.ts`. A one-off file can be passed as `--workbook <path>` without editing
+config. `pnpm run build:data` runs both converters in dependency order.
+
+`config/proposal.json` reproduces the previous hard-coded constants exactly: the non-network half
+of the build was diffed against the shipped `public/data/proposed/network.json` and produces
+identical lines, patterns, trips and stop ids.
+
+**Rejected:** *One command that rebuilds everything, as the normal way to update.* `build:network`
+re-downloads the feed whenever the operator's copy is newer and takes the shipped `feedDate` from
+that response, so a blanket rebuild silently republishes today's network as a side effect of
+editing the spreadsheet. That is not hypothetical — it happened during decision 32's work and cost
+the previous feed permanently (known bug 9). `build:data` exists for a deliberate full refresh;
+the documented path for a spreadsheet change is `build:proposal` alone, which reads the committed
+Overpass and routing caches and needs no network unless a stop actually moved.
+
+**Rejected:** *Making the current network buildable from a spreadsheet too*, so that one supplied
+file could regenerate the whole site. The current scenario is the operator's own GTFS: it carries a
+service calendar with exception dates, 20 routes including regional buses and trains, and
+parent-station groupings that the proposal's eight city-line sheets have no equivalent of. A
+spreadsheet importer for it would either invent that structure or drop it, and the proposal build
+depends on `public/data/current/` for stop coordinates, line colours and its own service window —
+so the dependency runs the wrong way for the substitution to help.
+
+**Why:** the question this answers is "someone hands the project a new timetable — what happens?"
+The honest answer has two halves, and the split above makes each half true rather than blurring
+them: a new *proposal* is a config edit and one command, while a new *operator timetable* is not
+something anyone hands over at all — it is fetched. Keeping the second out of config stops the
+first from looking more powerful than it is.
+
+**Left open:** the sheet-name-to-line-id mapping is still implicit (a sheet must be named exactly
+after its line), and direction order within a sheet is assumed rather than asserted — a
+return-first workbook would produce a silently reversed network. Both are listed in the README's
+"What still needs a developer" table.

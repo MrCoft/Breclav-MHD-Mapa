@@ -126,6 +126,20 @@ make: whether `Trip`/`Pattern` grow a second offsets vector (arrival alongside d
 vehicle arrives on time and then visibly waits), or whether the converter simply uses
 `arrival_time` for every stop after the first and drops the dwell.
 
+**Resolved 2026-09-04** by decisions 32 and 34, across `250285c` (GTFS importer), `b1cdf76`
+(vehicle motion), `c5b594b` (departure boards) and `ed4f052` (regenerated data). `offsets` are
+arrivals, a new `dwells` vector carries the wait, and both are forced to 0 at a trip's first and
+last stop so the operator's layover is never drawn at all — the user's own framing: a movement the
+operator makes is not a journey anyone takes.
+
+Verified by re-deriving both timing rules from the same cached feed and joining each to the
+committed `stopDistances`: over 8538 per-trip segments, **segments under 5 km/h fall from 166 to 1
+and under 10 km/h from 288 to 39**. The single survivor is entry 8 below, a geometry fault with no
+timing component. Sampling the map on 2026-09-10 at 06:00, 07:30, 10:00, 13:00, 16:30 and 20:00
+gives **0 crawling vehicles at every hour in both scenarios**, against 18-42% of those on screen
+before; a handful are now correctly shown standing at a stop instead. 1053 terminus layovers
+totalling 41,087 minutes were dropped, worst 792; the worst mid-route dwell kept is 21 minutes.
+
 ## 7. The proposal importer ignores the workbook's `příj.`/`odj.` markers, so the bus station is imported twice
 
 **Found:** 2026-09-03, during the same speed sanity check — this is what produces the
@@ -153,6 +167,11 @@ at Poštorná, kostel and 569's second is at Stará Břeclav, u parku, so it is 
 nádraží". And the marker is not the signal to detect it by: it also labels every section's first
 and last row, and it is blank on both rows of 569's Stará Břeclav pair and on the departure row of
 its direction-0 bus-station pair. Reproduce either with `parseSections` over the workbook.
+
+**Resolved 2026-09-04** in `c9acca9`, data regenerated in `ed4f052`. The rebuilt proposed scenario
+has **0 consecutive duplicate stop visits, down from 12**, and no 0 m segments; 48 patterns become
+47. `scripts/build-network.ts`'s `structuralProblems` now asserts that no pattern visits a stop
+twice in a row, so neither importer can reintroduce this silently.
 
 ## 8. Pattern 572-0-14's OSM-matched geometry puts BORS and Gumotex 27 m apart
 
@@ -209,6 +228,17 @@ server serves only the current feed — so the 2026-09-02 feed this repo's commi
 from no longer exists locally and cannot be fetched again. `public/data/current/` still holds the
 2026-09-02 output, untouched, because the build threw before writing.
 
+**Resolved 2026-09-04** in `f35caa9` (decision 33): the gate is `6 m + 0.2 m/km` instead of a flat
+20 m. `build:network` and `build:proposal` both complete against the 2026-09-04 feed. Note the
+practical effect is a tightening for most patterns — at 11 km the gate is 8.2 m against the old
+20 m — and `S8-0-12` clears it at 69% of budget, the closest committed pattern being `R13-1-1` at
+59%.
+
+The irreversible half stands: the 2026-09-02 feed is gone, so the committed data moved to
+2026-09-04 in `ed4f052` alongside the timing fix rather than separately. One visible consequence:
+the new feed's services begin 2026-09-04, so any deep link to an earlier date — including
+`e2e/smoke.spec.ts`'s hard-coded `d=2026-09-02` — now lands outside the service window.
+
 ## 10. `.prettierignore`'s bare `data` pattern silently excludes `src/data/` as well
 
 **Found:** 2026-09-04, adding `dwells` validation for decision 32 — `src/data/validate.ts` turned
@@ -231,3 +261,25 @@ Anchoring the pattern as `/data` fixes the over-match.
 written in the surrounding project style inside `src/data/` will look wrong next to the file it
 lands in, and no check anywhere will say so. Note that fixing the ignore pattern means reformatting
 all of `src/data/`, so the reformat wants its own commit.
+
+## 11. `e2e/smoke.spec.ts`'s deep-link step no longer exercises departures
+
+**Found:** 2026-09-04, after the feed refresh forced by known bug 9. The suite still passes — that
+is the problem.
+**Where:** `e2e/smoke.spec.ts:60`, `page.goto('/?line=…&stop=…&d=2026-09-02&t=07:30')`, asserted at
+:65 as `page.locator('table').or(page.getByText('V tuto dobu odsud nic nejede.'))`.
+**Problem:** every service in the 2026-09-04 feed starts on 2026-09-04, so the hard-coded
+`d=2026-09-02` is outside the service window and the stop panel now always renders the empty state.
+The assertion accepts either a departures table or that empty state, so the step passes while
+testing strictly less than it claims: whether a deep link restores a stop *with its departures* is
+no longer covered, only that the panel is not blank.
+
+This is exactly the rot `e2e/pausedDeepLink.spec.ts` documents in its own header comment and was
+fixed for — that suite derives its date and time from the committed data rather than hard-coding
+them. `smoke.spec.ts` was not given the same treatment.
+**Impact:** no user-visible defect; a silent hole in coverage that widens every time the feed's
+window moves. The fix is the idiom already in the repo — pick a date from `network.json`'s own
+services the way `pausedDeepLink.spec.ts` does — and it wants its own commit rather than riding
+along with a data regeneration. Note this affects any bookmarked deep link too: a shared
+`?d=2026-09-02` link now opens on an empty network, which is correct behaviour for a feed that does
+not cover that date, but worth knowing before someone reports it as a bug.

@@ -11,9 +11,14 @@ isn't in scope, see `docs/decisions.md` #18–#20. This document is the *how*.
 
 ## Source documents
 
-- `data/navrh_2026_new2.xlsx` — the import source. Cell-addressed structured data: one sheet per
-  city line (561, 562, 563, 565, 566, 567, 568, 569 — line 564 has no sheet, because the proposal
-  cancels it).
+- The workbook named by `config/proposal.json`'s `workbook` field — today
+  `data/navrh_2026_new2.xlsx`, but the path is config rather than a constant in the converter
+  (decision 35), so a new version of the proposal is a config edit and one `pnpm run build:proposal`.
+  Cell-addressed structured data: one sheet per city line, each named exactly after the line
+  (561, 562, 563, 565, 566, 567, 568, 569 — line 564 has no sheet, because the proposal cancels
+  it), with the sheets to import likewise listed in `config/proposal.json`. The README's "Updating
+  the proposal spreadsheet" section records which parts of a new workbook the importer absorbs on
+  its own and which still need code.
 - `data/jizdni_rady_2026.pdf` — narrative and cross-check only, never imported directly. Text
   recovered from a PDF by whitespace alignment is fragile; the spreadsheet is not. The PDF
   supplies things the spreadsheet lacks: which sheet is which direction, per-trip kilometres, the

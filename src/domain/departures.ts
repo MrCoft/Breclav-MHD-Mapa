@@ -1,4 +1,5 @@
 import { previousDate, servicesOnDate } from './calendar'
+import { tripTimes } from './tripTimes'
 import type { NetworkIndex } from '../data/buildIndex'
 
 export interface Departure {
@@ -15,9 +16,7 @@ export interface Departure {
 /**
  * Departures from `stopId` at or after `fromMinutes` on `date`.
  *
- * `offsets` are arrivals, so a departure is the arrival plus the stop's dwell. The two arrays are
- * taken from one source in a single expression: a trip that overrides `offsets` overrides `dwells`
- * with it, and a trip's `offsets` must never be read against the pattern's `dwells`.
+ * `offsets` are arrivals, so a departure is the arrival plus the stop's dwell.
  *
  * Two service days are considered. A trip on the previous service day with a
  * time of 1460 departs at 00:20 on `date`, so its time is shifted by -1440.
@@ -59,7 +58,7 @@ export function departuresAt(
                 if (!active.has(trip.service)) {
                     continue
                 }
-                const { offsets, dwells } = trip.offsets ? { offsets: trip.offsets, dwells: trip.dwells } : pattern
+                const { offsets, dwells } = tripTimes(trip, pattern)
                 const arrival = offsets[stopIndex]
                 if (arrival === undefined) {
                     continue

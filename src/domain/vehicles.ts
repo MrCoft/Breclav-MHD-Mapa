@@ -1,5 +1,6 @@
 import { previousDate, servicesOnDate } from './calendar'
 import { positionAt } from './patternGeometry'
+import { tripTimes } from './tripTimes'
 import type { PatternGeometry } from './patternGeometry'
 import type { NetworkIndex } from '../data/buildIndex'
 import type { Line, Pattern, Trip } from '../types/network'
@@ -85,10 +86,6 @@ function trapezoidDistance(seconds: number, duration: number, distance: number, 
 }
 
 /**
- * `offsets` are arrivals and `dwells` the scheduled wait at each stop, taken from one source in a
- * single expression: a trip that overrides `offsets` overrides `dwells` with it, and a trip's
- * `offsets` must never be read against the pattern's `dwells`.
- *
  * The vehicle is held at a stop for the longer of that scheduled dwell and the synthetic
  * `dwellSeconds`/`dwellFraction` pause, so a real dwell wins wherever the feed gives one and the
  * motion is exactly what it was before wherever it does not.
@@ -101,7 +98,7 @@ function vehicleForTrip(
     clockMinutes: number,
     options: VehicleMotionOptions,
 ): Vehicle | null {
-    const { offsets, dwells } = trip.offsets ? { offsets: trip.offsets, dwells: trip.dwells } : pattern
+    const { offsets, dwells } = tripTimes(trip, pattern)
     const first = offsets[0]
     const last = offsets[offsets.length - 1]
     if (offsets.length !== geometry.stopDistances.length || (dwells && dwells.length !== offsets.length)) {

@@ -388,3 +388,39 @@ aboard, and the timetable prints both times. A wait at the terminus is the opera
 vehicle until its next duty, or swapping it for a different one entirely, and no passenger relates
 to it. One number per stop cannot express that difference; two can, and the split falls exactly on
 the line between the two kinds of standing still.
+
+## 33. The geometry length gate scales with line length
+
+**Supersedes the rationale attached to `GEOMETRY_LENGTH_TOLERANCE_METRES`** in
+`scripts/build-network.ts`. Prompted by known bug 9.
+
+**Decided:** the check comparing a pattern's final `stopDistance` against its own simplified
+line's length uses `6 m + 0.2 m/km` instead of a flat 20 m.
+
+The floor is three times `config/scope.json`'s `geometrySimplifyMetres` (2 m) — one cut corner can
+shorten a line by roughly twice the simplification tolerance, and the third multiple covers
+haversine round-trip slack on repeated additions. The per-kilometre term is the worst relative
+shortening measured on lines long enough for it to dominate the floor (132-177 ppm across the
+`R13` patterns), rounded up to 200 ppm.
+
+Verified against all 300 committed patterns in both scenarios: every one passes, and the closest
+is `R13-1-1` at 59% of its budget (10.6 m against 18.0 m allowed over 60.2 km). The 2026-09-04
+feed's `S8-0-12` — 22.1 m over 129.5 km, the pattern that exposed this — sits at 69%.
+
+**Rejected:** *Raising the flat number to 25 or 30 m.* It would unblock the build in one character
+and keep the check's shape, but it makes the gate progressively more meaningless as lines get
+shorter: 30 m on the 1.5 km `563-1-1` is 20000 ppm, which no real defect could ever exceed.
+
+**Rejected:** *A pure parts-per-million gate.* The worst relative miss in the committed data is
+410 ppm on the 11.0 km `562-0-3`, and a gate clearing that would allow 53 m on a 129.5 km line —
+looser than the flat 20 m it replaced, on exactly the patterns where a real fault is most likely.
+The observed misses do not scale cleanly with length (0-410 ppm, no tidy relationship), which is
+why neither pure shape works and the two-term form does.
+
+**Why:** the quantity being gated is cumulative corner-cutting, which grows with the number of
+vertices simplification touches, while the failure it is meant to catch — a stop re-projected onto
+the wrong pass of a self-proximate line — is a fixed hundreds-of-metres error independent of
+length. A single absolute number cannot separate those two across a dataset spanning 1.5 km bus
+loops and 129.5 km rail runs. Note the practical effect is not a loosening: at 11 km the new gate
+is 8.2 m, 2.4 times **tighter** than the 20 m it replaces, and it only widens past the old value
+beyond about 70 km.

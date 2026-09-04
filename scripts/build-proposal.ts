@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { validateNetwork } from '../src/data/validate'
-import { buildPatternsAndTrips } from './gtfs/convert'
+import { buildPatternsAndTrips, tripTiming } from './gtfs/convert'
 import { loadScope } from './gtfs/read'
 import { assertGeometrySane, assertStructurallySane, sortNetwork } from './build-network'
 import { matchPatternGeometry, remeasureSimplified, straightLine } from './osm/match'
@@ -13,7 +13,7 @@ import { readWorkbook } from './proposal/xlsx'
 import { parseSections, tripStopMinutes } from './proposal/sheet'
 import { breclavStops, buildCandidates, isManesovaRow, matchStopName, resolveManesova } from './proposal/stopMatch'
 import type { GeometryDiagnostics, GeometryFeature } from './build-network'
-import type { TripShape } from './gtfs/convert'
+import type { StopVisit, TripShape } from './gtfs/convert'
 import type { GeometrySource, PatternRouter, RelationLine } from './osm/match'
 import type { OsmNode, OsmRelation, OsmWay } from './osm/overpass'
 import type { Section } from './proposal/sheet'
@@ -124,8 +124,10 @@ function resolveSectionStops(
 
 /** One section's trips as `TripShape`s, one per trip column, stops limited to what that
  *  particular trip actually serves — different subsets become different patterns downstream, in
- *  `buildPatternsAndTrips`, exactly as the GTFS converter already does for the current scenario. */
-function buildShapesForSection(
+ *  `buildPatternsAndTrips`, exactly as the GTFS converter already does for the current scenario.
+ *  Timing follows decision 32's three rules, applied by the same `tripTiming` the GTFS converter
+ *  uses. */
+export function buildShapesForSection(
     line: string,
     direction: 0 | 1,
     grid: Map<string, string>,
@@ -135,8 +137,7 @@ function buildShapesForSection(
 ): TripShape[] {
     const shapes: TripShape[] = []
     for (const tripColumn of section.tripColumns) {
-        const stops: string[] = []
-        const times: number[] = []
+        const visits: StopVisit[] = []
         section.stops.forEach((stopRow, index) => {
             const minutes = tripStopMinutes(grid, stopRow.row, tripColumn.column)
             if (minutes === undefined) {
@@ -146,24 +147,39 @@ function buildShapesForSection(
             if (!id) {
                 throw new Error(`line ${line} dir ${direction}: stop row ${stopRow.row} has no resolved id`)
             }
-            stops.push(id)
-            times.push(minutes)
+            // The workbook writes a timing point the vehicle stands at as two rows for the same
+            // stop, an arrival (`příj.`) and a departure (`odj.`) — one visit, not two (known bug
+            // 7). Recognised by this trip's own served sequence repeating a stop, rather than by
+            // column C's marker, which also labels every section's first and last row and is blank
+            // on both rows of 569's Stará Břeclav pair; and rather than by adjacent rows, because
+            // 569's two bus-station calls sit four never-served rows apart on the trips that run
+            // straight through. A genuine revisit keeps its calls apart by serving stops between
+            // them; one that served none would be standing at the stop either way.
+            const previous = visits.at(-1)
+            if (previous?.stop === id) {
+                previous.departure = minutes
+                return
+            }
+            visits.push({ stop: id, arrival: minutes, departure: minutes })
         })
-        if (stops.length < 2) {
+        if (visits.length < 2) {
             continue // a trip with fewer than 2 served stops carries no useful route
         }
-        const headStop = stopById.get(stops[stops.length - 1]!)
+        const tripId = `${line}-${direction}-${tripColumn.number}`
+        const headStop = stopById.get(visits[visits.length - 1]!.stop)
         if (!headStop) {
-            throw new Error(`line ${line}: stop id ${stops[stops.length - 1]} has no known name for a headsign`)
+            throw new Error(`line ${line}: stop id ${visits[visits.length - 1]!.stop} has no known name for a headsign`)
         }
+        const { arrivals, dwells } = tripTiming(tripId, visits)
         shapes.push({
-            tripId: `${line}-${direction}-${tripColumn.number}`,
+            tripId,
             routeId: line,
             directionId: direction,
             headsign: headStop.name,
             serviceId: SERVICE_ID,
-            stops,
-            times,
+            stops: visits.map((visit) => visit.stop),
+            arrivals,
+            dwells,
         })
     }
     return shapes

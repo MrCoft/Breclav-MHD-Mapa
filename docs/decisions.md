@@ -343,3 +343,48 @@ in `basemaps.ts`, so re-adding any of them is a small, low-risk follow-up rather
 worth doing if a reviewer wants the pale ground `mapColor`/`casingColor` were originally tuned
 against back as an option (`style.ts`'s own comment on `BASEMAP_STYLE`), or the dark pairing for
 the Storybook dark theme.
+
+## 32. A stop visit carries an arrival and a dwell; layovers between trips are never shown
+
+**Supersedes the implicit model behind decisions 23 and 24**, which assumed one time per stop.
+
+**Decided:** `Pattern.offsets` and `Trip.offsets` change meaning from departure minutes to
+**arrival** minutes, and both gain an optional parallel `dwells` array giving the minutes a
+vehicle stands at each stop. Departure from stop `i` is `offsets[i] + (dwells?.[i] ?? 0)`, travel
+on segment `i` occupies `offsets[i + 1] - departure(i)`, and a trip's on-screen window is
+`offsets[0]` to `offsets.at(-1)` — so a vehicle appears when it pulls out of its first stop and
+vanishes the moment it arrives at its last.
+
+Both importers apply the same three rules, which is where "never shown" is actually enforced:
+
+- **first stop** — `offsets[0]` is the departure and `dwells[0]` is 0, so a vehicle standing at
+  its origin before the trip starts is not drawn;
+- **intermediate stops** — `offsets[i]` is the arrival and `dwells[i]` the scheduled wait;
+- **last stop** — `offsets[n]` is the arrival and `dwells[n]` is 0, so the terminus layover is
+  dropped entirely.
+
+`vehicleForTrip` holds a vehicle at stop `i` for `max(realDwell, syntheticDwell)`, where the
+synthetic figure is the existing `dwellSeconds`/`dwellFraction` pause. Where the feed gives a real
+dwell (always a whole minute, so always larger) the real one wins; where it gives none the
+behaviour is unchanged from before.
+
+**Rejected:** *Reading `departure_time` only and skipping segments that look implausible* — the
+user's first instinct, and the reason this entry exists. Nothing in the feed is missing or
+corrupt; the correct number is present and unread, so skipping would guess where the truth is
+available. It also needs a threshold nothing can justify (45 segments legitimately run under
+10 km/h) and has no good render: hiding the vehicle removes 42% of the buses on screen at 10:00,
+teleporting makes it jump, and inventing a speed just moves the error one stop along.
+
+**Rejected:** *One number per stop, taking `arrival_time` except at the first stop.* One line to
+change and it kills the reported symptom just as completely (1 segment under 5 km/h, against 133
+before). But it folds each stop's wait into the leg approaching it, so 129 segments still crawl in
+— R50 covers the 2458 m into Brno hlavní nádraží at 11.3 km/h instead of arriving at 29.5 km/h and
+standing for 8 minutes with passengers aboard. It also leaves the proposal workbook's `příj.`/`odj.`
+pair as two separate stops (known bug 7), which carrying a dwell collapses for free.
+
+**Why:** the distinction the user drew is between a journey a passenger takes and a movement the
+operator makes. A wait in the middle of a trip is part of the ride — the doors open, people are
+aboard, and the timetable prints both times. A wait at the terminus is the operator parking a
+vehicle until its next duty, or swapping it for a different one entirely, and no passenger relates
+to it. One number per stop cannot express that difference; two can, and the split falls exactly on
+the line between the two kinds of standing still.

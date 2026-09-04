@@ -163,3 +163,40 @@ its checks are monotonicity, the final `stopDistance` against the line's own len
 `maxOffMetres` per stop — none of which compares a stop *gap* against the straight-line distance
 between the two stops, which is the cheap invariant that would have caught this (a routed gap can
 never be shorter than the crow-flies gap).
+
+## 9. The geometry length tolerance is an absolute 20 m, and today's feed brought a line long enough to exceed it
+
+**Found:** 2026-09-04, running `build:network` on unmodified code to get a clean baseline before
+implementing decision 32. The build fails; nothing in this branch's work caused it.
+**Where:** `scripts/build-network.ts:62` (`GEOMETRY_LENGTH_TOLERANCE_METRES = 20`), asserted at
+`:153`.
+**Problem:**
+
+```
+Error: Geometry sanity check failed:
+S8-0-12: final stopDistance 129525.4m is 22.1m from the line's own length 129547.6m
+```
+
+`S8-0-12` does not exist in the committed 2026-09-02 build — direction 0 of line S8 went up to
+`S8-0-10` there — so the 2026-09-04 feed added it. At 129.5 km it is over half again as long as
+anything the tolerance was ever sized against: the worst absolute miss anywhere in the committed
+build is 10.7 m, on the 81.1 km `R13-0-*` patterns, and the constant's own comment cites "~11m even
+on this dataset's longest route (115km of rail)".
+
+The gate is an absolute metre figure applied to a quantity that grows with the number of vertices
+simplification touches. Measured across the committed build there is no clean proportionality
+either (misses run 0-410 ppm with no tidy relationship to length), so neither a flat number nor a
+plain per-kilometre rate is obviously the right shape — which is the actual open problem.
+
+Evidence that the 22.1 m is simplification cutting corners rather than a mis-projection, though
+this was not confirmed directly: only the length check failed. `maxOffMetres` and `maxClampMetres`
+both passed, and those are the two that catch a window search matching the wrong pass of a
+self-proximate line — the failure mode the constant's comment says "misses by hundreds of metres
+at minimum".
+**Impact:** blocking. `build:network` cannot complete, so neither scenario can be regenerated,
+and `build:proposal` reads `build:network`'s output so it is blocked behind it. Worse, the failure
+is not recoverable by retreating: `data/cache/gtfs/` is gitignored, `downloadFeed` had already
+overwritten the cached zip and extracted the new CSVs before the check ran, and the operator's
+server serves only the current feed — so the 2026-09-02 feed this repo's committed data was built
+from no longer exists locally and cannot be fetched again. `public/data/current/` still holds the
+2026-09-02 output, untouched, because the build threw before writing.

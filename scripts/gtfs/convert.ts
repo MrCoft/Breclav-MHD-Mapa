@@ -9,14 +9,59 @@ export interface TripShape {
     serviceId: string
     /** Parent-station ids, in travel order. */
     stops: string[]
-    /** Departure minutes, same length and order as `stops`. May exceed 1440. */
-    times: number[]
+    /**
+     * Arrival minutes, same length and order as `stops`. May exceed 1440. Per decision 32 the
+     * first entry is the departure from the origin rather than an arrival; every later one is a
+     * true arrival, including the terminus.
+     */
+    arrivals: number[]
+    /**
+     * Whole minutes standing at each stop, same length and order as `stops`. Departure from stop
+     * `i` is `arrivals[i] + dwells[i]`. The first and last entries are always 0 — see `tripTiming`.
+     */
+    dwells: number[]
 }
 
 /** GTFS times may exceed 24 hours; 25:10:00 means 01:10 the next morning. */
 export function parseGtfsTime(value: string): number {
     const [h, m] = value.split(':')
     return Number(h) * 60 + Number(m)
+}
+
+/** One stop of one trip, as the feed gives it: both clock times, in minutes. */
+export interface StopVisit {
+    stop: string
+    arrival: number
+    departure: number
+}
+
+/**
+ * Decision 32's three importer rules, applied to one trip's stops in travel order: the first
+ * stop's offset is its *departure*, every later stop's is its *arrival*, and the dwell is the wait
+ * between the two — forced to 0 at both ends, so neither the wait before a trip starts nor the
+ * operator's layover after it ends is ever drawn. Dropping that layover is the whole point: the
+ * feed's departure at a terminus is the vehicle's next duty, hours later.
+ *
+ * A departure before its own arrival never occurs in this feed and cannot be interpreted, so it
+ * throws rather than clamping — clamping would bury exactly the kind of feed fault that went
+ * unnoticed for as long as this function's absence did (known bug 6).
+ */
+export function tripTiming(tripId: string, visits: StopVisit[]): { arrivals: number[]; dwells: number[] } {
+    const arrivals: number[] = []
+    const dwells: number[] = []
+
+    for (const [i, visit] of visits.entries()) {
+        if (visit.departure < visit.arrival) {
+            throw new Error(
+                `Trip ${tripId} at stop ${visit.stop}: departure minute ${visit.departure} is before arrival minute ${visit.arrival}`,
+            )
+        }
+        const atEnd = i === 0 || i === visits.length - 1
+        arrivals.push(i === 0 ? visit.departure : visit.arrival)
+        dwells.push(atEnd ? 0 : visit.departure - visit.arrival)
+    }
+
+    return { arrivals, dwells }
 }
 
 function isoDate(yyyymmdd: string): string {
@@ -108,11 +153,21 @@ export function buildServices(
         .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
 }
 
+/** Omitted from the shipped network when nothing stands anywhere, which is most patterns. */
+function dwellsIfAny(dwells: number[]): number[] | undefined {
+    return dwells.some((d) => d !== 0) ? dwells : undefined
+}
+
 /**
  * Groups trips into patterns by (line, direction, stop sequence). Each pattern
  * takes its group's most common run-time vector; trips that differ carry their
  * own. On the real feed roughly 38% of trips carry an override, so this is a
  * normal path, not a rare one.
+ *
+ * "Most common" tallies offsets and dwells together, and an overriding trip carries both or
+ * neither, because the two are read as a pair: a trip's `offsets` are never applied to the
+ * pattern's `dwells` (see `src/types/network.ts`), so two trips that agree on run times and
+ * disagree on where they wait are two different timings, not one.
  */
 export function buildPatternsAndTrips(
     shapes: Iterable<TripShape>,
@@ -121,6 +176,7 @@ export function buildPatternsAndTrips(
     interface Entry {
         start: number
         offsets: number[]
+        dwells: number[]
         service: string
     }
 
@@ -132,15 +188,17 @@ export function buildPatternsAndTrips(
         entries: Entry[]
     }
 
+    const timingKey = (entry: Entry): string => `${entry.offsets.join(',')}|${entry.dwells.join(',')}`
+
     const groups = new Map<string, Group>()
 
     for (const shape of shapes) {
         const lineId = lineIds.get(shape.routeId) ?? shape.routeId
         const key = `${lineId}|${shape.directionId}|${shape.stops.join('>')}`
-        const start = shape.times[0]!
-        const offsets = shape.times.map((t) => t - start)
+        const start = shape.arrivals[0]!
+        const offsets = shape.arrivals.map((t) => t - start)
 
-        const entry: Entry = { start, offsets, service: shape.serviceId }
+        const entry: Entry = { start, offsets, dwells: shape.dwells, service: shape.serviceId }
         const group = groups.get(key)
         if (group) {
             group.entries.push(entry)
@@ -167,13 +225,20 @@ export function buildPatternsAndTrips(
         counters.set(prefix, n)
         const patternId = `${prefix}-${n}`
 
-        const tally = new Map<string, number>()
+        const tally = new Map<string, { count: number; entry: Entry }>()
         for (const entry of group.entries) {
-            const k = entry.offsets.join(',')
-            tally.set(k, (tally.get(k) ?? 0) + 1)
+            const k = timingKey(entry)
+            const tallied = tally.get(k)
+            if (tallied) {
+                tallied.count += 1
+            } else {
+                tally.set(k, { count: 1, entry })
+            }
         }
-        const modalKey = [...tally.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]![0]
-        const modal = modalKey.split(',').map(Number)
+        const [modalKey, modal] = [...tally.entries()].sort(
+            (a, b) => b[1].count - a[1].count || a[0].localeCompare(b[0]),
+        )[0]!
+        const modalDwells = dwellsIfAny(modal.entry.dwells)
 
         patterns.push({
             id: patternId,
@@ -181,17 +246,24 @@ export function buildPatternsAndTrips(
             direction: group.direction,
             headsign: group.headsign,
             stops: group.stops,
-            offsets: modal,
+            offsets: modal.entry.offsets,
+            ...(modalDwells && { dwells: modalDwells }),
         })
 
         const sorted = group.entries.sort((a, b) => a.start - b.start || a.service.localeCompare(b.service))
         for (const entry of sorted) {
-            const same = entry.offsets.join(',') === modalKey
-            trips.push(
-                same
-                    ? { pattern: patternId, service: entry.service, start: entry.start }
-                    : { pattern: patternId, service: entry.service, start: entry.start, offsets: entry.offsets },
-            )
+            if (timingKey(entry) === modalKey) {
+                trips.push({ pattern: patternId, service: entry.service, start: entry.start })
+                continue
+            }
+            const dwells = dwellsIfAny(entry.dwells)
+            trips.push({
+                pattern: patternId,
+                service: entry.service,
+                start: entry.start,
+                offsets: entry.offsets,
+                ...(dwells && { dwells }),
+            })
         }
     }
 

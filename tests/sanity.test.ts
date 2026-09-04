@@ -30,6 +30,23 @@ describe('assertSane', () => {
 })
 
 describe('assertStructurallySane', () => {
+    // Decision 34: the shape known bug 7 shipped, in the proposal importer, for months.
+    it('rejects a pattern that visits the same stop twice in a row', () => {
+        const doubled: Network = structuredClone(tinyNetwork)
+        doubled.patterns[0]!.stops = ['a', 'b', 'b']
+        doubled.patterns[0]!.offsets = [0, 4, 6]
+        expect(() => assertStructurallySane(doubled)).toThrow(/563-0-1: stop b is visited twice in a row/)
+    })
+
+    it('accepts a pattern that revisits a stop with another in between', () => {
+        const loop: Network = structuredClone(tinyNetwork)
+        loop.patterns[0]!.stops = ['a', 'b', 'a']
+        loop.patterns[0]!.offsets = [0, 4, 9]
+        // 'c' would otherwise trip the orphan-stop check and pass this test for the wrong reason.
+        loop.stops = loop.stops.filter((s) => s.id !== 'c')
+        expect(() => assertStructurallySane(loop)).not.toThrow()
+    })
+
     // Finding I4: the proposal's 10 lines fail the route-count band `assertSane` gates, but the
     // three structural checks below apply to it just as much as to the GTFS-derived network.
     it('accepts a plausible network with a route count `assertSane` would reject', () => {
@@ -56,6 +73,19 @@ describe('assertStructurallySane', () => {
         const orphan: Network = structuredClone(tinyNetwork)
         orphan.stops.push({ id: 'z', name: 'Nikde', lat: 48, lon: 16 })
         expect(() => assertStructurallySane(orphan)).toThrow(/z/)
+    })
+
+    it('rejects a pattern with fewer dwells than stops', () => {
+        const ragged: Network = structuredClone(tinyNetwork)
+        ragged.patterns[0]!.dwells = [0, 2]
+        expect(ragged.patterns[0]!.stops).toHaveLength(3)
+        expect(() => assertStructurallySane(ragged)).toThrow(/563-0-1.*dwells|dwells.*563-0-1/is)
+    })
+
+    it('accepts a pattern whose dwells match its stops', () => {
+        const dwelling: Network = structuredClone(tinyNetwork)
+        dwelling.patterns[0]!.dwells = [0, 2, 0]
+        expect(() => assertStructurallySane(dwelling)).not.toThrow()
     })
 })
 

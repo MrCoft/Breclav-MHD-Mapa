@@ -1,7 +1,14 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { validateNetwork } from '../src/data/validate'
-import { assignLineIds, buildLines, buildPatternsAndTrips, buildServices, parseGtfsTime } from './gtfs/convert'
+import {
+    assignLineIds,
+    buildLines,
+    buildPatternsAndTrips,
+    buildServices,
+    parseGtfsTime,
+    tripTiming,
+} from './gtfs/convert'
 import { downloadFeed, extractEntries, loadScope, streamCsv } from './gtfs/read'
 import { assignStopIds, buildParentMap, municipalityOf } from './gtfs/scope'
 import { cumulativeDistances, matchPatternGeometry, remeasureSimplified, straightLine } from './osm/match'
@@ -25,7 +32,9 @@ import type { Meta, Network, Pattern, Stop } from '../src/types/network'
 import type { OsmNode, OsmRelation, OsmWay } from './osm/overpass'
 import type { RailGraph } from './osm/railGraph'
 
-export const CONVERTER_VERSION = '1.0.0'
+// 2.0.0: `offsets` are arrivals, not departures, and patterns and trips may carry `dwells`
+// alongside them (decision 32).
+export const CONVERTER_VERSION = '2.0.0'
 
 export interface GeometryFeature {
     type: 'Feature'
@@ -209,6 +218,20 @@ function structuralProblems(net: Network): string[] {
     if (net.patterns.some((p) => p.stops.length < 2)) {
         problems.push('patterns: at least one has fewer than 2 stops')
     }
+    for (const pattern of net.patterns) {
+        if (pattern.dwells && pattern.dwells.length !== pattern.stops.length) {
+            problems.push(
+                `pattern ${pattern.id}: ${pattern.dwells.length} dwells against ${pattern.stops.length} stops`,
+            )
+        }
+        // A stop twice in a row is always a zero-length segment and always a doubled departure
+        // board, whatever produced it — the shape known bug 7 shipped for months because each
+        // importer was trusted to avoid it rather than either being checked. Decision 34.
+        const repeated = pattern.stops.findIndex((stop, i) => i > 0 && stop === pattern.stops[i - 1])
+        if (repeated > 0) {
+            problems.push(`pattern ${pattern.id}: stop ${pattern.stops[repeated]} is visited twice in a row`)
+        }
+    }
 
     const served = new Set(net.patterns.flatMap((p) => p.stops))
     for (const stop of net.stops) {
@@ -221,11 +244,12 @@ function structuralProblems(net: Network): string[] {
 }
 
 /**
- * The three structural checks (no trips, a pattern with fewer than two stops, a stop no pattern
- * serves) that hold for any network regardless of source — split out from `assertSane` so
- * `build-proposal.ts` can run them without the route-count band below, which the proposal's 10
- * lines would always fail: `scope.expectedRoutes` is sized for the full GTFS-derived network
- * (`config/scope.json`), not a hand-authored subset covering only the city lines.
+ * The structural checks (no trips, a pattern with fewer than two stops, a pattern whose `dwells`
+ * do not match its stops, a stop no pattern serves) that hold for any network regardless of
+ * source — split out from `assertSane` so `build-proposal.ts` can run them without the
+ * route-count band below, which the proposal's 10 lines would always fail:
+ * `scope.expectedRoutes` is sized for the full GTFS-derived network (`config/scope.json`), not a
+ * hand-authored subset covering only the city lines.
  */
 export function assertStructurallySane(net: Network): void {
     const problems = structuralProblems(net)
@@ -295,11 +319,15 @@ async function main(): Promise<void> {
 
     // Pass 1: collect each trip's stop sequence, in parent-station ids.
     console.log('Reading stop_times…')
-    const sequences = new Map<string, { seq: number; station: string; minutes: number }[]>()
+    const sequences = new Map<string, { seq: number; stop: string; arrival: number; departure: number }[]>()
     await streamCsv<GtfsStopTimeRow>(join(cacheDir, 'stop_times.txt'), (r) => {
-        const station = parents.get(r.stop_id) ?? r.stop_id
         const list = sequences.get(r.trip_id)
-        const entry = { seq: Number(r.stop_sequence), station, minutes: parseGtfsTime(r.departure_time) }
+        const entry = {
+            seq: Number(r.stop_sequence),
+            stop: parents.get(r.stop_id) ?? r.stop_id,
+            arrival: parseGtfsTime(r.arrival_time),
+            departure: parseGtfsTime(r.departure_time),
+        }
         if (list) {
             list.push(entry)
         } else {
@@ -316,7 +344,7 @@ async function main(): Promise<void> {
     )
     const routeIds = new Set<string>()
     for (const [tripId, list] of sequences) {
-        if (!list.some((e) => breclavStations.has(e.station))) {
+        if (!list.some((e) => breclavStations.has(e.stop))) {
             continue
         }
         const trip = tripRows.get(tripId)
@@ -336,16 +364,18 @@ async function main(): Promise<void> {
             continue
         }
         for (const e of list) {
-            usedStations.add(e.station)
+            usedStations.add(e.stop)
         }
+        const { arrivals, dwells } = tripTiming(tripId, list)
         shapes.push({
             tripId,
             routeId: trip.route_id,
             directionId: trip.direction_id === '1' ? 1 : 0,
             headsign: trip.trip_headsign,
             serviceId: trip.service_id,
-            stops: list.map((e) => e.station),
-            times: list.map((e) => e.minutes),
+            stops: list.map((e) => e.stop),
+            arrivals,
+            dwells,
         })
     }
 

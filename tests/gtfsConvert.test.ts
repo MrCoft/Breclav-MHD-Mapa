@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { assignLineIds, buildPatternsAndTrips, buildServices, parseGtfsTime } from '../scripts/gtfs/convert'
-import type { TripShape } from '../scripts/gtfs/convert'
+import { assignLineIds, buildPatternsAndTrips, buildServices, parseGtfsTime, tripTiming } from '../scripts/gtfs/convert'
+import type { StopVisit, TripShape } from '../scripts/gtfs/convert'
 import type { GtfsCalendarDateRow, GtfsCalendarRow, GtfsRouteRow } from '../scripts/gtfs/scope'
 
 describe('parseGtfsTime', () => {
@@ -10,6 +10,45 @@ describe('parseGtfsTime', () => {
 
     it('keeps times past midnight above 1440', () => {
         expect(parseGtfsTime('25:10:00')).toBe(1510)
+    })
+})
+
+describe('tripTiming', () => {
+    // Trip 6387 of line 572 as the feed gives it (known bug 6): it reaches Hodonín at 7:42, and
+    // the 13:18 the feed prints there is the vehicle's next duty, not this trip's departure.
+    const trip6387: StopVisit[] = [
+        { stop: 'breclav-aut-nadr', arrival: 420, departure: 423 }, // 07:00, leaves 07:03
+        { stop: 'ladna', arrival: 437, departure: 439 }, // 07:17, leaves 07:19
+        { stop: 'hodonin-aut-nadr', arrival: 462, departure: 798 }, // 07:42, "leaves" 13:18
+    ]
+
+    it('takes the departure at the first stop, and never a dwell there', () => {
+        expect(trip6387[0]!.departure - trip6387[0]!.arrival).toBe(3)
+        const { arrivals, dwells } = tripTiming('6387', trip6387)
+        expect(arrivals[0]).toBe(423)
+        expect(dwells[0]).toBe(0)
+    })
+
+    it('takes the arrival at an intermediate stop, with the wait as its dwell', () => {
+        const { arrivals, dwells } = tripTiming('6387', trip6387)
+        expect(arrivals[1]).toBe(437)
+        expect(dwells[1]).toBe(2)
+    })
+
+    it('takes the arrival at the last stop, dropping the terminus layover', () => {
+        expect(trip6387.at(-1)!.departure - trip6387.at(-1)!.arrival).toBe(336)
+        const { arrivals, dwells } = tripTiming('6387', trip6387)
+        expect(arrivals.at(-1)).toBe(462)
+        expect(dwells.at(-1)).toBe(0)
+    })
+
+    it('throws naming the trip and the stop when a departure precedes its own arrival', () => {
+        const backwards: StopVisit[] = [
+            { stop: 'a', arrival: 420, departure: 420 },
+            { stop: 'ladna', arrival: 437, departure: 435 },
+            { stop: 'c', arrival: 462, departure: 462 },
+        ]
+        expect(() => tripTiming('6387', backwards)).toThrow(/6387.*ladna|ladna.*6387/s)
     })
 })
 
@@ -100,14 +139,20 @@ describe('buildServices', () => {
 describe('buildPatternsAndTrips', () => {
     const lineIds = new Map([['L563D99', '563']])
 
-    const shape = (tripId: string, times: number[], stops = ['a', 'b', 'c']): TripShape => ({
+    const shape = (
+        tripId: string,
+        arrivals: number[],
+        dwells = arrivals.map(() => 0),
+        stops = ['a', 'b', 'c'],
+    ): TripShape => ({
         tripId,
         routeId: 'L563D99',
         directionId: 0,
         headsign: 'FOSFA',
         serviceId: '1',
         stops,
-        times,
+        arrivals,
+        dwells,
     })
 
     it('groups trips sharing a stop sequence into one pattern', () => {
@@ -122,7 +167,7 @@ describe('buildPatternsAndTrips', () => {
 
     it('separates patterns that differ in stop sequence', () => {
         const { patterns } = buildPatternsAndTrips(
-            [shape('t1', [360, 364, 369]), shape('t2', [420, 424], ['a', 'b'])],
+            [shape('t1', [360, 364, 369]), shape('t2', [420, 424], [0, 0], ['a', 'b'])],
             lineIds,
         )
         expect(patterns).toHaveLength(2)
@@ -150,5 +195,67 @@ describe('buildPatternsAndTrips', () => {
     it('sorts trips deterministically by pattern then start', () => {
         const { trips } = buildPatternsAndTrips([shape('t2', [420, 424, 429]), shape('t1', [360, 364, 369])], lineIds)
         expect(trips.map((t) => t.start)).toEqual([360, 420])
+    })
+
+    it('carries the modal dwells on the pattern, beside the offsets', () => {
+        const { patterns } = buildPatternsAndTrips(
+            [shape('t1', [360, 364, 369], [0, 2, 0]), shape('t2', [420, 424, 429], [0, 2, 0])],
+            lineIds,
+        )
+        expect(patterns).toHaveLength(1)
+        expect(patterns[0]!.offsets).toEqual([0, 4, 9])
+        expect(patterns[0]!.dwells).toEqual([0, 2, 0])
+    })
+
+    it('omits dwells entirely when the vehicle stands nowhere', () => {
+        const { patterns, trips } = buildPatternsAndTrips(
+            [shape('t1', [360, 364, 369]), shape('t2', [480, 484, 489])],
+            lineIds,
+        )
+        expect(patterns[0]!.offsets).toEqual([0, 4, 9])
+        expect('dwells' in patterns[0]!).toBe(false)
+        expect(trips.filter((t) => 'dwells' in t)).toEqual([])
+    })
+
+    // Keying the modal tally on offsets alone would make this one pattern with no override at
+    // all, and t3 would silently inherit the 2-minute wait it does not have.
+    it('overrides a trip that matches the modal offsets but not the modal dwells', () => {
+        const { patterns, trips } = buildPatternsAndTrips(
+            [
+                shape('t1', [360, 364, 369], [0, 2, 0]),
+                shape('t2', [420, 424, 429], [0, 2, 0]),
+                shape('t3', [480, 484, 489], [0, 5, 0]),
+            ],
+            lineIds,
+        )
+        expect(patterns).toHaveLength(1)
+        expect(patterns[0]!.dwells).toEqual([0, 2, 0])
+
+        const overrides = trips.filter((t) => t.offsets !== undefined)
+        expect(overrides).toHaveLength(1)
+        expect(overrides[0]!.start).toBe(480)
+        expect(overrides[0]!.offsets).toEqual([0, 4, 9])
+        expect(overrides[0]!.dwells).toEqual([0, 5, 0])
+    })
+
+    // `vehicleForTrip` and `departuresAt` read a trip's offsets and dwells as a pair, so dwells
+    // alone would be read against the pattern's offsets — `validateNetwork` rejects it outright.
+    it('gives an overriding trip both vectors or neither, never dwells alone', () => {
+        const { patterns, trips } = buildPatternsAndTrips(
+            [
+                shape('t1', [360, 364, 369], [0, 2, 0]),
+                shape('t2', [420, 424, 429], [0, 2, 0]),
+                shape('t3', [480, 484, 489]),
+                shape('t4', [540, 543, 547]),
+            ],
+            lineIds,
+        )
+        expect(patterns[0]!.dwells).toEqual([0, 2, 0])
+        expect(trips.filter((t) => t.offsets !== undefined)).toHaveLength(2)
+        expect(trips.filter((t) => t.dwells !== undefined && t.offsets === undefined)).toEqual([])
+
+        const standsNowhere = trips.find((t) => t.start === 480)!
+        expect(standsNowhere.offsets).toEqual([0, 4, 9])
+        expect('dwells' in standsNowhere).toBe(false)
     })
 })

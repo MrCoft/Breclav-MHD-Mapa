@@ -200,3 +200,26 @@ overwritten the cached zip and extracted the new CSVs before the check ran, and 
 server serves only the current feed — so the 2026-09-02 feed this repo's committed data was built
 from no longer exists locally and cannot be fetched again. `public/data/current/` still holds the
 2026-09-02 output, untouched, because the build threw before writing.
+
+## 10. `.prettierignore`'s bare `data` pattern silently excludes `src/data/` as well
+
+**Found:** 2026-09-04, adding `dwells` validation for decision 32 — `src/data/validate.ts` turned
+out to use 2-space indentation and semicolons while the rest of the project uses 4-space and none,
+and `prettier --check` reported the file clean anyway.
+**Where:** `.prettierignore:5` (`data`), against `src/data/`.
+**Problem:** Prettier ignore patterns use gitignore semantics, so a bare `data` with no leading
+slash matches a directory called `data` at *any* depth. The entry was plainly meant for the
+top-level `data/` cache of GTFS/OSM/routing artifacts, but it also takes out `src/data/`, which is
+application source. Every file there has drifted off the project's Prettier style as a result;
+nothing else under `src/` has. Reproduce:
+
+```
+npx prettier --check $(git ls-files 'src/data/*.ts')                          # reports clean
+npx prettier --check --ignore-path /dev/null $(git ls-files 'src/data/*.ts')  # reports off-style
+```
+
+Anchoring the pattern as `/data` fixes the over-match.
+**Impact:** cosmetic but persistent, and it widens over time. It is also a trap for edits: a change
+written in the surrounding project style inside `src/data/` will look wrong next to the file it
+lands in, and no check anywhere will say so. Note that fixing the ignore pattern means reformatting
+all of `src/data/`, so the reformat wants its own commit.

@@ -146,6 +146,14 @@ proposed scenario's stop counts per pattern one higher than the route really has
 share a fix shape: whatever represents "arrive, wait, depart" for the GTFS side should represent it
 here too, rather than each importer inventing its own.
 
+**Fix landed 2026-09-04** (decision 34), awaiting a rebuild of `public/data/proposed/`: the pair is
+now one stop visit carrying a dwell. Two corrections to the survey above, both found while
+implementing it. The lines with a consecutive pair are 561, 563, 566, 567, 568 and 569 — 563's is
+at Poštorná, kostel and 569's second is at Stará Břeclav, u parku, so it is not only "Autobusové
+nádraží". And the marker is not the signal to detect it by: it also labels every section's first
+and last row, and it is blank on both rows of 569's Stará Břeclav pair and on the departure row of
+its direction-0 bus-station pair. Reproduce either with `parseSections` over the workbook.
+
 ## 8. Pattern 572-0-14's OSM-matched geometry puts BORS and Gumotex 27 m apart
 
 **Found:** 2026-09-03, in the same speed sanity check — this is the single segment that still runs

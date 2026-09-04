@@ -192,7 +192,7 @@ These have no GTFS parent station and no coordinates. They will be hand-placed f
 descriptions against OpenStreetMap, recorded in a small overrides file so each placement is
 auditable rather than silently guessed.
 
-## 16. How should "arrive, wait, depart" be represented?
+## 16. How should "arrive, wait, depart" be represented? — RESOLVED 2026-09-04
 
 Raised 2026-09-03 by the vehicle-speed sanity check; the evidence is in `docs/known-bugs.md`
 entries 6 and 7. Both importers currently collapse a stop visit to a single time — the GTFS one to
@@ -249,6 +249,13 @@ If both are carried, note that 83.8% of stop rows have no dwell at all, so a spa
 indices" map costs far less in `network.json` than a second full-length vector.
 
 **Decide before fixing either bug**, since the two must land together.
+
+**Answered:** carry both. Decision 32 fixes the model — `offsets` become arrivals, and `Pattern`
+and `Trip` each gain an optional `dwells` — and decision 34 settles how the workbook's own version
+of the same thing is recognised. Both importers now apply the three rules through one `tripTiming`,
+so entries 6 and 7 of `docs/known-bugs.md` are fixed in code and await a data rebuild. The sparse
+"dwell at these indices" map noted above was not taken up: `dwells` is a full-length vector,
+omitted entirely from any pattern or trip where every entry would be 0.
 
 ## 17. Should a trip that terminates at a stop appear on that stop's departure board?
 

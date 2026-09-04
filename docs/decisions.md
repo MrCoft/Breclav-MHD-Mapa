@@ -424,3 +424,39 @@ length. A single absolute number cannot separate those two across a dataset span
 loops and 129.5 km rail runs. Note the practical effect is not a loosening: at 11 km the new gate
 is 8.2 m, 2.4 times **tighter** than the 20 m it replaces, and it only widens past the old value
 beyond about 70 km.
+
+## 34. The proposal workbook's arrive-then-depart pair is collapsed on the trip's served sequence
+
+**Closes known bug 7**, the workbook half of decision 32. Prompted by implementing it.
+
+**Decided:** `buildShapesForSection` merges a stop into the previous stop visit whenever the trip's
+own *served* sequence repeats a stop id — arrival from the first row, departure from the second —
+and applies decision 32's three rules through the same `tripTiming` the GTFS converter uses. A trip
+that serves only one row of such a pair becomes one visit whose arrival and departure are the same
+minute, so no dwell is invented for it.
+
+**Rejected:** *Detecting the pair from column C's `příj.`/`odj.` marker.* The marker labels
+something else as well — every section's own first and last row — and it is missing from real
+pairs. Run `parseSections` over the workbook: most marked rows are section ends rather than halves
+of a pair, line 569's direction-0 bus-station pair has a blank departure row, and its Stará Břeclav
+pair is blank on both.
+
+**Rejected:** *Detecting the pair from two adjacent rows in the sheet.* Sound as far as it goes —
+no genuine revisit in this workbook puts its two calls in adjacent rows — but it closes only part
+of the bug. Line 569 lays its Městský hřbitov leg out between the bus station's two calls, and the
+trips that run straight through serve none of the rows in between, leaving the two calls four rows
+apart on the sheet and adjacent in the trip. Row adjacency leaves 32 of the proposal's 349 trips
+and 2 of its 31 patterns still carrying the station twice; served-sequence adjacency leaves none.
+
+**Why:** the sequence that ends up in `pattern.stops` is the per-trip served sequence, so that is
+where the invariant has to hold — the same stop twice in a row there is always a 0 m segment and
+always a doubled departure board, whatever the sheet looks like. The rule cannot damage a genuine
+revisit either: a revisit that served nothing in between would render as a vehicle standing at the
+stop under both rules, and collapsing merely stops it also being counted twice. In this workbook
+the question is moot — no trip anywhere serves both calls of any of the five repeated-stop
+layouts, which are alternative routings the sheet stacks rather than loops a trip drives.
+
+**Left open:** nothing checks the invariant. `structuralProblems` in `scripts/build-network.ts`
+verifies stop counts, dwell lengths and orphan stops, but not that a pattern's `stops` never
+repeats consecutively — the one cheap assertion that would have caught known bug 7 in either
+importer.

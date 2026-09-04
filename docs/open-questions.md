@@ -249,3 +249,24 @@ If both are carried, note that 83.8% of stop rows have no dwell at all, so a spa
 indices" map costs far less in `network.json` than a second full-length vector.
 
 **Decide before fixing either bug**, since the two must land together.
+
+## 17. Should a trip that terminates at a stop appear on that stop's departure board?
+
+Raised 2026-09-04 while implementing decision 32. It currently does, and after that change it
+advertises its final arrival as a departure time — `dwells.at(-1)` is 0 by decision 32, so the
+number shown is the arrival minute exactly.
+
+Before decision 32 this was plainly wrong in a different way: the last stop showed the operator's
+layover departure, so a 572 trip arriving at Hodonín at 7:42 advertised 13:18. That part is fixed.
+What is left is a narrower question of meaning: 7:42 is a real, correct minute for that stop, but
+it is when the bus *stops being available*, not when it leaves for anywhere.
+
+- **Leave it.** Someone reading the board sees a service touching the stop at that minute, which is
+  true, and a terminus is often where people alight rather than board. Costs nothing.
+- **Drop it.** A departure board should list departures. `patternsByStop` already yields the stop
+  index, so filtering `index === pattern.stops.length - 1` is a one-line change in `departuresAt`.
+- **Mark it.** Show it labelled as an arrival, which is what printed timetables usually do.
+
+No test pins the current behaviour either way — deliberately, so whichever way this goes, no test
+has to be deleted to get there. **Decide** when someone next looks at `StopPanel` with real users
+in mind; nothing else depends on it.

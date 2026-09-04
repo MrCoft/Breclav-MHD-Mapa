@@ -9,6 +9,7 @@ import { fetchRoutes } from './osm/overpass'
 import { routePattern } from './osm/routePattern'
 import { simplifyIndices } from './osm/simplify'
 import { relationToLine } from './osm/stitch'
+import { loadProposalConfig, workbookFromArgv } from './proposal/config'
 import { readWorkbook } from './proposal/xlsx'
 import { parseSections, tripStopMinutes } from './proposal/sheet'
 import { breclavStops, buildCandidates, isManesovaRow, matchStopName, resolveManesova } from './proposal/stopMatch'
@@ -16,6 +17,7 @@ import type { GeometryDiagnostics, GeometryFeature } from './build-network'
 import type { StopVisit, TripShape } from './gtfs/convert'
 import type { GeometrySource, PatternRouter, RelationLine } from './osm/match'
 import type { OsmNode, OsmRelation, OsmWay } from './osm/overpass'
+import type { ProposalConfig } from './proposal/config'
 import type { Section } from './proposal/sheet'
 import type { StopCandidate } from './proposal/stopMatch'
 import type { DayMask, Line, Meta, Network, Pattern, Service, Stop, Trip } from '../src/types/network'
@@ -28,8 +30,6 @@ interface GeometryFile {
 
 export const CONVERTER_VERSION = '1.0.0'
 
-const WORKBOOK_PATH = 'data/navrh_2026_new2.xlsx'
-const OVERRIDES_PATH = 'data/proposed-stops.json'
 const CURRENT_DIR = 'public/data/current'
 const OUT_DIR = 'public/data/proposed'
 // Proposed pattern ids reuse the current scenario's own numbering scheme ("561-0-1", …), which
@@ -39,31 +39,6 @@ const OUT_DIR = 'public/data/proposed'
 // different route. A separate cache directory avoids that; the OSM relation cache (keyed by bbox,
 // not pattern) is safe to share and is reused as-is.
 const ROUTING_CACHE_DIR = 'data/cache/routing-proposed'
-
-const CITY_LINES = ['561', '562', '563', '565', '566', '567', '568', '569']
-const INHERITED_LINES = ['571', '574']
-const SERVICE_ID = 'vsedni-den'
-
-const NA_ZAHRADACH_ID = 'breclav-na-zahradach'
-const MANESOVA_NEW_ID = 'breclav-stara-breclav-manesova-2'
-const J_SKACELA_ID = 'breclav-postorna-j-skacela-1-maje'
-
-/**
- * The proposal's own long names, from PDF page 1 ("Uvažované vedení linek") — preferred over the
- * current scenario's long names since the routings genuinely differ. Transcribed by hand, with
- * the PDF's own spacing normalised and one typo fixed ("Vatlická" -> "Valtická", the same place
- * the workbook and every other PDF mention spell correctly).
- */
-const LONG_NAMES: Record<string, string> = {
-    '561': 'Městský hřbitov - Poštorná - Charvátská Nová Ves a zpět',
-    '562': 'Městský hřbitov - Valtická Točna - Charvátská Nová Ves a zpět',
-    '563': 'Autobusové nádraží - Slovácká - Cukrovar - Poliklinika - Poštorná, FOSFA a zpět',
-    '565': 'Městský hřbitov - Sovadinova - Stará Břeclav a zpět',
-    '566': 'Křižovatka Ladná - Sovadinova - Aut. Nádraží - Nám. TGM - Valtická Točna a zpět',
-    '567': 'Autobusové nádraží - Hlavní - Valtická Točna a zpět',
-    '568': 'Městský hřbitov - Poliklinika - Valtická Točna a zpět',
-    '569': 'Charvátská Nová Ves - Hlavní - Autobusové nádraží - Stará Břeclav a zpět',
-}
 
 interface StopOverride {
     id: string
@@ -91,6 +66,7 @@ function resolveSectionStops(
     direction: 0 | 1,
     section: Section,
     candidates: StopCandidate[],
+    manesovaNewPoleId: string,
     problems: UnmatchedStop[],
 ): (string | undefined)[] {
     const resolved: (string | undefined)[] = section.stops.map((stop) => {
@@ -116,7 +92,7 @@ function resolveSectionStops(
         if (!isManesovaRow(stop.name)) {
             return
         }
-        resolved[index] = resolveManesova(resolved[index - 1], resolved[index + 1], MANESOVA_NEW_ID)
+        resolved[index] = resolveManesova(resolved[index - 1], resolved[index + 1], manesovaNewPoleId)
     })
 
     return resolved
@@ -134,6 +110,7 @@ export function buildShapesForSection(
     section: Section,
     resolvedIds: (string | undefined)[],
     stopById: Map<string, Stop>,
+    serviceId: string,
 ): TripShape[] {
     const shapes: TripShape[] = []
     for (const tripColumn of section.tripColumns) {
@@ -176,7 +153,7 @@ export function buildShapesForSection(
             routeId: line,
             directionId: direction,
             headsign: headStop.name,
-            serviceId: SERVICE_ID,
+            serviceId,
             stops: visits.map((visit) => visit.stop),
             arrivals,
             dwells,
@@ -185,17 +162,20 @@ export function buildShapesForSection(
     return shapes
 }
 
-function buildCityLines(current: Network): Line[] {
-    return CITY_LINES.map((id): Line => {
+function buildCityLines(current: Network, config: ProposalConfig): Line[] {
+    return config.cityLines.map((id): Line => {
         const existing = current.lines.find((l) => l.id === id)
         if (!existing) {
             throw new Error(`buildCityLines: line ${id} not found in the current scenario to copy colour/mode from`)
         }
-        const longName = LONG_NAMES[id]
-        if (!longName) {
-            throw new Error(`buildCityLines: no PDF long name recorded for line ${id}`)
+        return {
+            id,
+            name: id,
+            longName: config.longNames[id]!, // loadProposalConfig has already checked every city line has one
+            mode: existing.mode,
+            color: existing.color,
+            textColor: existing.textColor,
         }
-        return { id, name: id, longName, mode: existing.mode, color: existing.color, textColor: existing.textColor }
     })
 }
 
@@ -238,9 +218,9 @@ export function coreWeekdayService(services: Service[]): Service {
  *  brief: the proposal changes both (cancels 564 in favour of 574, has 571 call at every
  *  intermediate stop) but supplies no timetable for either, so synthesising one would be
  *  inventing data no source actually gives. */
-function buildInherited(current: Network, currentGeometry: GeometryFile): Inherited {
-    const lines = current.lines.filter((l) => INHERITED_LINES.includes(l.id))
-    const patterns = current.patterns.filter((p) => INHERITED_LINES.includes(p.line))
+function buildInherited(current: Network, currentGeometry: GeometryFile, inheritedLines: string[]): Inherited {
+    const lines = current.lines.filter((l) => inheritedLines.includes(l.id))
+    const patterns = current.patterns.filter((p) => inheritedLines.includes(p.line))
     const patternIds = new Set(patterns.map((p) => p.id))
     const trips = current.trips.filter((t) => patternIds.has(t.pattern))
     const serviceIds = new Set(trips.map((t) => t.service))
@@ -260,22 +240,24 @@ function buildInherited(current: Network, currentGeometry: GeometryFile): Inheri
 
 async function main(): Promise<void> {
     const scope = loadScope()
+    const config = loadProposalConfig()
+    const workbookPath = workbookFromArgv(process.argv) ?? config.workbook
 
     const current = JSON.parse(readFileSync(join(CURRENT_DIR, 'network.json'), 'utf8')) as Network
     const currentMeta = JSON.parse(readFileSync(join(CURRENT_DIR, 'meta.json'), 'utf8')) as Meta
     const currentGeometry = JSON.parse(readFileSync(join(CURRENT_DIR, 'geometry.geojson'), 'utf8')) as GeometryFile
-    const overrides = JSON.parse(readFileSync(OVERRIDES_PATH, 'utf8')) as StopOverride[]
+    const overrides = JSON.parse(readFileSync(config.stopOverrides, 'utf8')) as StopOverride[]
     const overrideIds = new Set(overrides.map((o) => o.id))
-    for (const expected of [NA_ZAHRADACH_ID, MANESOVA_NEW_ID, J_SKACELA_ID]) {
+    for (const expected of config.requiredStopOverrides) {
         if (!overrideIds.has(expected)) {
-            throw new Error(`${OVERRIDES_PATH} is missing the expected override stop ${expected}`)
+            throw new Error(`${config.stopOverrides} is missing the expected override stop ${expected}`)
         }
     }
 
     // The Mánesova override is deliberately excluded from the generic candidate pool: its name
     // is identical to the existing stop's, so it can only ever be reached through
     // `resolveManesova`'s explicit neighbour rule, never through ordinary fuzzy matching.
-    const matchableOverrides = overrides.filter((o) => o.id !== MANESOVA_NEW_ID)
+    const matchableOverrides = overrides.filter((o) => o.id !== config.manesovaNewPoleId)
     const candidates = buildCandidates([...breclavStops(current.stops), ...matchableOverrides])
 
     const overrideStopsById = new Map<string, Stop>(
@@ -286,12 +268,12 @@ async function main(): Promise<void> {
         ...overrideStopsById,
     ])
 
-    console.log('Reading proposal workbook…')
-    const sheets = await readWorkbook(WORKBOOK_PATH, (name) => CITY_LINES.includes(name))
+    console.log(`Reading proposal workbook ${workbookPath}…`)
+    const sheets = await readWorkbook(workbookPath, (name) => config.cityLines.includes(name))
     const sheetNames = new Set(sheets.map((s) => s.name))
-    const missingSheets = CITY_LINES.filter((line) => !sheetNames.has(line))
+    const missingSheets = config.cityLines.filter((line) => !sheetNames.has(line))
     if (missingSheets.length > 0) {
-        throw new Error(`workbook is missing the expected sheet(s): ${missingSheets.join(', ')}`)
+        throw new Error(`${workbookPath} is missing the expected sheet(s): ${missingSheets.join(', ')}`)
     }
 
     const problems: UnmatchedStop[] = []
@@ -307,7 +289,14 @@ async function main(): Promise<void> {
         }
         sections.forEach((section, index) => {
             const direction = index as 0 | 1
-            const resolvedIds = resolveSectionStops(sheet.name, direction, section, candidates, problems)
+            const resolvedIds = resolveSectionStops(
+                sheet.name,
+                direction,
+                section,
+                candidates,
+                config.manesovaNewPoleId,
+                problems,
+            )
             if (problems.length > 0) {
                 return // keep scanning the rest of this line's rows so every problem is collected
             }
@@ -316,7 +305,15 @@ async function main(): Promise<void> {
                     usedStopIds.add(id)
                 }
             }
-            const shapes = buildShapesForSection(sheet.name, direction, sheet.grid, section, resolvedIds, stopById)
+            const shapes = buildShapesForSection(
+                sheet.name,
+                direction,
+                sheet.grid,
+                section,
+                resolvedIds,
+                stopById,
+                config.serviceId,
+            )
             allShapes.push(...shapes)
         })
     }
@@ -330,12 +327,12 @@ async function main(): Promise<void> {
         throw new Error(`Could not match every proposal stop name to an existing stop:\n${lines.join('\n')}`)
     }
 
-    const lineIds = new Map(CITY_LINES.map((id) => [id, id]))
+    const lineIds = new Map(config.cityLines.map((id) => [id, id]))
     const { patterns: cityPatterns, trips: cityTrips } = buildPatternsAndTrips(allShapes, lineIds)
 
     const currentCoreWeekday = coreWeekdayService(current.services)
     const service: Service = {
-        id: SERVICE_ID,
+        id: config.serviceId,
         days: WEEKDAY_MASK,
         // Same validity window, and the same `removed` dates (Czech public holidays that the
         // core service excludes even though they fall on a weekday), as the current scenario's
@@ -346,13 +343,13 @@ async function main(): Promise<void> {
         removed: currentCoreWeekday.removed,
     }
 
-    const inherited = buildInherited(current, currentGeometry)
+    const inherited = buildInherited(current, currentGeometry, config.inheritedLines)
 
     const network = sortNetwork({
         stops: [...usedStopIds, ...inherited.stopIds]
             .map((id) => stopById.get(id))
             .filter((s): s is Stop => s !== undefined),
-        lines: [...buildCityLines(current), ...inherited.lines],
+        lines: [...buildCityLines(current, config), ...inherited.lines],
         patterns: [...cityPatterns, ...inherited.patterns],
         services: [service, ...inherited.services],
         trips: [...cityTrips, ...inherited.trips],
@@ -461,7 +458,7 @@ async function main(): Promise<void> {
         // of assuming the two always match (I8).
         derivedFrom: { scenarioId: 'current', feedDate: currentMeta.feedDate, generatedAt: currentMeta.generatedAt },
         inheritedLines: {
-            lines: INHERITED_LINES,
+            lines: config.inheritedLines,
             note:
                 'The proposal cancels 564 in favour of 574 and has 571 call at every intermediate stop, but ' +
                 'supplies no timetable for either change. Both lines are carried over from the current scenario ' +

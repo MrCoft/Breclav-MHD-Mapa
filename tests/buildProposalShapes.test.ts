@@ -28,6 +28,8 @@ const stopById = new Map<string, Stop>(
     Object.entries(NAMES).map(([id, name]) => [id, { id, name, lat: 48.75, lon: 16.88 }]),
 )
 
+const SERVICE_ID = 'vsedni-den'
+
 /** The one section of a single-section fixture sheet, with its stop rows asserted against the
  *  `resolvedIds` the caller pairs them with — a fixture that drifts out of alignment would
  *  otherwise quietly test a different route than the one written down. */
@@ -89,7 +91,7 @@ describe('buildShapesForSection collapses an arrival/departure row pair', () => 
         NAMES.stara!,
     ])
     const resolvedIds = ['hrbitov', 'palacha', 'nadrazi', 'nadrazi', 'sovadinova', 'stara']
-    const shapes = buildShapesForSection('569', 0, sheet, section, resolvedIds, stopById)
+    const shapes = buildShapesForSection('569', 0, sheet, section, resolvedIds, stopById, SERVICE_ID)
 
     it('reads the pair as two rows in the sheet', () => {
         // The arrange step: without two consecutive rows resolving to one stop there is nothing
@@ -102,6 +104,7 @@ describe('buildShapesForSection collapses an arrival/departure row pair', () => 
     it('gives a trip serving both rows one stop with a dwell equal to the gap', () => {
         const [both] = shapes
         expect(both!.tripId).toBe('569-0-1')
+        expect(both!.serviceId).toBe(SERVICE_ID)
         expect(both!.stops).toEqual(['hrbitov', 'palacha', 'nadrazi', 'sovadinova', 'stara'])
         expect(both!.arrivals).toEqual([360, 363, 365, 372, 375])
         expect(both!.dwells).toEqual([0, 0, 4, 0, 0])
@@ -163,6 +166,7 @@ describe('buildShapesForSection applies decision 32’s end rules', () => {
         section,
         ['hrbitov', 'hrbitov', 'palacha', 'konecna', 'konecna'],
         stopById,
+        SERVICE_ID,
     )
 
     it('reads both waits from the sheet', () => {
@@ -207,6 +211,7 @@ describe('buildShapesForSection keeps a stop a trip genuinely calls at twice', (
         section,
         ['hrbitov', 'pohansko', 'gumotex', 'pohansko', 'nadrazi'],
         stopById,
+        SERVICE_ID,
     )
 
     it('keeps both calls, because the trip serves a stop between them', () => {
@@ -266,6 +271,7 @@ describe('buildShapesForSection collapses a pair the sheet writes rows apart', (
         section,
         ['sovadinova', 'nadrazi', 'hrbitov', 'gumotex', 'nadrazi', 'palacha'],
         stopById,
+        SERVICE_ID,
     )
 
     it('separates the two station rows by rows in the sheet', () => {

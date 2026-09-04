@@ -1,0 +1,23 @@
+{
+    "workbook": "data/navrh_2026_new2.xlsx",
+    "stopOverrides": "data/proposed-stops.json",
+    "cityLines": ["561", "562", "563", "565", "566", "567", "568", "569"],
+    "inheritedLines": ["571", "574"],
+    "serviceId": "vsedni-den",
+    "longNames": {
+        "561": "Městský hřbitov - Poštorná - Charvátská Nová Ves a zpět",
+        "562": "Městský hřbitov - Valtická Točna - Charvátská Nová Ves a zpět",
+        "563": "Autobusové nádraží - Slovácká - Cukrovar - Poliklinika - Poštorná, FOSFA a zpět",
+        "565": "Městský hřbitov - Sovadinova - Stará Břeclav a zpět",
+        "566": "Křižovatka Ladná - Sovadinova - Aut. Nádraží - Nám. TGM - Valtická Točna a zpět",
+        "567": "Autobusové nádraží - Hlavní - Valtická Točna a zpět",
+        "568": "Městský hřbitov - Poliklinika - Valtická Točna a zpět",
+        "569": "Charvátská Nová Ves - Hlavní - Autobusové nádraží - Stará Břeclav a zpět"
+    },
+    "requiredStopOverrides": [
+        "breclav-na-zahradach",
+        "breclav-stara-breclav-manesova-2",
+        "breclav-postorna-j-skacela-1-maje"
+    ],
+    "manesovaNewPoleId": "breclav-stara-breclav-manesova-2"
+}

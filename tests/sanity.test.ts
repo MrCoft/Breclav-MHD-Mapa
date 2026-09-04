@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assertGeometrySane, assertSane, assertStructurallySane } from '../scripts/build-network'
+import { assertGeometrySane, assertSane, assertStructurallySane, lengthToleranceMetres } from '../scripts/build-network'
 import { loadScope } from '../scripts/gtfs/read'
 import { cumulativeDistances } from '../scripts/osm/match'
 import { tinyNetwork } from './fixtures/tinyNetwork'
@@ -56,6 +56,13 @@ describe('assertStructurallySane', () => {
         const orphan: Network = structuredClone(tinyNetwork)
         orphan.stops.push({ id: 'z', name: 'Nikde', lat: 48, lon: 16 })
         expect(() => assertStructurallySane(orphan)).toThrow(/z/)
+    })
+})
+
+describe('lengthToleranceMetres', () => {
+    it('is 6m at zero length and 31.9m over the 129.5km that prompted decision 33', () => {
+        expect(lengthToleranceMetres(0)).toBeCloseTo(6, 6)
+        expect(lengthToleranceMetres(129_500)).toBeCloseTo(31.9, 6)
     })
 })
 
@@ -169,5 +176,42 @@ describe('assertGeometrySane', () => {
         }
         const diagnostics: GeometryDiagnostics[] = [{ patternId: 'p1', maxOffMetres: 1, maxClampMetres: 0 }]
         expect(() => assertGeometrySane([feature], diagnostics, [pattern])).not.toThrow()
+    })
+
+    // Decision 33: the final-length gate scales with the line, so the two directions it moved in
+    // need separate cases — it is roughly 2.4x tighter than the old flat 20m at 11km and only
+    // widens past 20m beyond about 70km. A meridian line's distance is R·Δφ, so a target length
+    // converts straight into a latitude delta; each test asserts the length it actually built
+    // before exercising the gate, since the length is what picks the tolerance.
+    const METRES_PER_DEGREE_LATITUDE = 111195.08
+
+    function featureMissingItsLengthBy(lengthMetres: number, missMetres: number): GeometryFeature {
+        const coords: [number, number][] = [
+            [16.8, 48.7],
+            [16.8, 48.7 + lengthMetres / METRES_PER_DEGREE_LATITUDE],
+        ]
+        const measured = cumulativeDistances(coords).at(-1)!
+        return {
+            ...busFeature({ stopDistances: [0, measured - missMetres] }),
+            geometry: { type: 'LineString', coordinates: coords },
+        }
+    }
+
+    it('rejects an 11km line missing by 12m, which the old flat 20m gate accepted', () => {
+        const shortFeature = featureMissingItsLengthBy(11_000, 12)
+        expect(cumulativeDistances(shortFeature.geometry.coordinates).at(-1)!).toBeCloseTo(11_000, 0)
+        const diagnostics: GeometryDiagnostics[] = [{ patternId: 'p1', maxOffMetres: 1, maxClampMetres: 0 }]
+        // 11km buys 8.2m, so 12m is a failure now even though it is well under the old 20m.
+        expect(() => assertGeometrySane([shortFeature], diagnostics, noPatterns)).toThrow(
+            /p1.*final stopDistance|final stopDistance.*p1/is,
+        )
+    })
+
+    it('accepts a 129.5km line missing by 22.1m — the S8-0-12 case that prompted decision 33', () => {
+        const longFeature = featureMissingItsLengthBy(129_500, 22.1)
+        expect(cumulativeDistances(longFeature.geometry.coordinates).at(-1)!).toBeCloseTo(129_500, 0)
+        const diagnostics: GeometryDiagnostics[] = [{ patternId: 'p1', maxOffMetres: 1, maxClampMetres: 0 }]
+        // 129.5km buys 31.9m, against the 20m that failed this build.
+        expect(() => assertGeometrySane([longFeature], diagnostics, noPatterns)).not.toThrow()
     })
 })

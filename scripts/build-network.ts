@@ -54,12 +54,18 @@ export interface GeometryDiagnostics {
     maxClampMetres: number
 }
 
-// How far a pattern's final stopDistance may sit from its simplified line's own length.
-// Simplification legitimately shortens a line by cutting corners — observed up to ~11m even on
-// this dataset's longest route (115km of rail) — so this must clear that, but a genuine bug
-// (a stop re-projected onto the wrong part of a self-proximate line) misses by hundreds of
-// metres at minimum, so 20m keeps a wide margin on both sides.
-const GEOMETRY_LENGTH_TOLERANCE_METRES = 20
+// How far a pattern's final stopDistance may sit from its simplified line's own length. The floor
+// is three times config/scope.json's geometrySimplifyMetres (2m): one cut corner shortens a line by
+// roughly twice the simplification tolerance, and the third multiple covers haversine round-trip
+// slack on repeated additions. The per-kilometre term is the worst relative shortening measured on
+// lines long enough for it to dominate the floor — 132-177 ppm across the R13 patterns — rounded up
+// to 200 ppm.
+const LENGTH_TOLERANCE_FLOOR_METRES = 6
+const LENGTH_TOLERANCE_METRES_PER_KILOMETRE = 0.2
+
+export function lengthToleranceMetres(lineLengthMetres: number): number {
+    return LENGTH_TOLERANCE_FLOOR_METRES + (LENGTH_TOLERANCE_METRES_PER_KILOMETRE * lineLengthMetres) / 1000
+}
 
 // How far a stop's projection onto the simplified line may sit from the stop itself — gated per
 // mode, not by one shared number, because the two modes' legitimate spreads differ by an order of
@@ -150,10 +156,14 @@ export function assertGeometrySane(
             }
         }
         const last = stopDistances.at(-1)
-        if (last !== undefined && Math.abs(last - lineLength) > GEOMETRY_LENGTH_TOLERANCE_METRES) {
-            problems.push(
-                `${patternId}: final stopDistance ${last.toFixed(1)}m is ${Math.abs(last - lineLength).toFixed(1)}m from the line's own length ${lineLength.toFixed(1)}m`,
-            )
+        if (last !== undefined) {
+            const lengthMiss = Math.abs(last - lineLength)
+            const lengthTolerance = lengthToleranceMetres(lineLength)
+            if (lengthMiss > lengthTolerance) {
+                problems.push(
+                    `${patternId}: final stopDistance ${last.toFixed(1)}m is ${lengthMiss.toFixed(1)}m from the line's own length ${lineLength.toFixed(1)}m (tolerance ${lengthTolerance.toFixed(1)}m)`,
+                )
+            }
         }
 
         const pattern = patternById.get(patternId)

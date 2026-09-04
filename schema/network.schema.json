@@ -49,7 +49,8 @@
                     "direction": { "enum": [0, 1] },
                     "headsign": { "type": "string" },
                     "stops": { "type": "array", "minItems": 2, "items": { "type": "string" } },
-                    "offsets": { "type": "array", "minItems": 2, "items": { "type": "integer", "minimum": 0 } }
+                    "offsets": { "type": "array", "minItems": 2, "items": { "type": "integer", "minimum": 0 } },
+                    "dwells": { "type": "array", "minItems": 2, "items": { "type": "integer", "minimum": 0 } }
                 }
             }
         },
@@ -79,7 +80,8 @@
                     "pattern": { "type": "string" },
                     "service": { "type": "string" },
                     "start": { "type": "integer", "minimum": 0 },
-                    "offsets": { "type": "array", "minItems": 2, "items": { "type": "integer", "minimum": 0 } }
+                    "offsets": { "type": "array", "minItems": 2, "items": { "type": "integer", "minimum": 0 } },
+                    "dwells": { "type": "array", "minItems": 2, "items": { "type": "integer", "minimum": 0 } }
                 }
             }
         },

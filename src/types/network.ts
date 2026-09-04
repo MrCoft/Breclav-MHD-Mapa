@@ -30,8 +30,20 @@ export interface Pattern {
     headsign: string
     /** Stop ids in travel order. May repeat if the pattern loops. */
     stops: string[]
-    /** Minutes from trip start, one per entry in `stops`. Same length as `stops`. */
+    /**
+     * Arrival minutes from trip start, one per entry in `stops`. Same length as `stops`.
+     * `offsets[0]` is when the trip pulls out of its first stop, and `offsets.at(-1)` when it
+     * arrives at its last — between them lies the whole of the trip's on-screen life.
+     */
     offsets: number[]
+    /**
+     * Whole minutes the vehicle stands at each stop, parallel to `stops`. Departure from stop `i`
+     * is `offsets[i] + (dwells?.[i] ?? 0)`, and travel on segment `i` spans that departure to
+     * `offsets[i + 1]`. The first and last entries are 0: a vehicle waiting at its origin has not
+     * started yet, and the layover at its terminus belongs to the next trip, not this one.
+     * Omitted entirely when every entry would be 0.
+     */
+    dwells?: number[]
 }
 
 export interface Service {
@@ -51,8 +63,14 @@ export interface Trip {
     service: string
     /** Minutes since midnight of the service day. May exceed 1440. */
     start: number
-    /** Overrides the pattern's offsets when this trip's run times differ. */
+    /** Overrides the pattern's arrival offsets when this trip's run times differ. */
     offsets?: number[]
+    /**
+     * Overrides the pattern's `dwells`, and only ever alongside this trip's own `offsets`: the two
+     * vectors are read as a pair, so a trip that overrides one overrides both. A trip's `dwells`
+     * are never applied to the pattern's `offsets`, nor the pattern's to the trip's.
+     */
+    dwells?: number[]
 }
 
 export interface FrequencyBlock {
